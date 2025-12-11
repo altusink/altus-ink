@@ -1,0 +1,112 @@
+# ALTUSINK.IO - Tattoo Booking SaaS Platform
+
+## Overview
+ALTUSINK.IO is a premium multi-tenant tattoo booking SaaS platform for Altus Ink agency. The platform enables tattoo artists to manage their bookings, availability, and earnings while clients can book appointments through personalized artist pages.
+
+## Current State
+The application is functional with core features implemented:
+- Authentication (Replit Auth with development mode fallback)
+- Artist dashboard with overview, calendar, earnings, tour mode, personalization, and settings
+- CEO dashboard with artist management, financial overview, and platform stats
+- Public booking pages at `/book/:subdomain`
+- Database schema with full deposit retention and booking lock support
+
+## Tech Stack
+- **Frontend**: React 18 + TypeScript, Vite, TanStack Query, Wouter routing
+- **Backend**: Express.js, PostgreSQL with Drizzle ORM
+- **UI**: Shadcn/ui components, Tailwind CSS, Lucide icons
+- **Auth**: Replit OpenID Connect (with dev mode fallback)
+- **Payments**: Stripe integration (configured)
+
+## Key Features
+
+### Multi-Tenant Architecture
+- Artists have personalized booking pages at `artist.altusink.io` or `/book/:subdomain`
+- Each artist can customize their theme color, bio, and branding
+- Subdomain-based routing for public pages
+
+### Booking System
+- 10-minute slot locking to prevent double-booking
+- Real-time countdown timer during booking process
+- 4-step booking flow: Calendar → Time → Details → Payment
+
+### Financial Model
+- Non-refundable deposits (configurable per artist)
+- 90-day deposit retention period
+- 70/30 revenue split (70% artist, 30% platform)
+- Held → Available → Released deposit lifecycle
+
+### Tour Mode
+- Artists can enable tour mode for traveling
+- City schedules with venue information
+- Payment-gated address exposure (address revealed after deposit payment)
+
+### Role-Based Access
+- **CEO**: Full platform access, artist approval, financial overview
+- **Artist**: Own profile, bookings, calendar, earnings management
+- **Client**: Public booking pages only
+
+## File Structure
+```
+client/src/
+├── pages/
+│   ├── dashboard/
+│   │   ├── artist/      # Artist dashboard pages
+│   │   └── ceo/         # CEO dashboard pages
+│   └── book/            # Public booking page
+├── components/
+│   ├── ui/              # Shadcn components
+│   └── dashboard-layout.tsx
+├── hooks/
+│   └── useAuth.ts       # Authentication hook
+└── lib/
+    └── queryClient.ts   # TanStack Query config
+
+server/
+├── routes.ts            # API endpoints
+├── storage.ts           # Database operations
+├── replitAuth.ts        # Auth configuration
+└── index.ts             # Server entry
+
+shared/
+└── schema.ts            # Drizzle schema & Zod validation
+```
+
+## API Routes
+
+### Artist APIs
+- `GET /api/artist/me` - Get current artist profile
+- `PATCH /api/artist/me` - Update artist profile
+- `GET /api/artist/stats` - Get dashboard stats
+- `GET /api/artist/availability` - Get availability schedule
+- `POST /api/artist/availability` - Update availability
+- `GET /api/artist/bookings` - Get bookings
+- `GET /api/artist/deposits` - Get earnings/deposits
+
+### CEO APIs
+- `GET /api/ceo/stats` - Platform stats
+- `GET /api/ceo/artists` - List all artists
+- `POST /api/ceo/artists/:id/approve` - Approve artist
+- `POST /api/ceo/artists/:id/deactivate` - Deactivate artist
+- `GET /api/ceo/deposits` - All deposits
+- `GET /api/ceo/financial/stats` - Financial overview
+
+### Public APIs
+- `GET /api/public/artist/:subdomain` - Get public artist profile
+- `GET /api/public/artist/:subdomain/availability` - Get availability
+- `POST /api/public/artist/:subdomain/lock` - Create 10-min booking lock
+- `POST /api/public/artist/:subdomain/book` - Create booking
+
+## Environment Variables
+- `DATABASE_URL` - PostgreSQL connection string
+- `SESSION_SECRET` - Express session secret
+- `REPLIT_DEPLOYMENT` - Set in production for Replit Auth
+
+## Development
+The application runs on port 5000. Use `npm run dev` to start the development server.
+
+## Planned Features (Not Yet Implemented)
+- Multi-language support (EN, PT-BR, PT-PT, ES, FR, DE, IT)
+- Email notifications for booking confirmations
+- Stripe checkout integration (webhooks configured)
+- Full subdomain routing (artist.altusink.io)

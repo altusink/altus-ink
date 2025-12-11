@@ -25,15 +25,67 @@ const getOidcConfig = memoize(
   { maxAge: 3600 * 1000 }
 );
 
+// Create session table if it doesn't exist (with proper IF NOT EXISTS)
+async function ensureSessionTable(): Promise<void> {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "session" (
+        "sid" varchar NOT NULL COLLATE "default",
+        "sess" json NOT NULL,
+        "expire" timestamp(6) NOT NULL,
+        CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+      ) WITH (OIDS=FALSE);
+    `);
+    // Create index only if it doesn't exist (using DO block to avoid error)
+    await pool.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_indexes WHERE indexname = 'IDX_session_expire'
+        ) THEN
+          CREATE INDEX "IDX_session_expire" ON "session" ("expire");
+        END IF;
+      END
+      $$;
+    `);
+  } catch (error: any) {
+    // Ignore if already exists
+    if (error?.code !== '42P07' && !error?.message?.includes('already exists')) {
+      throw error;
+    }
+  }
+}
+
 export async function setupAuth(app: Express) {
+  // Ensure session table exists before creating store
+  await ensureSessionTable();
+  
+  // Create PgStore WITHOUT createTableIfMissing since we handle it above
+  const pgStore = new PgStore({
+    pool: pool,
+    createTableIfMissing: false, // We handle this ourselves
+    errorLog: (error: any) => {
+      // Only log non-duplicate errors
+      if (error?.code !== '42P07' && error?.code !== '42P06' && 
+          !error?.message?.includes('already exists')) {
+        console.error('Session store error:', error);
+      }
+    },
+  });
+  
+  // Handle store errors
+  pgStore.on('error', (error: any) => {
+    if (error?.code !== '42P07' && error?.code !== '42P06' && 
+        !error?.message?.includes('already exists')) {
+      console.error('PgStore error:', error);
+    }
+  });
+  
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "altusink-dev-secret",
     resave: false,
     saveUninitialized: false,
-    store: new PgStore({
-      pool: pool,
-      createTableIfMissing: true,
-    }),
+    store: pgStore,
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
