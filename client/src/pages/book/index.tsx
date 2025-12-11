@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LogoCompact } from "@/components/logo";
 import {
   Form,
   FormControl,
@@ -27,7 +28,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Sparkles,
   Calendar,
   Clock,
   MapPin,
@@ -710,9 +710,9 @@ export default function BookingPage() {
       {/* Footer */}
       <footer className="border-t border-border/50 py-6 mt-8">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Sparkles className="w-4 h-4" style={{ color: themeColor }} />
-            <span>Powered by ALTUSINK.IO</span>
+          <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground">
+            <span>Powered by</span>
+            <LogoCompact />
           </div>
         </div>
       </footer>

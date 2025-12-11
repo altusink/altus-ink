@@ -1,16 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Logo } from "@/components/logo";
 import { 
   Calendar, 
   Clock, 
   Shield, 
-  Sparkles, 
   Globe, 
   Users,
   ArrowRight,
   CheckCircle2,
   Star,
+  Sparkles,
 } from "lucide-react";
 
 export default function Landing() {
@@ -20,14 +21,7 @@ export default function Landing() {
       <header className="fixed top-0 left-0 right-0 z-50 glass bg-black/80 border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4 h-16">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-display text-xl font-bold tracking-tight">
-                ALTUSINK<span className="text-primary">.IO</span>
-              </span>
-            </div>
+            <Logo size="lg" />
             <Button 
               data-testid="button-login"
               onClick={() => window.location.href = "/api/login"}
@@ -225,16 +219,9 @@ export default function Landing() {
       <footer className="border-t border-border/50 py-12 safe-bottom">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-                <Sparkles className="w-3 h-3 text-primary-foreground" />
-              </div>
-              <span className="font-display text-sm font-semibold">
-                ALTUSINK.IO
-              </span>
-            </div>
+            <Logo size="sm" />
             <p className="text-sm text-muted-foreground">
-              A premium private platform by Altus Ink
+              A premium private platform by Altus International Ink
             </p>
           </div>
         </div>

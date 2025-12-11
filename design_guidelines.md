@@ -29,6 +29,32 @@
 - Small/Meta: text-sm (font-medium)
 - Buttons: text-base (font-semibold)
 
+## Brand Logo Usage
+
+**Official Logo:** `attached_assets/altus1_1765480827921.png` (Altus International Ink)
+
+**Logo Component:** Use `@/components/logo` for consistent branding
+
+**Size Variants:**
+- `sm` (32px height): Footer, compact spaces
+- `md` (40px height): Dashboard sidebar, secondary navigation
+- `lg` (48px height): Main navigation header
+- `xl` (64px height): Hero sections, splash screens
+
+**Usage Guidelines:**
+- Import: `import { Logo, LogoCompact } from "@/components/logo"`
+- Always use the reusable component, never import the asset directly
+- Maintain clear space equal to the height of the "A" around the logo
+- Only place on high-contrast backgrounds (dark surfaces preferred)
+- Never add shadows, filters, or color modifications to the logo
+- For "Powered by" attributions, use `LogoCompact` with text beside it
+
+**Placement:**
+- Landing page: Header (size lg) + Footer (size sm)
+- Dashboard sidebar: Header area (size md)
+- Booking pages: Footer with "Powered by" text (LogoCompact)
+- Login/auth screens: Center placement (size xl)
+
 ## Layout System
 
 **Spacing Primitives:** 

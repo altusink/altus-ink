@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Logo } from "@/components/logo";
 import {
   Sidebar,
   SidebarContent,
@@ -18,16 +19,13 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Calendar,
-  Clock,
   Home,
   LogOut,
   MapPin,
   Palette,
   Settings,
-  Sparkles,
   TrendingUp,
   Users,
-  FileText,
   BarChart3,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -79,13 +77,8 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
         <Sidebar>
           <SidebarHeader className="p-4">
             <Link href="/">
-              <div className="flex items-center gap-2 hover-elevate rounded-lg p-2 -m-2 cursor-pointer">
-                <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-primary-foreground" />
-                </div>
-                <span className="font-display text-lg font-bold tracking-tight">
-                  ALTUSINK<span className="text-primary">.IO</span>
-                </span>
+              <div className="flex items-center hover-elevate rounded-lg p-2 -m-2 cursor-pointer">
+                <Logo size="md" />
               </div>
             </Link>
           </SidebarHeader>
