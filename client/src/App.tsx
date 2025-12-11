@@ -21,6 +21,9 @@ import ArtistPortfolio from "@/pages/dashboard/artist/portfolio";
 import CEODashboard from "@/pages/dashboard/ceo/index";
 import CEOArtists from "@/pages/dashboard/ceo/artists";
 import CEOFinancial from "@/pages/dashboard/ceo/financial";
+import CEOBookings from "@/pages/dashboard/ceo/bookings";
+import CEOReports from "@/pages/dashboard/ceo/reports";
+import CEOSettings from "@/pages/dashboard/ceo/settings";
 
 // Public Pages
 import BookingPage from "@/pages/book/index";
@@ -93,16 +96,16 @@ function Router() {
         {() => <ProtectedRoute component={CEOArtists} />}
       </Route>
       <Route path="/dashboard/ceo/bookings">
-        {() => <ProtectedRoute component={CEODashboard} />}
+        {() => <ProtectedRoute component={CEOBookings} />}
       </Route>
       <Route path="/dashboard/ceo/financial">
         {() => <ProtectedRoute component={CEOFinancial} />}
       </Route>
       <Route path="/dashboard/ceo/reports">
-        {() => <ProtectedRoute component={CEODashboard} />}
+        {() => <ProtectedRoute component={CEOReports} />}
       </Route>
       <Route path="/dashboard/ceo/settings">
-        {() => <ProtectedRoute component={CEODashboard} />}
+        {() => <ProtectedRoute component={CEOSettings} />}
       </Route>
       
       {/* Fallback to 404 */}
