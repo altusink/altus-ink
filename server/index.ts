@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { emailService } from "./services/email";
 
 const app = express();
 const httpServer = createServer(app);
@@ -60,6 +61,21 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize email service if SMTP credentials are available
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+    emailService.initialize({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || "587", 10),
+      secure: process.env.SMTP_SECURE === "true",
+      user: process.env.SMTP_USER,
+      password: process.env.SMTP_PASSWORD,
+      from: process.env.SMTP_FROM || `ALTUSINK.IO <${process.env.SMTP_USER}>`,
+    });
+    log("Email service initialized", "email");
+  } else {
+    log("Email service not configured - SMTP credentials missing", "email");
+  }
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

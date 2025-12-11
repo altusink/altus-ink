@@ -40,8 +40,9 @@ import {
   AlertCircle,
   Shield,
   MessageCircle,
+  CreditCard,
 } from "lucide-react";
-import { SiWhatsapp } from "react-icons/si";
+import { SiWhatsapp, SiStripe, SiRevolut, SiWise } from "react-icons/si";
 import { bookingFormSchema, type BookingFormData, type Artist, type Availability, type CitySchedule, type DepositValue } from "@shared/schema";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -62,6 +63,7 @@ export default function BookingPage() {
   const [quickEmail, setQuickEmail] = useState("");
   const [selectedServiceType, setSelectedServiceType] = useState<"standard" | "coverup">("standard");
   const [selectedDepositValue, setSelectedDepositValue] = useState<DepositValue | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"stripe" | "revolut" | "wise">("stripe");
 
   const { data: artist, isLoading: artistLoading, error: artistError } = useQuery<Artist>({
     queryKey: ["/api/public/artist", subdomain],
@@ -812,6 +814,57 @@ export default function BookingPage() {
                     </div>
                   </div>
 
+                  {/* Payment Methods */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium">Payment Method</h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-2 hover-elevate ${
+                          selectedPaymentMethod === "stripe"
+                            ? "border-primary bg-primary/5"
+                            : "border-border"
+                        }`}
+                        onClick={() => setSelectedPaymentMethod("stripe")}
+                        data-testid="payment-stripe"
+                      >
+                        <SiStripe className="w-6 h-6" style={{ color: "#635BFF" }} />
+                        <span className="text-xs font-medium">Stripe</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-2 hover-elevate ${
+                          selectedPaymentMethod === "revolut"
+                            ? "border-primary bg-primary/5"
+                            : "border-border"
+                        }`}
+                        onClick={() => setSelectedPaymentMethod("revolut")}
+                        data-testid="payment-revolut"
+                      >
+                        <SiRevolut className="w-6 h-6" style={{ color: "#0075EB" }} />
+                        <span className="text-xs font-medium">Revolut</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-2 hover-elevate ${
+                          selectedPaymentMethod === "wise"
+                            ? "border-primary bg-primary/5"
+                            : "border-border"
+                        }`}
+                        onClick={() => setSelectedPaymentMethod("wise")}
+                        data-testid="payment-wise"
+                      >
+                        <SiWise className="w-6 h-6" style={{ color: "#9FE870" }} />
+                        <span className="text-xs font-medium">Wise</span>
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedPaymentMethod === "stripe" && "Pay securely with credit/debit card via Stripe."}
+                      {selectedPaymentMethod === "revolut" && "Pay via Revolut bank transfer."}
+                      {selectedPaymentMethod === "wise" && "Pay via Wise international transfer."}
+                    </p>
+                  </div>
+
                   {/* Trust Badges */}
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
@@ -821,6 +874,10 @@ export default function BookingPage() {
                     <div className="flex items-center gap-1">
                       <Lock className="w-3 h-3" />
                       Non-refundable
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <CreditCard className="w-3 h-3" />
+                      Multiple Options
                     </div>
                   </div>
 
