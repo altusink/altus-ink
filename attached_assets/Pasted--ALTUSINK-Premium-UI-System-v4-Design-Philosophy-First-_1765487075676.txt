@@ -1,0 +1,1184 @@
+# ALTUSINK Premium UI System v4
+## Design Philosophy
+- **First Impression**: Client must want to book within 5 seconds
+- **Trust Signals**: Integrations, certifications, social proof visible
+- **Premium Feel**: Hollywood-level polish, no amateur elements
+- **Conversion Focus**: Every element guides toward booking CTA
+- **Language First**: User selects language before seeing any content
+---
+## 0. Language Selection (First Visit)
+### Modal on First Load
+```tsx
+// components/LanguageSelector.tsx
+'use client';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+const languages = [
+  { code: 'pt-BR', name: 'Português (Brasil)', flag: '🇧🇷' },
+  { code: 'pt-PT', name: 'Português (Portugal)', flag: '🇵🇹' },
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
+];
+export function LanguageSelector() {
+  const [show, setShow] = useState(false);
+  const router = useRouter();
+  
+  useEffect(() => {
+    const savedLang = Cookies.get('locale');
+    if (!savedLang) {
+      setShow(true);
+    }
+  }, []);
+  
+  const selectLanguage = (code: string) => {
+    Cookies.set('locale', code, { expires: 365 });
+    setShow(false);
+    router.refresh(); // Reload with new locale
+  };
+  
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] bg-black flex items-center justify-center px-6"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="max-w-lg w-full"
+          >
+            {/* Logo */}
+            <div className="text-center mb-10">
+              <Image src="/logo-gold.svg" alt="Altus Ink" width={120} height={40} className="mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-white">Selecione seu idioma</h2>
+              <p className="text-zinc-400 mt-2">Select your language</p>
+            </div>
+            
+            {/* Language Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {languages.map((lang) => (
+                <motion.button
+                  key={lang.code}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => selectLanguage(lang.code)}
+                  className="flex items-center gap-4 p-4 rounded-xl
+                    bg-zinc-900 border border-zinc-800
+                    hover:border-gold/50 hover:bg-zinc-800
+                    transition-all duration-200"
+                >
+                  <span className="text-3xl">{lang.flag}</span>
+                  <span className="text-white font-medium">{lang.name}</span>
+                </motion.button>
+              ))}
+            </div>
+            
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+```
+### i18n Setup (next-intl)
+```typescript
+// i18n.ts
+import { getRequestConfig } from 'next-intl/server';
+import { cookies } from 'next/headers';
+export default getRequestConfig(async () => {
+  const cookieStore = cookies();
+  const locale = cookieStore.get('locale')?.value || 'en';
+  
+  return {
+    locale,
+    messages: (await import(`./messages/${locale}.json`)).default
+  };
+});
+```
+### Translation Files Structure
+```
+/messages
+  ├── pt-BR.json
+  ├── pt-PT.json
+  ├── en.json
+  ├── de.json
+  ├── es.json
+  ├── fr.json
+  ├── it.json
+  └── nl.json
+```
+### Example Translation File
+```json
+// messages/pt-BR.json
+{
+  "common": {
+    "bookNow": "Agendar Agora",
+    "viewPortfolio": "Ver Portfólio",
+    "artists": "Artistas",
+    "about": "Sobre Nós",
+    "contact": "Contato",
+    "login": "Entrar",
+    "logout": "Sair"
+  },
+  "hero": {
+    "badge": "Vagas Limitadas em Dezembro",
+    "headline": "Arte que Marca para Sempre",
+    "subheadline": "Tatuadores premiados internacionalmente. Reserve sua sessão agora.",
+    "cta": "Agendar Minha Sessão",
+    "secondary": "Ver Portfólio"
+  },
+  "booking": {
+    "selectService": "Selecione o Serviço",
+    "selectDate": "Escolha a Data",
+    "selectTime": "Escolha o Horário",
+    "yourDetails": "Seus Dados",
+    "payment": "Pagamento",
+    "confirmation": "Confirmação",
+    "tattoo": "Tatuagem",
+    "coverup": "Cobertura",
+    "small": "Pequena (1h - 1:30h)",
+    "medium": "Média (2h - 3h)",
+    "large": "Grande (3h - 5h)",
+    "xl": "Extra Grande (5h - 8h)",
+    "talkOnWhatsApp": "Falar no WhatsApp"
+  },
+  "notifications": {
+    "autoMessage": "— Mensagem Automática —",
+    "confirmation": {
+      "subject": "Sua sessão está confirmada! ✨",
+      "greeting": "Olá {{name}}!",
+      "body": "Sua sessão de tatuagem foi confirmada com sucesso.",
+      "details": "Detalhes da Sessão:",
+      "artist": "Artista",
+      "date": "Data",
+      "time": "Horário",
+      "address": "Endereço",
+      "deposit": "Sinal Pago",
+      "instructions": "Instruções Importantes",
+      "instruction1": "Chegue 10 minutos antes",
+      "instruction2": "Traga documento com foto",
+      "instruction3": "Evite álcool 24h antes",
+      "instruction4": "Hidrate-se bem",
+      "footer": "Dúvidas? Responda esta mensagem."
+    },
+    "reminder24h": {
+      "subject": "Lembrete: Sua sessão é AMANHÃ! 🎨",
+      "body": "Este é um lembrete automático da sua sessão agendada para amanhã."
+    }
+  },
+  "footer": {
+    "securePayment": "Pagamento Seguro",
+    "certifications": "Certificações",
+    "navigation": "Navegação",
+    "legal": "Legal",
+    "privacy": "Privacidade",
+    "terms": "Termos de Uso",
+    "cancellation": "Cancelamento",
+    "cookies": "Cookies (GDPR)",
+    "copyright": "© 2024 Altus Ink. Todos os direitos reservados.",
+    "madeWith": "Feito com 🖤 em Berlin"
+  }
+}
+```
+### Save Language in Booking
+```typescript
+// When creating booking lock
+const bookingData = {
+  ...formData,
+  locale: Cookies.get('locale') || 'en', // Save client's language
+};
+// API saves to database
+await supabase.from('booking_locks').insert({
+  ...bookingData,
+  client_locale: bookingData.locale,
+});
+```
+### Localized Notifications
+```typescript
+// lib/notifications.ts
+import { getTranslations } from 'next-intl/server';
+export async function sendConfirmationWhatsApp(booking: Booking) {
+  const t = await getTranslations({ locale: booking.client_locale, namespace: 'notifications' });
+  
+  const message = `
+${t('autoMessage')}
+${t('confirmation.greeting', { name: booking.client_name })}
+${t('confirmation.body')}
+📋 ${t('confirmation.details')}
+👨‍🎨 ${t('confirmation.artist')}: ${booking.artist_name}
+📅 ${t('confirmation.date')}: ${formatDate(booking.slot_datetime, booking.client_locale)}
+🕐 ${t('confirmation.time')}: ${formatTime(booking.slot_datetime, booking.client_locale)}
+📍 ${t('confirmation.address')}: ${booking.address}
+💳 ${t('confirmation.deposit')}: €${booking.deposit_amount}
+⚠️ ${t('confirmation.instructions')}
+• ${t('confirmation.instruction1')}
+• ${t('confirmation.instruction2')}
+• ${t('confirmation.instruction3')}
+• ${t('confirmation.instruction4')}
+${t('confirmation.footer')}
+— Altus Ink ✨
+${t('autoMessage')}
+  `.trim();
+  
+  await sendWhatsApp(booking.client_phone, message);
+}
+```
+### Language Switcher (In Navigation)
+```tsx
+// components/LanguageSwitcher.tsx
+export function LanguageSwitcher() {
+  const currentLocale = Cookies.get('locale') || 'en';
+  const [open, setOpen] = useState(false);
+  
+  return (
+    <div className="relative">
+      <button 
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-800 transition-colors"
+      >
+        <span className="text-lg">{languages.find(l => l.code === currentLocale)?.flag}</span>
+        <ChevronDown className="w-4 h-4 text-zinc-400" />
+      </button>
+      
+      {open && (
+        <div className="absolute top-full right-0 mt-2 w-48 py-2 
+          bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl z-50"
+        >
+          {languages.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => {
+                Cookies.set('locale', lang.code, { expires: 365 });
+                setOpen(false);
+                window.location.reload();
+              }}
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-2 hover:bg-zinc-800 transition-colors",
+                currentLocale === lang.code && "bg-gold/10 text-gold"
+              )}
+            >
+              <span>{lang.flag}</span>
+              <span>{lang.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+---
+## 1. Color System
+**IMPORTANT: NO ORANGE. Only pure gold tones.**
+```css
+:root {
+  /* Backgrounds */
+  --bg-void: #000000;
+  --bg-primary: #050505;
+  --bg-card: #0A0A0A;
+  --bg-elevated: #111111;
+  
+  /* Gold Spectrum (NO ORANGE) */
+  --gold-dark: #8B7500;
+  --gold: #C9A227;
+  --gold-light: #D4AF37;
+  --gold-glow: rgba(201, 162, 39, 0.4);
+  
+  /* Neon Gold (NO AMBER) */
+  --neon-gold: #FFD700;
+  --neon-glow: 0 0 20px rgba(255, 215, 0, 0.3), 0 0 40px rgba(255, 215, 0, 0.1);
+  
+  /* Text */
+  --text-primary: #FFFFFF;
+  --text-secondary: #B8B8B8;
+  --text-muted: #666666;
+  
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-gold: rgba(201, 162, 39, 0.3);
+  
+  /* Status Colors */
+  --success: #22C55E;
+  --error: #EF4444;
+  --warning: #EAB308; /* Yellow, not orange */
+}
+```
+### Tailwind Config Override
+```javascript
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        gold: {
+          DEFAULT: '#C9A227',
+          dark: '#8B7500',
+          light: '#D4AF37',
+        },
+        // Override amber to gold (prevent accidental usage)
+        amber: {
+          50: '#FDF8E1',
+          100: '#FCF0C3',
+          200: '#F9E188',
+          300: '#F5D14D',
+          400: '#D4AF37',
+          500: '#C9A227',
+          600: '#8B7500',
+          700: '#705F00',
+          800: '#554800',
+          900: '#3A3100',
+        },
+      },
+    },
+  },
+};
+```
+---
+## 2. Hero Section (Above the Fold)
+```tsx
+// app/page.tsx - Hero Section
+<section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+  
+  {/* 3D Background - Spline or Three.js */}
+  <div className="absolute inset-0 z-0">
+    <Spline scene="https://prod.spline.design/tattoo-ink-particles.splinecode" />
+    {/* Alternative: Animated gradient mesh */}
+    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black" />
+  </div>
+  
+  {/* Ambient Light Effects */}
+  <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gold/10 rounded-full blur-[150px]" />
+  <div className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-amber-500/5 rounded-full blur-[100px]" />
+  
+  {/* Content */}
+  <div className="relative z-10 text-center px-6 max-w-5xl">
+    
+    {/* Badge */}
+    <motion.div 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="inline-flex items-center gap-2 px-4 py-2 rounded-full 
+        border border-gold/30 bg-gold/5 mb-8"
+    >
+      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+      <span className="text-gold text-sm font-medium">Vagas Limitadas em Dezembro</span>
+    </motion.div>
+    
+    {/* Headline */}
+    <motion.h1 
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+      className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6"
+    >
+      <span className="text-white">Arte que </span>
+      <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-light to-gold">
+        Marca
+      </span>
+      <span className="text-white"> para Sempre</span>
+    </motion.h1>
+    
+    {/* Subheadline */}
+    <motion.p 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.2 }}
+      className="text-xl md:text-2xl text-zinc-400 max-w-2xl mx-auto mb-10"
+    >
+      Tatuadores premiados internacionalmente. 
+      <span className="text-white"> Reserve sua sessão agora.</span>
+    </motion.p>
+    
+    {/* CTA Buttons */}
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="flex flex-col sm:flex-row gap-4 justify-center"
+    >
+      {/* Primary CTA - Neon Gold */}
+      <Link href="/book">
+        <button className="group relative px-10 py-5 rounded-2xl font-bold text-lg
+          bg-gradient-to-r from-gold to-gold-light text-black
+          shadow-[0_0_30px_rgba(201,162,39,0.3)]
+          hover:shadow-[0_0_50px_rgba(201,162,39,0.5)]
+          transition-all duration-300 hover:-translate-y-1"
+        >
+          <span className="relative z-10 flex items-center gap-3">
+            Agendar Minha Sessão
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </span>
+        </button>
+      </Link>
+      
+      {/* Secondary CTA */}
+      <Link href="/portfolio">
+        <button className="px-10 py-5 rounded-2xl font-medium text-lg
+          border border-zinc-700 text-white
+          hover:border-gold/50 hover:bg-gold/5
+          transition-all duration-300"
+        >
+          Ver Portfólio
+        </button>
+      </Link>
+    </motion.div>
+    
+    {/* Trust Badges */}
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.5 }}
+      className="flex items-center justify-center gap-6 mt-12 text-zinc-500"
+    >
+      <div className="flex items-center gap-2">
+        <Shield className="w-4 h-4" />
+        <span className="text-sm">Pagamento Seguro</span>
+      </div>
+      <div className="w-px h-4 bg-zinc-700" />
+      <div className="flex items-center gap-2">
+        <Star className="w-4 h-4 fill-gold text-gold" />
+        <span className="text-sm">4.9 (230+ avaliações)</span>
+      </div>
+      <div className="w-px h-4 bg-zinc-700" />
+      <div className="flex items-center gap-2">
+        <MapPin className="w-4 h-4" />
+        <span className="text-sm">Berlin • Lisboa • São Paulo</span>
+      </div>
+    </motion.div>
+    
+  </div>
+  
+  {/* Scroll Indicator */}
+  <motion.div 
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ delay: 1 }}
+    className="absolute bottom-8 left-1/2 -translate-x-1/2"
+  >
+    <motion.div
+      animate={{ y: [0, 10, 0] }}
+      transition={{ repeat: Infinity, duration: 1.5 }}
+      className="w-6 h-10 rounded-full border-2 border-zinc-700 flex items-start justify-center p-2"
+    >
+      <div className="w-1 h-2 bg-gold rounded-full" />
+    </motion.div>
+  </motion.div>
+  
+</section>
+```
+---
+## 3. Featured Artists Section
+```tsx
+<section className="py-24 px-6 bg-black relative">
+  
+  {/* Section Header */}
+  <div className="max-w-7xl mx-auto mb-16">
+    <motion.p 
+      className="text-gold font-medium tracking-widest uppercase mb-4"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+    >
+      Nossos Artistas
+    </motion.p>
+    <motion.h2 
+      className="text-4xl md:text-5xl font-bold text-white"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+    >
+      Mestres da Arte Corporal
+    </motion.h2>
+  </div>
+  
+  {/* Artists Grid */}
+  <div className="max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {artists.map((artist, i) => (
+      <motion.div
+        key={artist.id}
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ delay: i * 0.1 }}
+        className="group relative rounded-3xl overflow-hidden 
+          bg-gradient-to-b from-zinc-900/50 to-zinc-900
+          border border-zinc-800/50 hover:border-gold/30
+          transition-all duration-500"
+      >
+        {/* Artist Image */}
+        <div className="aspect-[3/4] relative overflow-hidden">
+          <Image 
+            src={artist.photo} 
+            alt={artist.name}
+            fill
+            className="object-cover transition-transform duration-700 
+              group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+        </div>
+        
+        {/* Artist Info */}
+        <div className="absolute bottom-0 left-0 right-0 p-6">
+          <h3 className="text-2xl font-bold text-white mb-1">{artist.name}</h3>
+          <p className="text-gold text-sm mb-4">{artist.specialty}</p>
+          
+          {/* Hover Actions */}
+          <div className="flex gap-3 opacity-0 translate-y-4 
+            group-hover:opacity-100 group-hover:translate-y-0
+            transition-all duration-300"
+          >
+            <Link href={`/artist/${artist.slug}`} className="flex-1">
+              <button className="w-full py-3 rounded-xl bg-white/10 backdrop-blur-sm
+                text-white text-sm font-medium
+                hover:bg-white/20 transition-colors"
+              >
+                Ver Portfólio
+              </button>
+            </Link>
+            <Link href={`/book/${artist.slug}`}>
+              <button className="py-3 px-6 rounded-xl bg-gold text-black
+                text-sm font-bold hover:bg-gold-light transition-colors"
+              >
+                Agendar
+              </button>
+            </Link>
+          </div>
+        </div>
+        
+        {/* Availability Badge */}
+        {artist.hasAvailability && (
+          <div className="absolute top-4 right-4 px-3 py-1 rounded-full
+            bg-green-500/20 border border-green-500/30 text-green-400 text-xs font-medium"
+          >
+            Vagas Abertas
+          </div>
+        )}
+      </motion.div>
+    ))}
+  </div>
+  
+</section>
+```
+---
+## 4. Portfolio Gallery (Masonry + Lightbox)
+```tsx
+<section className="py-24 px-6 bg-zinc-950 relative">
+  
+  {/* Ambient Glow */}
+  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] 
+    bg-gradient-radial from-gold/5 to-transparent blur-3xl" />
+  
+  <div className="max-w-7xl mx-auto">
+    
+    {/* Header */}
+    <div className="flex items-end justify-between mb-12">
+      <div>
+        <p className="text-gold font-medium tracking-widest uppercase mb-4">Portfólio</p>
+        <h2 className="text-4xl md:text-5xl font-bold text-white">Trabalhos Recentes</h2>
+      </div>
+      <Link href="/portfolio">
+        <button className="text-gold hover:text-gold-light transition-colors 
+          flex items-center gap-2"
+        >
+          Ver Todos <ArrowRight className="w-4 h-4" />
+        </button>
+      </Link>
+    </div>
+    
+    {/* Masonry Grid */}
+    <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+      {portfolio.map((item, i) => (
+        <motion.div
+          key={item.id}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.05 }}
+          className="break-inside-avoid group cursor-pointer"
+          onClick={() => openLightbox(item)}
+        >
+          <div className="relative rounded-2xl overflow-hidden 
+            border border-zinc-800/50 hover:border-gold/30
+            transition-all duration-300"
+          >
+            <Image src={item.url} alt="" width={400} height={500} 
+              className="w-full transition-transform duration-500 group-hover:scale-105" />
+            
+            {/* Overlay on Hover */}
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100
+              transition-opacity duration-300 flex items-end p-4"
+            >
+              <div>
+                <p className="text-white font-medium">{item.style}</p>
+                <p className="text-zinc-400 text-sm">{item.artistName}</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+    
+  </div>
+</section>
+```
+---
+## 5. Premium Footer
+```tsx
+<footer className="bg-black border-t border-zinc-900">
+  
+  {/* Main Footer */}
+  <div className="max-w-7xl mx-auto px-6 py-16">
+    <div className="grid md:grid-cols-4 gap-12">
+      
+      {/* Brand */}
+      <div className="md:col-span-2">
+        <Link href="/" className="inline-block mb-6">
+          <Image src="/logo-gold.svg" alt="Altus Ink" width={150} height={50} />
+        </Link>
+        <p className="text-zinc-400 max-w-md mb-6 leading-relaxed">
+          Conectamos você aos melhores tatuadores da Europa. 
+          Arte corporal premium com agendamento simplificado e pagamento seguro.
+        </p>
+        
+        {/* Social Links */}
+        <div className="flex gap-4">
+          <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center
+            hover:bg-gold/20 hover:text-gold transition-colors">
+            <Instagram className="w-5 h-5" />
+          </a>
+          <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center
+            hover:bg-gold/20 hover:text-gold transition-colors">
+            <TikTok className="w-5 h-5" />
+          </a>
+          <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center
+            hover:bg-gold/20 hover:text-gold transition-colors">
+            <Youtube className="w-5 h-5" />
+          </a>
+        </div>
+      </div>
+      
+      {/* Quick Links */}
+      <div>
+        <h4 className="text-white font-semibold mb-6">Navegação</h4>
+        <ul className="space-y-3">
+          <li><Link href="/artists" className="text-zinc-400 hover:text-gold transition-colors">Artistas</Link></li>
+          <li><Link href="/portfolio" className="text-zinc-400 hover:text-gold transition-colors">Portfólio</Link></li>
+          <li><Link href="/about" className="text-zinc-400 hover:text-gold transition-colors">Sobre Nós</Link></li>
+          <li><Link href="/book" className="text-zinc-400 hover:text-gold transition-colors">Agendar</Link></li>
+          <li><Link href="/faq" className="text-zinc-400 hover:text-gold transition-colors">FAQ</Link></li>
+        </ul>
+      </div>
+      
+      {/* Legal */}
+      <div>
+        <h4 className="text-white font-semibold mb-6">Legal</h4>
+        <ul className="space-y-3">
+          <li><Link href="/privacy" className="text-zinc-400 hover:text-gold transition-colors">Privacidade</Link></li>
+          <li><Link href="/terms" className="text-zinc-400 hover:text-gold transition-colors">Termos de Uso</Link></li>
+          <li><Link href="/cancellation" className="text-zinc-400 hover:text-gold transition-colors">Cancelamento</Link></li>
+          <li><Link href="/cookies" className="text-zinc-400 hover:text-gold transition-colors">Cookies (GDPR)</Link></li>
+        </ul>
+      </div>
+      
+    </div>
+  </div>
+  
+  {/* Trust & Integrations Bar */}
+  <div className="border-t border-zinc-900">
+    <div className="max-w-7xl mx-auto px-6 py-8">
+      
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+        
+        {/* Payment Methods */}
+        <div className="flex items-center gap-6">
+          <span className="text-zinc-500 text-sm">Pagamento Seguro</span>
+          <div className="flex items-center gap-4 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
+            <Image src="/brands/stripe.svg" alt="Stripe" width={50} height={20} />
+            <Image src="/brands/visa.svg" alt="Visa" width={40} height={25} />
+            <Image src="/brands/mastercard.svg" alt="Mastercard" width={35} height={25} />
+            <Image src="/brands/apple-pay.svg" alt="Apple Pay" width={40} height={20} />
+            <Image src="/brands/google-pay.svg" alt="Google Pay" width={45} height={20} />
+            <Image src="/brands/pix.svg" alt="PIX" width={35} height={25} />
+          </div>
+        </div>
+        
+        {/* Certifications */}
+        <div className="flex items-center gap-6">
+          <span className="text-zinc-500 text-sm">Certificações</span>
+          <div className="flex items-center gap-4 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
+            <div className="flex items-center gap-2 px-3 py-1 rounded bg-zinc-900 border border-zinc-800">
+              <Shield className="w-4 h-4 text-green-500" />
+              <span className="text-xs text-zinc-400">SSL Secured</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1 rounded bg-zinc-900 border border-zinc-800">
+              <span className="text-xs text-zinc-400">GDPR Compliant</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1 rounded bg-zinc-900 border border-zinc-800">
+              <span className="text-xs text-zinc-400">PCI DSS</span>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      
+    </div>
+  </div>
+  
+  {/* Copyright */}
+  <div className="border-t border-zinc-900">
+    <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
+      <p className="text-zinc-500 text-sm">
+        © 2024 Altus Ink. Todos os direitos reservados.
+      </p>
+      <div className="flex items-center gap-6 text-zinc-500 text-sm">
+        <span>Feito com 🖤 em Berlin</span>
+        <span className="hidden md:inline">•</span>
+        <span className="hidden md:inline">Powered by Next.js & Supabase</span>
+      </div>
+    </div>
+  </div>
+  
+</footer>
+```
+---
+## 6. Neon Button Component
+```tsx
+// components/ui/NeonButton.tsx
+interface NeonButtonProps {
+  children: React.ReactNode;
+  variant?: 'gold' | 'white';
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+  onClick?: () => void;
+}
+export function NeonButton({ 
+  children, 
+  variant = 'gold', 
+  size = 'md',
+  className,
+  onClick 
+}: NeonButtonProps) {
+  const sizes = {
+    sm: 'px-4 py-2 text-sm',
+    md: 'px-6 py-3 text-base',
+    lg: 'px-10 py-5 text-lg',
+  };
+  
+  const variants = {
+    gold: `
+      bg-gradient-to-r from-gold to-gold-light text-black
+      shadow-[0_0_20px_rgba(201,162,39,0.3)]
+      hover:shadow-[0_0_40px_rgba(201,162,39,0.5)]
+    `,
+    white: `
+      bg-white text-black
+      shadow-[0_0_20px_rgba(255,255,255,0.1)]
+      hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]
+    `,
+  };
+  
+  return (
+    <motion.button
+      whileHover={{ scale: 1.02, y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className={cn(
+        'relative rounded-2xl font-bold transition-all duration-300',
+        sizes[size],
+        variants[variant],
+        className
+      )}
+    >
+      {children}
+    </motion.button>
+  );
+}
+```
+---
+## 7. 3D Background Options
+### Option A: Spline (No-code 3D)
+```tsx
+import Spline from '@splinetool/react-spline';
+<Spline 
+  scene="https://prod.spline.design/your-scene.splinecode"
+  className="absolute inset-0 pointer-events-none"
+/>
+```
+### Option B: Three.js Particles
+```tsx
+// components/ParticlesBackground.tsx
+import { Canvas } from '@react-three/fiber';
+import { Points, PointMaterial } from '@react-three/drei';
+function GoldParticles() {
+  const points = useMemo(() => {
+    const p = new Float32Array(5000 * 3);
+    for (let i = 0; i < 5000; i++) {
+      p[i * 3] = (Math.random() - 0.5) * 10;
+      p[i * 3 + 1] = (Math.random() - 0.5) * 10;
+      p[i * 3 + 2] = (Math.random() - 0.5) * 10;
+    }
+    return p;
+  }, []);
+  
+  return (
+    <Points positions={points}>
+      <PointMaterial 
+        color="#C9A227" 
+        size={0.02} 
+        transparent 
+        opacity={0.6}
+        sizeAttenuation 
+      />
+    </Points>
+  );
+}
+export function ParticlesBackground() {
+  return (
+    <Canvas className="absolute inset-0">
+      <ambientLight intensity={0.5} />
+      <GoldParticles />
+    </Canvas>
+  );
+}
+```
+### Option C: Gradient Mesh (CSS Only - Lightweight)
+```css
+.hero-gradient {
+  background: 
+    radial-gradient(ellipse at 20% 30%, rgba(201, 162, 39, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(201, 162, 39, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(30, 30, 30, 1) 0%, rgba(0, 0, 0, 1) 100%);
+  animation: gradientShift 10s ease-in-out infinite;
+}
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 0%, 100% 100%, 50% 50%; }
+  50% { background-position: 100% 100%, 0% 0%, 50% 50%; }
+}
+```
+---
+## 8. Complete Route Architecture
+### File Structure
+```
+app/
+├── (public)/
+│   ├── page.tsx              → /           (Landing Page)
+│   ├── artists/
+│   │   ├── page.tsx          → /artists    (Artists List)
+│   │   └── [slug]/
+│   │       └── page.tsx      → /artist/{slug}
+│   ├── portfolio/
+│   │   └── page.tsx          → /portfolio  (Gallery)
+│   ├── about/
+│   │   └── page.tsx          → /about      (About Us)
+│   ├── book/
+│   │   ├── page.tsx          → /book       (Artist Selection)
+│   │   └── [slug]/
+│   │       └── page.tsx      → /book/{slug} (Booking Flow)
+│   ├── privacy/
+│   │   └── page.tsx          → /privacy
+│   ├── terms/
+│   │   └── page.tsx          → /terms
+│   ├── cancellation/
+│   │   └── page.tsx          → /cancellation
+│   └── faq/
+│       └── page.tsx          → /faq
+├── (auth)/
+│   ├── login/
+│   │   └── page.tsx          → /login
+│   ├── forgot-password/
+│   │   └── page.tsx          → /forgot-password
+│   └── reset-password/
+│       └── page.tsx          → /reset-password
+├── (dashboard)/
+│   └── dashboard/
+│       ├── page.tsx          → /dashboard  (Role-based redirect)
+│       ├── artist/
+│       │   ├── page.tsx      → /dashboard/artist
+│       │   ├── bookings/
+│       │   ├── portfolio/
+│       │   ├── availability/
+│       │   └── settings/
+│       ├── ceo/
+│       │   ├── page.tsx      → /dashboard/ceo
+│       │   ├── users/
+│       │   ├── integrations/
+│       │   ├── payouts/
+│       │   └── settings/
+│       ├── coordinator/
+│       │   └── page.tsx      → /dashboard/coordinator
+│       └── vendor/
+│           └── page.tsx      → /dashboard/vendor
+└── api/
+    ├── health/
+    ├── artists/
+    ├── bookings/
+    ├── webhooks/
+    └── cron/
+```
+### Button → Route Mapping (CRITICAL)
+```tsx
+// components/Navigation.tsx - ENSURE ALL LINKS USE Next.js Link
+// Header Links
+<Link href="/">Home</Link>
+<Link href="/artists">Artistas</Link>
+<Link href="/portfolio">Portfólio</Link>
+<Link href="/about">Sobre Nós</Link>
+<Link href="/book">Agendar</Link>
+<Link href="/login">Login</Link>
+<Link href="/dashboard">Dashboard</Link>
+// Hero CTA
+<Link href="/book">
+  <NeonButton>Agendar Minha Sessão</NeonButton>
+</Link>
+// Artist Card
+<Link href={`/artist/${artist.slug}`}>Ver Portfólio</Link>
+<Link href={`/book/${artist.slug}`}>Agendar</Link>
+// Footer Links
+<Link href="/privacy">Privacidade</Link>
+<Link href="/terms">Termos de Uso</Link>
+<Link href="/cancellation">Cancelamento</Link>
+<Link href="/faq">FAQ</Link>
+// Social Links (External)
+<a href="https://instagram.com/altusink" target="_blank" rel="noopener">Instagram</a>
+<a href="https://tiktok.com/@altusink" target="_blank" rel="noopener">TikTok</a>
+// WhatsApp Float
+<a href="https://wa.me/491234567890" target="_blank" rel="noopener">WhatsApp</a>
+```
+### Protected Route Middleware
+```typescript
+// middleware.ts
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+const publicRoutes = [
+  '/',
+  '/artists',
+  '/artist',
+  '/portfolio',
+  '/about',
+  '/book',
+  '/login',
+  '/forgot-password',
+  '/reset-password',
+  '/privacy',
+  '/terms',
+  '/cancellation',
+  '/faq',
+];
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  const path = req.nextUrl.pathname;
+  
+  // Check if route is public
+  const isPublic = publicRoutes.some(route => 
+    path === route || path.startsWith(`${route}/`)
+  );
+  
+  // Protect dashboard routes
+  if (path.startsWith('/dashboard') && !session) {
+    const loginUrl = new URL('/login', req.url);
+    loginUrl.searchParams.set('next', path);
+    return NextResponse.redirect(loginUrl);
+  }
+  
+  // Redirect logged-in users from login to dashboard
+  if (path === '/login' && session) {
+    return NextResponse.redirect(new URL('/dashboard', req.url));
+  }
+  
+  return res;
+}
+```
+---
+## 9. Premium Loading States (High-Ticket Feel)
+### Full Page Loader
+```tsx
+// components/FullPageLoader.tsx
+'use client';
+import { motion } from 'framer-motion';
+export function FullPageLoader() {
+  return (
+    <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center">
+      {/* Ambient glow */}
+      <div className="absolute w-96 h-96 bg-gold/10 rounded-full blur-[150px] animate-pulse" />
+      
+      {/* Logo + Animation */}
+      <div className="relative">
+        {/* Rotating ring */}
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="absolute -inset-8"
+        >
+          <div className="w-full h-full rounded-full border-2 border-transparent 
+            border-t-gold border-r-gold/50" />
+        </motion.div>
+        
+        {/* Logo */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Image src="/logo-gold.svg" alt="Altus Ink" width={80} height={80} />
+        </motion.div>
+        
+        {/* Pulsing dot */}
+        <motion.div
+          animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 bg-gold rounded-full"
+        />
+      </div>
+      
+      {/* Loading text */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="absolute bottom-1/4 text-zinc-500 text-sm tracking-widest uppercase"
+      >
+        Carregando experiência premium...
+      </motion.p>
+    </div>
+  );
+}
+```
+### Button Loading State
+```tsx
+// components/ui/Button.tsx
+interface ButtonProps {
+  loading?: boolean;
+  children: React.ReactNode;
+  // ...
+}
+export function Button({ loading, children, ...props }: ButtonProps) {
+  return (
+    <motion.button 
+      disabled={loading}
+      className={cn(
+        "relative overflow-hidden",
+        loading && "pointer-events-none"
+      )}
+      {...props}
+    >
+      {/* Button content */}
+      <span className={cn(loading && "opacity-0")}>{children}</span>
+      
+      {/* Premium spinner */}
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-5 h-5"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" 
+                strokeLinecap="round" strokeDasharray="60" strokeDashoffset="20" />
+            </svg>
+          </motion.div>
+        </div>
+      )}
+      
+      {/* Shimmer effect while loading */}
+      {loading && (
+        <motion.div
+          animate={{ x: ['-100%', '100%'] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+        />
+      )}
+    </motion.button>
+  );
+}
+```
+### Skeleton Cards
+```tsx
+// components/Skeleton.tsx
+export function ArtistCardSkeleton() {
+  return (
+    <div className="rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800">
+      {/* Image skeleton */}
+      <div className="aspect-[3/4] relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 
+          animate-shimmer bg-[length:200%_100%]" />
+      </div>
+      
+      {/* Content skeleton */}
+      <div className="p-6 space-y-3">
+        <div className="h-6 w-3/4 bg-zinc-800 rounded animate-pulse" />
+        <div className="h-4 w-1/2 bg-zinc-800 rounded animate-pulse" />
+      </div>
+    </div>
+  );
+}
+export function BookingStepSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="h-8 w-1/3 bg-zinc-800 rounded" />
+      <div className="grid grid-cols-2 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-24 bg-zinc-800 rounded-xl" />
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+### Page Transition
+```tsx
+// components/PageTransition.tsx
+import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
+export function PageTransition({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={pathname}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3 }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+```
+### CSS Shimmer Animation
+```css
+/* globals.css */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+```
+---
+## 10. Summary
+| Element | Status |
+|---------|--------|
+| Route Architecture | Complete file structure |
+| Button Links | All mapped to correct routes |
+| Middleware | Public/Protected separation |
+| Full Page Loader | Premium with gold glow |
+| Button Loading | Shimmer + spinner |
+| Skeleton Cards | Artist & Booking skeletons |
+| Page Transitions | Framer Motion |
+| Language Modal | First visit selection |
+| Localized Notifications | WhatsApp/Email in user language |

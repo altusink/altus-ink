@@ -77,9 +77,17 @@ export default {
         },
         status: {
           online: "rgb(34 197 94)",
-          away: "rgb(245 158 11)",
+          away: "rgb(234 179 8)",
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
+        },
+        gold: {
+          DEFAULT: "hsl(var(--gold) / <alpha-value>)",
+          dark: "hsl(var(--gold-dark) / <alpha-value>)",
+          light: "hsl(var(--gold-light) / <alpha-value>)",
+        },
+        neon: {
+          gold: "hsl(var(--neon-gold) / <alpha-value>)",
         },
       },
       fontFamily: {

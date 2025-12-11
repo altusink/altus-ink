@@ -1,10 +1,13 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocale } from "@/hooks/useLocale";
 import { Button } from "@/components/ui/button";
 import { LogoCompact } from "@/components/logo";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default function Navigation() {
   const { isAuthenticated } = useAuth();
+  const { t } = useLocale();
   const [location] = useLocation();
 
   const isBookingPage = location.startsWith("/book/");
@@ -26,30 +29,31 @@ export default function Navigation() {
 
         <div className="hidden md:flex items-center gap-8">
           <Link href="/" className="text-zinc-400 hover:text-white transition" data-testid="nav-home">
-            Home
+            {t.common.home}
           </Link>
           <Link href="/book/demo" className="text-zinc-400 hover:text-white transition" data-testid="nav-book">
-            Book Now
+            {t.common.bookNow}
           </Link>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           {isAuthenticated ? (
             <>
-              <Link href="/dashboard/artist" className="text-zinc-400 hover:text-white" data-testid="nav-dashboard">
-                Dashboard
+              <Link href="/dashboard/artist" className="text-zinc-400 hover:text-white hidden sm:inline" data-testid="nav-dashboard">
+                {t.common.dashboard}
               </Link>
               <Button variant="outline" onClick={handleLogout} data-testid="button-logout">
-                Logout
+                {t.common.logout}
               </Button>
             </>
           ) : (
             <>
               <Link href="/api/login" className="text-zinc-400 hover:text-white hidden sm:block" data-testid="nav-login">
-                Login
+                {t.common.login}
               </Link>
               <Button
-                className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6"
+                className="bg-gold hover:bg-gold-light text-black font-bold px-6"
                 onClick={() => {
                   const artistSection = document.getElementById("artists");
                   if (artistSection) {
@@ -60,7 +64,7 @@ export default function Navigation() {
                 }}
                 data-testid="button-book-now"
               >
-                Book Now
+                {t.common.bookNow}
               </Button>
             </>
           )}

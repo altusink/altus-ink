@@ -1,0 +1,273 @@
+# IMPLEMENTATION PROMPT v3: Feature Updates & Refinement
+**Objective**: Apply specific user-requested improvements to the ALTUSINK platform. Focus on routing, pricing tiers, cover-up flow, and authentication connections.
+## 1. Routing & Middleware Updates
+**Goal**: Ensure the landing page is always the default entry point.
+- **Modify `middleware.ts`**:
+  - Remove any auto-redirect from `/` to `/dashboard`.
+  - Root path `/` must always render the Landing Page.
+  - Dashboard routes (`/dashboard/*`) remain protected.
+## 2. Database Schema Update
+**Goal**: Support new pricing tiers and "Cover-up" specific logic.
+- **Update `deposit_values` table**:
+  - Add `duration_hours` as `DECIMAL(4,1)` (to support 1.5h).
+  - Add `service_type` enum: `'standard'`, `'coverup'`.
+  - Add `cta_action` enum: `'payment'`, `'whatsapp'`.
+```sql
+-- Run this SQL Migration
+ALTER TABLE public.deposit_values 
+  ALTER COLUMN duration_hours TYPE DECIMAL(4,1),
+  ADD COLUMN service_type TEXT DEFAULT 'standard' CHECK (service_type IN ('standard', 'coverup')),
+  ADD COLUMN cta_action TEXT DEFAULT 'payment' CHECK (cta_action IN ('payment', 'whatsapp'));
+-- Insert Default Values (for new artists)
+INSERT INTO public.deposit_values (artist_id, name, duration_hours, deposit_amount, service_type, cta_action)
+SELECT 
+  id as artist_id,
+  name, duration, amount, type, action
+FROM public.artists
+CROSS JOIN (VALUES
+  ('Small', 1.5, 30.00, 'standard', 'payment'),
+  ('Medium', 3.0, 50.00, 'standard', 'payment'),
+  ('Large', 5.0, 80.00, 'standard', 'payment'),
+  ('XL', 8.0, 150.00, 'standard', 'payment'),
+  ('Cobertura P', 2.0, 100.00, 'coverup', 'payment'),
+  ('Cobertura M', 4.0, 200.00, 'coverup', 'payment'),
+  ('Cobertura G', 6.0, 300.00, 'coverup', 'payment'),
+  ('Cobertura XL', 8.0, 350.00, 'coverup', 'whatsapp')
+) AS v(name, duration, amount, type, action)
+WHERE NOT EXISTS (SELECT 1 FROM public.deposit_values WHERE artist_id = public.artists.id);
+```
+## 3. Booking Flow UI Updates
+**Goal**: Implement the new Pricing Table and Cover-up Menu.
+- **Service Selection Step**:
+  - Add a **Tab Switcher**: [Tattoo (Standard)] | [Cover-up (Reforma)]
+  - **Standard Tab**:
+    - Display cards: Small (1h-1:30h / €30), Medium (2h-3h / €50), Large (3-5h / €80), XL (5-8h / €150).
+  - **Cover-up Tab**:
+    - Display cards: P (€100), M (€200), G (€300).
+    - **XL Card (€350)**: Instead of "Book", show button "Discuss on WhatsApp" (links to Artist's WhatsApp).
+- **Real-time Optimization**:
+  - Use `useOptimistic` for immediate UI feedback when selecting slots.
+  - Prefetch availability when hovering over dates.
+## 4. Authentication Connectivity
+**Goal**: Ensure no dead buttons.
+- **Global Rule**: Any interaction that creates data (Booking, Saving Favorite, etc.) must check session.
+- **Implementation**:
+  - If user is NOT logged in: Redirect to `/login?next=current_path`.
+  - "Book Appointment" button -> Check Auth -> If No -> Login Modal/Redirect.
+  - "Dashboard" link in Nav -> Only show if logged in.
+## 5. Suggested Improvements (Proactive)
+- **Cover-up Photo Upload**: Add a specific step for Cover-ups to upload a photo of the *current* tattoo to be covered.
+- **Anamnesis Form**: digital health questionnaire before booking.
+- **Waitlist Deposit**: Option to pay a small fee to join the priority waitlist.
+---
+## 6. Navigation Menu & Strategic Buttons
+### Header Navigation (Desktop)
+```tsx
+// components/Navigation.tsx
+<header className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-zinc-800">
+  <nav className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+    {/* Logo */}
+    <Link href="/" className="flex items-center gap-3">
+      <Image src="/logo.svg" alt="Altus Ink" width={40} height={40} />
+      <span className="text-xl font-bold text-white">ALTUS INK</span>
+    </Link>
+    
+    {/* Menu Items */}
+    <div className="hidden md:flex items-center gap-8">
+      <Link href="/" className="text-zinc-400 hover:text-white transition">Home</Link>
+      <Link href="/artists" className="text-zinc-400 hover:text-white transition">Artists</Link>
+      <Link href="/about" className="text-zinc-400 hover:text-white transition">About Us</Link>
+      <Link href="/portfolio" className="text-zinc-400 hover:text-white transition">Portfolio</Link>
+    </div>
+    
+    {/* CTA Buttons */}
+    <div className="flex items-center gap-4">
+      {session ? (
+        <>
+          <Link href="/dashboard" className="text-zinc-400 hover:text-white">Dashboard</Link>
+          <Button variant="outline" onClick={signOut}>Logout</Button>
+        </>
+      ) : (
+        <>
+          <Link href="/login" className="text-zinc-400 hover:text-white">Login</Link>
+          <Button className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6">
+            Book Now
+          </Button>
+        </>
+      )}
+    </div>
+  </nav>
+</header>
+```
+### Mobile Navigation (Bottom Tab Bar)
+```tsx
+// components/MobileNav.tsx
+<nav className="fixed bottom-0 left-0 right-0 md:hidden bg-zinc-900 border-t border-zinc-800 z-50">
+  <div className="flex justify-around py-3">
+    <NavItem href="/" icon={Home} label="Home" />
+    <NavItem href="/artists" icon={Users} label="Artists" />
+    <NavItem href="/book" icon={Calendar} label="Book" highlight />
+    <NavItem href="/portfolio" icon={Image} label="Portfolio" />
+    <NavItem href="/profile" icon={User} label="Profile" />
+  </div>
+</nav>
+// Center button highlighted (Book)
+<Link href="/book" className="relative -top-4 bg-amber-500 p-4 rounded-full shadow-lg">
+  <Calendar className="w-6 h-6 text-black" />
+</Link>
+```
+### Strategic Button Placements
+| Location | Button | Action |
+|----------|--------|--------|
+| Hero Section | "Agende sua Sessão" | Scroll to Artists |
+| Artist Card | "Ver Portfólio" | Navigate to Artist Page |
+| Artist Card | "Agendar" | Open Booking Modal |
+| Portfolio Image | "Quero Similar" | Pre-fill booking with style |
+| Footer | "Fale Conosco" | Open WhatsApp |
+| Floating | WhatsApp Icon | Always visible, opens chat |
+---
+## 7. Visual UI Improvements
+### Color System (Premium Dark)
+```css
+:root {
+  --bg-primary: #030303;      /* Near black */
+  --bg-secondary: #0A0A0A;    /* Card backgrounds */
+  --bg-elevated: #141414;     /* Modals, dropdowns */
+  --border: #1F1F1F;          /* Subtle borders */
+  
+  --accent-gold: #D4AF37;     /* Premium gold */
+  --accent-amber: #F59E0B;    /* CTA buttons */
+  --accent-glow: rgba(212, 175, 55, 0.15); /* Glow effects */
+  
+  --text-primary: #FAFAFA;
+  --text-secondary: #A1A1AA;
+  --text-muted: #52525B;
+}
+```
+### Typography Hierarchy
+```css
+.heading-xl { @apply text-5xl md:text-7xl font-bold tracking-tight; }
+.heading-lg { @apply text-3xl md:text-5xl font-bold; }
+.heading-md { @apply text-2xl md:text-3xl font-semibold; }
+.body-lg { @apply text-lg text-zinc-300 leading-relaxed; }
+.body-sm { @apply text-sm text-zinc-400; }
+```
+### Card Styles (Glassmorphism)
+```css
+.card-premium {
+  @apply bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 rounded-2xl;
+  box-shadow: 
+    0 0 0 1px rgba(255,255,255,0.05) inset,
+    0 20px 50px -10px rgba(0,0,0,0.5);
+}
+.card-premium:hover {
+  @apply border-amber-500/30;
+  box-shadow: 
+    0 0 30px rgba(245, 158, 11, 0.1),
+    0 20px 50px -10px rgba(0,0,0,0.5);
+}
+```
+### Button Variants
+```tsx
+// Primary CTA
+<Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 
+  text-black font-bold px-8 py-4 rounded-xl shadow-lg shadow-amber-500/20 
+  transition-all hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-0.5">
+  Agendar Agora
+</Button>
+// Secondary
+<Button variant="outline" className="border-zinc-700 hover:border-amber-500/50 
+  hover:bg-amber-500/5 text-white px-6 py-3 rounded-xl transition-all">
+  Ver Portfólio
+</Button>
+// Ghost
+<Button variant="ghost" className="text-zinc-400 hover:text-white hover:bg-zinc-800/50">
+  Saiba Mais
+</Button>
+```
+### Micro-Animations
+```tsx
+// Stagger children animation
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+};
+// Hover scale
+<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+// Scroll reveal
+<motion.section
+  initial={{ opacity: 0, y: 50 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true, margin: "-100px" }}
+>
+```
+### Loading States
+```tsx
+// Skeleton with shimmer
+<div className="animate-pulse bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-800 
+  bg-[length:200%_100%] animate-shimmer rounded-xl h-48" />
+// Spinner
+<div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+```
+### Page Layouts
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ HEADER (fixed, blur background)                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  HERO SECTION                                                   │
+│  ├── Background: Gradient mesh or video                        │
+│  ├── Headline: Large, bold                                      │
+│  ├── Subhead: Zinc-400                                          │
+│  └── CTA Button: Amber gradient                                 │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  FEATURED ARTISTS (horizontal scroll on mobile)                 │
+│  ├── Artist Card 1                                              │
+│  ├── Artist Card 2                                              │
+│  └── Artist Card 3                                              │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  PORTFOLIO GRID (masonry layout)                                │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  TESTIMONIALS / REVIEWS (carousel)                              │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ FOOTER                                                          │
+│ ├── Links: Home, Artists, About, Contact                        │
+│ ├── Social: Instagram, TikTok                                   │
+│ └── Legal: Privacy, Terms                                       │
+└─────────────────────────────────────────────────────────────────┘
+│ MOBILE NAV (bottom, fixed) - visible only on mobile             │
+└─────────────────────────────────────────────────────────────────┘
+```
+---
+## 8. Floating WhatsApp Button
+```tsx
+// components/WhatsAppFloat.tsx
+<motion.a
+  href="https://wa.me/491234567890"
+  target="_blank"
+  className="fixed bottom-24 md:bottom-8 right-6 z-40 bg-green-500 p-4 rounded-full shadow-lg"
+  whileHover={{ scale: 1.1 }}
+  whileTap={{ scale: 0.95 }}
+  initial={{ opacity: 0, scale: 0 }}
+  animate={{ opacity: 1, scale: 1 }}
+  transition={{ delay: 1 }}
+>
+  <MessageCircle className="w-6 h-6 text-white" />
+</motion.a>
+```
+---
+**ACTION**: Execute these changes in the codebase.
