@@ -1,0 +1,898 @@
+# ALTUSINK.IO Technical Specification
+## Multi-Tenant Tattoo Booking SaaS Platform
+**Version**: 2.0.0  
+**Last Updated**: 2024-12-11  
+**Classification**: Internal Engineering Document
+---
+## Table of Contents
+1. [Executive Summary](#1-executive-summary)
+2. [System Architecture](#2-system-architecture)
+3. [Technology Stack](#3-technology-stack)
+4. [Database Schema](#4-database-schema)
+5. [Authentication & Authorization](#5-authentication--authorization)
+6. [Core Features](#6-core-features)
+7. [API Endpoints](#7-api-endpoints)
+8. [Payment Integration](#8-payment-integration)
+9. [Notification System](#9-notification-system)
+10. [Admin Panel](#10-admin-panel)
+11. [Environment Variables](#11-environment-variables)
+12. [Deployment](#12-deployment)
+---
+## 1. Executive Summary
+ALTUSINK.IO is a private, invite-only SaaS platform for managing tattoo artist bookings, portfolios, and payments. The platform is exclusively operated by Altus Ink agency and is not available for public registration.
+### Business Model
+| Parameter | Value |
+|-----------|-------|
+| Platform Fee | 30% of all deposits |
+| Vendor Commission | 2% of sales (deducted from 30%) |
+| Deposit Policy | Non-refundable |
+| Payout Frequency | Weekly or Monthly (artist choice) |
+| Booking Lock Duration | 10 minutes |
+| Modification Window | Up to 48 hours before appointment |
+### Founders
+- **Jander Felipe**: CEO & Founder, 25 years old, self-taught entrepreneur
+- **Danilo Santos**: Lead Artist, international award winner (Germany), 6 years experience, former police officer
+---
+## 2. System Architecture
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                          CLIENT LAYER                           │
+├─────────────────────────────────────────────────────────────────┤
+│  Next.js 14 App Router │ React 18 │ TypeScript │ Tailwind CSS  │
+└────────────────────────────────┬────────────────────────────────┘
+                                 │
+┌────────────────────────────────▼────────────────────────────────┐
+│                          API LAYER                              │
+├─────────────────────────────────────────────────────────────────┤
+│  Next.js API Routes │ Zod Validation │ Rate Limiting │ CORS    │
+└────────────────────────────────┬────────────────────────────────┘
+                                 │
+┌────────────────────────────────▼────────────────────────────────┐
+│                        SERVICE LAYER                            │
+├─────────────────────────────────────────────────────────────────┤
+│  Supabase (DB + Auth + Storage + Realtime)                      │
+│  Stripe (Payments + Connect)                                    │
+│  Resend (Email)                                                 │
+│  Z-API (WhatsApp)                                               │
+└─────────────────────────────────────────────────────────────────┘
+```
+### Subdomain Routing
+```typescript
+// Pattern: {artist-slug}.altusink.io
+// Main domain: altusink.io
+// Admin domain: admin.altusink.io
+```
+---
+## 3. Technology Stack
+### Frontend
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Next.js | 14.x | Framework |
+| React | 18.x | UI Library |
+| TypeScript | 5.x | Type Safety |
+| Tailwind CSS | 3.x | Styling |
+| Framer Motion | 10.x | Animations |
+| shadcn/ui | Latest | Component Library |
+### Backend
+| Technology | Purpose |
+|------------|---------|
+| Supabase | Database, Auth, Storage, Realtime |
+| Stripe | Payment Processing |
+| Stripe Connect | Artist Payouts |
+| Resend | Transactional Email |
+| Z-API | WhatsApp API |
+### Installation
+```bash
+npx create-next-app@latest altusink --typescript --tailwind --eslint --app --src-dir
+cd altusink
+npm install @supabase/supabase-js @supabase/ssr stripe @stripe/stripe-js framer-motion zod lucide-react
+npx shadcn-ui@latest init
+```
+---
+## 4. Database Schema
+### Entity Relationship
+```
+profiles (users)
+    ├── artists (1:1 for tattoo artists)
+    │   ├── portfolio_categories (1:N)
+    │   │   └── portfolio_photos (1:N, max 20)
+    │   ├── deposit_values (1:N)
+    │   ├── city_schedules (1:N, tour mode)
+    │   ├── availability (1:N)
+    │   └── bookings (1:N)
+    │       ├── payments (1:1)
+    │       └── deposits (1:1)
+    ├── vendor_goals (1:N for vendors)
+    └── vendor_commissions (1:N for vendors)
+```
+### SQL Schema
+```sql
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- User Profiles
+CREATE TABLE public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    full_name TEXT,
+    phone TEXT,
+    role TEXT NOT NULL DEFAULT 'vendor' 
+        CHECK (role IN ('ceo', 'partner', 'artist', 'coordinator', 'vendor')),
+    avatar_url TEXT,
+    password_visible TEXT, -- Encrypted, viewable by CEO/Partner
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Artists
+CREATE TABLE public.artists (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    subdomain TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
+    bio TEXT,
+    instagram TEXT,
+    currency TEXT DEFAULT 'EUR' CHECK (currency IN ('EUR', 'CHF', 'USD', 'BRL')),
+    timezone TEXT DEFAULT 'Europe/Berlin',
+    tour_mode_active BOOLEAN DEFAULT false,
+    theme_color TEXT DEFAULT '#F59E0B',
+    theme_font TEXT DEFAULT 'Inter',
+    cover_photo_url TEXT,
+    is_active BOOLEAN DEFAULT true,
+    is_approved BOOLEAN DEFAULT false,
+    stripe_account_id TEXT,
+    payout_frequency TEXT DEFAULT 'weekly' CHECK (payout_frequency IN ('weekly', 'monthly')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Deposit Values by Duration
+CREATE TABLE public.deposit_values (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    artist_id UUID REFERENCES public.artists(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    duration_hours INTEGER NOT NULL,
+    deposit_amount DECIMAL(10,2) NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Portfolio Categories
+CREATE TABLE public.portfolio_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    artist_id UUID REFERENCES public.artists(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    description TEXT,
+    sort_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Portfolio Photos (max 20 per category)
+CREATE TABLE public.portfolio_photos (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    category_id UUID REFERENCES public.portfolio_categories(id) ON DELETE CASCADE,
+    artist_id UUID REFERENCES public.artists(id) ON DELETE CASCADE,
+    photo_url TEXT NOT NULL,
+    description TEXT,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Trigger: Limit 20 photos per category
+CREATE OR REPLACE FUNCTION check_photo_limit()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT COUNT(*) FROM public.portfolio_photos WHERE category_id = NEW.category_id) >= 20 THEN
+        RAISE EXCEPTION 'Maximum 20 photos per category';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER enforce_photo_limit
+BEFORE INSERT ON public.portfolio_photos
+FOR EACH ROW EXECUTE FUNCTION check_photo_limit();
+-- Artist Availability
+CREATE TABLE public.artist_availability (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    artist_id UUID REFERENCES public.artists(id) ON DELETE CASCADE,
+    day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    slot_duration_minutes INTEGER DEFAULT 60,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- City Schedules (Tour Mode)
+CREATE TABLE public.city_schedules (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    artist_id UUID REFERENCES public.artists(id) ON DELETE CASCADE,
+    city TEXT NOT NULL,
+    country TEXT NOT NULL,
+    country_code TEXT,
+    full_address TEXT NOT NULL, -- Revealed only after payment
+    studio_name TEXT,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Booking Locks (10-minute hold)
+CREATE TABLE public.booking_locks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    artist_id UUID REFERENCES public.artists(id) ON DELETE CASCADE,
+    slot_datetime TIMESTAMPTZ NOT NULL,
+    duration_hours INTEGER NOT NULL,
+    client_email TEXT NOT NULL,
+    client_name TEXT NOT NULL,
+    client_phone TEXT NOT NULL,
+    client_instagram TEXT NOT NULL,
+    reference_image_url TEXT,
+    tattoo_description TEXT,
+    authorize_portfolio BOOLEAN DEFAULT false,
+    confirmation_channel TEXT DEFAULT 'whatsapp' 
+        CHECK (confirmation_channel IN ('whatsapp', 'instagram', 'both')),
+    deposit_value_id UUID REFERENCES public.deposit_values(id),
+    payment_intent_id TEXT,
+    status TEXT DEFAULT 'pending' 
+        CHECK (status IN ('pending', 'paid', 'expired', 'cancelled')),
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Confirmed Bookings
+CREATE TABLE public.bookings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    artist_id UUID REFERENCES public.artists(id) ON DELETE CASCADE,
+    lock_id UUID REFERENCES public.booking_locks(id),
+    city_schedule_id UUID REFERENCES public.city_schedules(id),
+    client_email TEXT NOT NULL,
+    client_name TEXT NOT NULL,
+    client_phone TEXT NOT NULL,
+    client_instagram TEXT NOT NULL,
+    reference_image_url TEXT,
+    tattoo_description TEXT,
+    authorize_portfolio BOOLEAN DEFAULT false,
+    slot_datetime TIMESTAMPTZ NOT NULL,
+    duration_hours INTEGER NOT NULL,
+    deposit_amount DECIMAL(10,2) NOT NULL,
+    currency TEXT DEFAULT 'EUR',
+    status TEXT DEFAULT 'confirmed' 
+        CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled', 'no_show')),
+    notes TEXT,
+    result_photo_url TEXT,
+    rating_stars INTEGER CHECK (rating_stars BETWEEN 1 AND 5),
+    rating_text TEXT,
+    added_to_portfolio BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Payments
+CREATE TABLE public.payments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    artist_id UUID REFERENCES public.artists(id),
+    booking_id UUID REFERENCES public.bookings(id),
+    lock_id UUID REFERENCES public.booking_locks(id),
+    amount DECIMAL(10,2) NOT NULL,
+    currency TEXT DEFAULT 'EUR',
+    payment_method TEXT DEFAULT 'stripe' 
+        CHECK (payment_method IN ('stripe', 'revolut', 'wise', 'pix')),
+    payment_intent_id TEXT UNIQUE,
+    status TEXT DEFAULT 'pending' 
+        CHECK (status IN ('pending', 'succeeded', 'failed', 'refunded')),
+    error_message TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Deposits
+CREATE TABLE public.deposits (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    payment_id UUID REFERENCES public.payments(id),
+    artist_id UUID REFERENCES public.artists(id),
+    booking_id UUID REFERENCES public.bookings(id),
+    amount DECIMAL(10,2) NOT NULL,
+    currency TEXT DEFAULT 'EUR',
+    platform_fee DECIMAL(10,2) NOT NULL, -- 30%
+    artist_amount DECIMAL(10,2) GENERATED ALWAYS AS (amount - platform_fee) STORED,
+    is_refundable BOOLEAN DEFAULT false, -- Always false
+    status TEXT DEFAULT 'held' 
+        CHECK (status IN ('held', 'available', 'released', 'forfeited')),
+    next_payout_date DATE,
+    released_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Vendor Goals
+CREATE TABLE public.vendor_goals (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    vendor_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    set_by UUID REFERENCES public.profiles(id),
+    month INTEGER NOT NULL,
+    year INTEGER NOT NULL,
+    goal_amount DECIMAL(10,2) NOT NULL,
+    achieved_amount DECIMAL(10,2) DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Vendor Commissions (2%)
+CREATE TABLE public.vendor_commissions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    vendor_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    booking_id UUID REFERENCES public.bookings(id),
+    sale_amount DECIMAL(10,2) NOT NULL,
+    commission_rate DECIMAL(5,2) DEFAULT 2.00,
+    commission_amount DECIMAL(10,2) GENERATED ALWAYS AS (sale_amount * commission_rate / 100) STORED,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'paid')),
+    paid_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Notifications Queue
+CREATE TABLE public.notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.profiles(id),
+    artist_id UUID REFERENCES public.artists(id),
+    booking_id UUID REFERENCES public.bookings(id),
+    channel TEXT NOT NULL CHECK (channel IN ('email', 'whatsapp', 'instagram', 'push')),
+    template TEXT NOT NULL,
+    recipient TEXT NOT NULL,
+    subject TEXT,
+    data JSONB DEFAULT '{}',
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed')),
+    attempts INTEGER DEFAULT 0,
+    sent_at TIMESTAMPTZ,
+    scheduled_for TIMESTAMPTZ DEFAULT NOW(),
+    error_message TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Waiting List
+CREATE TABLE public.waiting_list (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    artist_id UUID REFERENCES public.artists(id) ON DELETE CASCADE,
+    city_schedule_id UUID REFERENCES public.city_schedules(id),
+    email TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    name TEXT NOT NULL,
+    desired_duration_hours INTEGER NOT NULL,
+    status TEXT DEFAULT 'waiting' 
+        CHECK (status IN ('waiting', 'notified', 'converted', 'expired')),
+    notified_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Terms Acceptance
+CREATE TABLE public.terms_acceptance (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.profiles(id),
+    client_email TEXT,
+    term_type TEXT NOT NULL 
+        CHECK (term_type IN ('usage', 'cancellation', 'partnership', 'commission', 'portfolio')),
+    version TEXT NOT NULL DEFAULT 'v1.0',
+    ip_address INET,
+    user_agent TEXT,
+    accepted_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Cookie Consent (GDPR)
+CREATE TABLE public.cookie_consent (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_id TEXT NOT NULL,
+    ip_address INET,
+    analytics BOOLEAN DEFAULT false,
+    marketing BOOLEAN DEFAULT false,
+    functional BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Email Templates
+CREATE TABLE public.email_templates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    template_key TEXT UNIQUE NOT NULL,
+    subject TEXT NOT NULL,
+    html_body TEXT NOT NULL,
+    variables TEXT[],
+    is_active BOOLEAN DEFAULT true,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- System Integrations
+CREATE TABLE public.system_integrations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    service_key TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
+    status TEXT DEFAULT 'not_configured' 
+        CHECK (status IN ('connected', 'error', 'not_configured', 'disabled')),
+    config JSONB DEFAULT '{}',
+    last_check TIMESTAMPTZ,
+    error_message TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Two-Factor Authentication
+CREATE TABLE public.two_factor_config (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    secret TEXT NOT NULL,
+    is_enabled BOOLEAN DEFAULT false,
+    backup_codes TEXT[],
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Audit Log
+CREATE TABLE public.audit_log (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID,
+    artist_id UUID,
+    action TEXT NOT NULL,
+    table_name TEXT,
+    record_id UUID,
+    old_data JSONB,
+    new_data JSONB,
+    ip_address INET,
+    user_agent TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Global Settings
+CREATE TABLE public.global_settings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    value TEXT NOT NULL,
+    description TEXT,
+    is_public BOOLEAN DEFAULT false,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Default Settings
+INSERT INTO public.global_settings (key, value, description, is_public) VALUES
+    ('platform_fee_percent', '30', 'Agency fee percentage', false),
+    ('vendor_commission_percent', '2', 'Vendor commission percentage', false),
+    ('lock_duration_minutes', '10', 'Booking lock duration', true),
+    ('modification_hours_limit', '48', 'Hours before appointment for modifications', true),
+    ('support_email', 'support@altusink.io', 'Support email address', true);
+-- Indexes
+CREATE INDEX idx_bookings_artist_datetime ON public.bookings(artist_id, slot_datetime);
+CREATE INDEX idx_locks_expires ON public.booking_locks(expires_at) WHERE status = 'pending';
+CREATE INDEX idx_deposits_payout ON public.deposits(next_payout_date) WHERE status = 'held';
+CREATE INDEX idx_photos_category ON public.portfolio_photos(category_id);
+CREATE INDEX idx_vendor_goals ON public.vendor_goals(vendor_id, year, month);
+CREATE INDEX idx_waiting_list ON public.waiting_list(artist_id, status);
+-- Row Level Security
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.artists ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.deposits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.system_integrations ENABLE ROW LEVEL SECURITY;
+-- RLS Policies
+CREATE POLICY "ceo_full_access" ON public.profiles FOR ALL
+    USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'ceo');
+CREATE POLICY "partner_access" ON public.profiles FOR ALL
+    USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('ceo', 'partner'));
+CREATE POLICY "artists_own_data" ON public.artists FOR ALL
+    USING (user_id = auth.uid());
+CREATE POLICY "public_artist_profiles" ON public.artists FOR SELECT
+    USING (is_active = true AND is_approved = true);
+CREATE POLICY "ceo_only_integrations" ON public.system_integrations FOR ALL
+    USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'ceo');
+```
+---
+## 5. Authentication & Authorization
+### Role Hierarchy
+| Role | Level | Permissions |
+|------|-------|-------------|
+| CEO | 1 | Full system access, view all credentials, impersonate users |
+| Partner | 2 | All except CEO credentials and critical settings |
+| Artist | 3 | Own profile, bookings, portfolio, availability |
+| Coordinator | 4 | Same as Artist + manage vendors |
+| Vendor | 5 | Read-only bookings, view own goals and commissions |
+### Middleware Implementation
+```typescript
+// middleware.ts
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+export async function middleware(req: NextRequest) {
+    const res = NextResponse.next();
+    const supabase = createMiddlewareClient({ req, res });
+    
+    const hostname = req.headers.get('host') || '';
+    const subdomain = hostname.split('.')[0];
+    
+    // Handle subdomain routing
+    if (subdomain !== 'www' && subdomain !== 'altusink' && subdomain !== 'admin') {
+        const url = req.nextUrl.clone();
+        url.pathname = `/artist/${subdomain}${url.pathname}`;
+        return NextResponse.rewrite(url);
+    }
+    
+    // Protect dashboard routes
+    if (req.nextUrl.pathname.startsWith('/dashboard')) {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+            return NextResponse.redirect(new URL('/login', req.url));
+        }
+    }
+    
+    return res;
+}
+export const config = {
+    matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+};
+```
+### Two-Factor Authentication
+```typescript
+// lib/2fa.ts
+import { authenticator } from 'otplib';
+export function generateSecret(): string {
+    return authenticator.generateSecret();
+}
+export function generateQRCode(email: string, secret: string): string {
+    return authenticator.keyuri(email, 'AltusInk', secret);
+}
+export function verifyToken(token: string, secret: string): boolean {
+    return authenticator.verify({ token, secret });
+}
+export function generateBackupCodes(): string[] {
+    return Array.from({ length: 10 }, () => 
+        Math.random().toString(36).substring(2, 8).toUpperCase()
+    );
+}
+```
+---
+## 6. Core Features
+### 6.1 Booking Flow
+```
+1. Client lands on artist page (subdomain)
+2. Selects service duration (2h/4h/6h/8h/full)
+3. Views calendar with available slots
+4. Fills booking form:
+   - Name, Email, Phone, Instagram
+   - Reference image upload
+   - Tattoo description
+   - Portfolio authorization checkbox
+5. Accepts terms and conditions
+6. 10-minute lock created
+7. Payment via Stripe/Revolut/Wise
+8. On success:
+   - Booking confirmed
+   - Notification sent (WhatsApp/Instagram)
+   - Address revealed
+```
+### 6.2 Booking Modification Rules
+| Action | Allowed | Conditions |
+|--------|---------|------------|
+| Reschedule | Yes | 48+ hours before, same city only, matching slot duration |
+| Cancel | Yes | Any time, but 100% deposit forfeited |
+| City change | No | Not permitted |
+### 6.3 Slot Matching Algorithm
+```typescript
+// lib/booking.ts
+export async function getAvailableSlots(
+    artistId: string,
+    cityScheduleId: string,
+    requiredHours: number
+): Promise<Slot[]> {
+    // 1. Get all slots for the date range
+    // 2. Filter out locked slots
+    // 3. Filter out confirmed bookings
+    // 4. Find consecutive slots >= requiredHours
+    // 5. Return available slots
+}
+```
+### 6.4 Portfolio System
+- Categories: Fine Line, Realism, Pointillism, Blackwork, Cover-ups, etc.
+- Max 20 photos per category
+- Photos added from completed bookings (with client authorization)
+- CEO can create/edit/delete categories
+### 6.5 Tour Mode
+Artists can set city schedules for traveling work:
+```typescript
+interface CitySchedule {
+    city: string;
+    country: string;
+    startDate: Date;
+    endDate: Date;
+    fullAddress: string; // Hidden until payment
+    studioName?: string;
+}
+```
+---
+## 7. API Endpoints
+### Public Endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/artists` | List approved artists |
+| GET | `/api/artists/[slug]` | Artist profile |
+| GET | `/api/artists/[slug]/availability` | Available slots |
+| POST | `/api/bookings/lock` | Create booking lock |
+| POST | `/api/webhooks/stripe` | Stripe webhook |
+### Protected Endpoints (Auth Required)
+| Method | Path | Role | Description |
+|--------|------|------|-------------|
+| GET | `/api/dashboard/artist` | Artist | Artist stats |
+| GET | `/api/dashboard/ceo` | CEO | Platform stats |
+| POST | `/api/artists/approve/[id]` | CEO, Partner | Approve artist |
+| PUT | `/api/settings/integrations` | CEO | Update integrations |
+| GET | `/api/health` | Public | System health check |
+### Health Check Response
+```typescript
+// GET /api/health
+interface HealthResponse {
+    timestamp: string;
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    services: {
+        supabase: { status: string; latency: number };
+        stripe: { status: string; latency: number };
+        resend: { status: string };
+        zapi: { status: string };
+    };
+}
+```
+---
+## 8. Payment Integration
+### Stripe Configuration
+```typescript
+// lib/stripe.ts
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2023-10-16',
+});
+export async function createPaymentIntent(
+    amount: number,
+    currency: string,
+    metadata: Record<string, string>
+): Promise<Stripe.PaymentIntent> {
+    return stripe.paymentIntents.create({
+        amount: Math.round(amount * 100),
+        currency: currency.toLowerCase(),
+        metadata,
+        automatic_payment_methods: { enabled: true },
+    });
+}
+```
+### Stripe Connect (Artist Payouts)
+```typescript
+// lib/stripe-connect.ts
+export async function createConnectAccount(artistId: string, email: string) {
+    const account = await stripe.accounts.create({
+        type: 'express',
+        email,
+        capabilities: {
+            transfers: { requested: true },
+        },
+    });
+    
+    return account;
+}
+export async function createOnboardingLink(accountId: string) {
+    return stripe.accountLinks.create({
+        account: accountId,
+        refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/artist/payout-setup`,
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/artist/payout-complete`,
+        type: 'account_onboarding',
+    });
+}
+export async function createPayout(
+    accountId: string,
+    amount: number,
+    currency: string
+) {
+    return stripe.transfers.create({
+        amount: Math.round(amount * 100),
+        currency: currency.toLowerCase(),
+        destination: accountId,
+    });
+}
+```
+### Webhook Handler
+```typescript
+// app/api/webhooks/stripe/route.ts
+export async function POST(req: Request) {
+    const body = await req.text();
+    const signature = req.headers.get('stripe-signature')!;
+    
+    const event = stripe.webhooks.constructEvent(
+        body,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET!
+    );
+    
+    switch (event.type) {
+        case 'payment_intent.succeeded':
+            await handlePaymentSuccess(event.data.object);
+            break;
+        case 'payment_intent.payment_failed':
+            await handlePaymentFailure(event.data.object);
+            break;
+    }
+    
+    return new Response('OK', { status: 200 });
+}
+async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
+    const { lock_id, artist_id } = paymentIntent.metadata;
+    
+    // 1. Update lock status
+    // 2. Create confirmed booking
+    // 3. Create payment record
+    // 4. Create deposit record (30% platform fee)
+    // 5. Queue confirmation notification
+}
+```
+---
+## 9. Notification System
+### Channels
+| Channel | Provider | Use Cases |
+|---------|----------|-----------|
+| Email | Resend | Confirmations, reminders, password reset |
+| WhatsApp | Z-API | Booking confirmations, reminders |
+| Push | Web Push API | Dashboard alerts |
+### Email Templates
+| Template Key | Subject | Variables |
+|--------------|---------|-----------|
+| `booking_confirmed` | Your session is confirmed | `{{name}}`, `{{date}}`, `{{artist}}`, `{{address}}` |
+| `reminder_24h` | Reminder: Your session is tomorrow | `{{name}}`, `{{date}}`, `{{artist}}`, `{{address}}` |
+| `password_reset` | Reset your password | `{{name}}`, `{{link}}` |
+| `artist_welcome` | Welcome to Altus Ink | `{{name}}`, `{{onboarding_link}}` |
+| `slot_available` | Slot available! | `{{name}}`, `{{artist}}`, `{{date}}`, `{{link}}` |
+| `review_request` | How was your experience? | `{{name}}`, `{{artist}}`, `{{link}}` |
+### Notification Service
+```typescript
+// lib/notifications.ts
+export async function sendWhatsApp(phone: string, message: string) {
+    const response = await fetch(
+        `https://api.z-api.io/instances/${process.env.ZAPI_INSTANCE_ID}/token/${process.env.ZAPI_TOKEN}/send-text`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, message }),
+        }
+    );
+    return response.json();
+}
+export async function sendEmail(to: string, templateKey: string, data: Record<string, string>) {
+    const template = await getTemplate(templateKey);
+    const html = replaceVariables(template.html_body, data);
+    const subject = replaceVariables(template.subject, data);
+    
+    const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            from: 'Altus Ink <no-reply@altusink.io>',
+            to,
+            subject,
+            html,
+        }),
+    });
+    return response.json();
+}
+```
+### Cron Jobs
+| Schedule | Task | Endpoint |
+|----------|------|----------|
+| Every 5 min | Process notification queue | `/api/cron/notifications` |
+| Every 5 min | Clean expired locks | `/api/cron/cleanup-locks` |
+| Daily 10:00 | Send 24h reminders | `/api/cron/reminders` |
+| Weekly/Monthly | Process payouts | `/api/cron/payouts` |
+---
+## 10. Admin Panel
+### CEO Dashboard Sections
+1. **Platform Overview**
+   - Total revenue
+   - Active artists
+   - Pending approvals
+   - Today's bookings
+2. **User Management**
+   - View all users with credentials
+   - Approve/reject artists
+   - Reset passwords
+   - Manage roles
+3. **Integrations**
+   - Payment gateways (Stripe, Revolut, Wise)
+   - Notifications (Resend, Z-API)
+   - Database (Supabase)
+   - Analytics (GA, Hotjar)
+4. **Payouts**
+   - Configure payout frequency
+   - View pending payouts
+   - Execute manual payouts
+   - Stripe Connect onboarding status
+5. **Settings**
+   - Platform fee (30%)
+   - Vendor commission (2%)
+   - Lock duration (10 min)
+   - Modification window (48h)
+6. **Compliance**
+   - GDPR data export
+   - GDPR data deletion
+   - Terms & policies editor
+   - Cookie consent settings
+7. **Maintenance**
+   - Health check status
+   - Backup management
+   - Maintenance mode toggle
+   - Error page customization
+---
+## 11. Environment Variables
+```bash
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx
+SUPABASE_SERVICE_ROLE_KEY=eyJxxx
+# Stripe
+STRIPE_SECRET_KEY=sk_live_xxx
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+STRIPE_CONNECT_WEBHOOK_SECRET=whsec_xxx
+# Revolut (optional)
+REVOLUT_API_KEY=xxx
+REVOLUT_WEBHOOK_SECRET=xxx
+# Wise (optional)
+WISE_API_KEY=xxx
+WISE_WEBHOOK_SECRET=xxx
+# Notifications
+RESEND_API_KEY=re_xxx
+ZAPI_INSTANCE_ID=xxx
+ZAPI_TOKEN=xxx
+# Application
+NEXT_PUBLIC_APP_URL=https://altusink.io
+CRON_SECRET=xxx
+# Analytics (optional)
+NEXT_PUBLIC_GA_ID=G-xxx
+NEXT_PUBLIC_HOTJAR_ID=xxx
+SENTRY_DSN=xxx
+```
+---
+## 12. Deployment
+### Vercel Configuration
+```json
+// vercel.json
+{
+    "crons": [
+        {
+            "path": "/api/cron/notifications",
+            "schedule": "*/5 * * * *"
+        },
+        {
+            "path": "/api/cron/cleanup-locks",
+            "schedule": "*/5 * * * *"
+        },
+        {
+            "path": "/api/cron/reminders",
+            "schedule": "0 10 * * *"
+        }
+    ]
+}
+```
+### Pre-Deployment Checklist
+- [ ] All environment variables configured
+- [ ] Supabase schema executed
+- [ ] Stripe webhooks registered
+- [ ] DNS configured for main domain and wildcard subdomains
+- [ ] SSL certificates active
+- [ ] Health check endpoint responding
+- [ ] Test payment flow in Stripe test mode
+- [ ] Test notification delivery
+---
+## Appendix A: UI Components
+### Design System
+| Token | Value |
+|-------|-------|
+| Primary Color | `#F59E0B` (Amber 500) |
+| Background | `#0A0A0A` |
+| Surface | `#18181B` (Zinc 900) |
+| Border | `#27272A` (Zinc 800) |
+| Text Primary | `#FFFFFF` |
+| Text Secondary | `#A1A1AA` (Zinc 400) |
+| Font Primary | Inter |
+| Font Display | Outfit |
+### Animation Guidelines
+- Page transitions: 300ms ease-out
+- Micro-interactions: 150ms ease-in-out
+- Hover states: 200ms
+- Loading skeletons: pulse animation
+- Scroll animations: Intersection Observer with threshold 0.1
+---
+## Appendix B: Error Handling
+### Error Codes
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `LOCK_EXPIRED` | 410 | Booking lock has expired |
+| `SLOT_UNAVAILABLE` | 409 | Slot is no longer available |
+| `PAYMENT_FAILED` | 402 | Payment processing failed |
+| `UNAUTHORIZED` | 401 | Authentication required |
+| `FORBIDDEN` | 403 | Insufficient permissions |
+| `NOT_FOUND` | 404 | Resource not found |
+| `VALIDATION_ERROR` | 400 | Invalid input data |
+| `RATE_LIMITED` | 429 | Too many requests |
+---
