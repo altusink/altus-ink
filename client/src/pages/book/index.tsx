@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogoCompact } from "@/components/logo";
 import {
   Form,
@@ -38,8 +39,10 @@ import {
   CheckCircle2,
   AlertCircle,
   Shield,
+  MessageCircle,
 } from "lucide-react";
-import { bookingFormSchema, type BookingFormData, type Artist, type Availability, type CitySchedule } from "@shared/schema";
+import { SiWhatsapp } from "react-icons/si";
+import { bookingFormSchema, type BookingFormData, type Artist, type Availability, type CitySchedule, type DepositValue } from "@shared/schema";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -51,12 +54,14 @@ export default function BookingPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [step, setStep] = useState<"calendar" | "time" | "details" | "payment" | "success">("calendar");
+  const [step, setStep] = useState<"service" | "calendar" | "time" | "details" | "payment" | "success">("service");
   const [lockId, setLockId] = useState<string | null>(null);
   const [lockExpiresAt, setLockExpiresAt] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(600); // 10 minutes in seconds
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [quickEmail, setQuickEmail] = useState("");
+  const [selectedServiceType, setSelectedServiceType] = useState<"standard" | "coverup">("standard");
+  const [selectedDepositValue, setSelectedDepositValue] = useState<DepositValue | null>(null);
 
   const { data: artist, isLoading: artistLoading, error: artistError } = useQuery<Artist>({
     queryKey: ["/api/public/artist", subdomain],
@@ -90,6 +95,14 @@ export default function BookingPage() {
     queryKey: [`/api/public/artist/${subdomain}/portfolio/categories`],
     enabled: !!subdomain && !!artist,
   });
+
+  const { data: depositValues = [] } = useQuery<DepositValue[]>({
+    queryKey: [`/api/public/artist/${subdomain}/deposit-values`],
+    enabled: !!subdomain && !!artist,
+  });
+
+  const standardServices = depositValues.filter((dv) => dv.serviceType === "standard" || !dv.serviceType);
+  const coverupServices = depositValues.filter((dv) => dv.serviceType === "coverup");
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingFormSchema),
@@ -361,32 +374,172 @@ export default function BookingPage() {
       <main className="max-w-4xl mx-auto px-4 py-6 safe-bottom">
         {/* Progress Steps */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          {["calendar", "time", "details", "payment"].map((s, i) => (
+          {["service", "calendar", "time", "details", "payment"].map((s, i) => (
             <div key={s} className="flex items-center gap-2">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                  step === s || (step === "success" && i < 4)
+                  step === s || (step === "success" && i < 5)
                     ? "text-white"
                     : "bg-muted text-muted-foreground"
                 }`}
                 style={{
-                  backgroundColor: step === s || (step === "success" && i < 4) ? themeColor : undefined,
+                  backgroundColor: step === s || (step === "success" && i < 5) ? themeColor : undefined,
                 }}
               >
                 {i + 1}
               </div>
-              {i < 3 && (
-                <div className={`w-8 h-0.5 ${i < ["calendar", "time", "details", "payment"].indexOf(step) ? "bg-foreground" : "bg-muted"}`} />
+              {i < 4 && (
+                <div className={`w-8 h-0.5 ${i < ["service", "calendar", "time", "details", "payment"].indexOf(step) ? "bg-foreground" : "bg-muted"}`} />
               )}
             </div>
           ))}
         </div>
 
+        {/* Service Selection Step */}
+        {step === "service" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Choose Your Service</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={selectedServiceType} onValueChange={(v) => setSelectedServiceType(v as "standard" | "coverup")} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="standard" data-testid="tab-standard">
+                    Tattoo
+                  </TabsTrigger>
+                  <TabsTrigger value="coverup" data-testid="tab-coverup">
+                    Cover-up
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="standard" className="space-y-4">
+                  {standardServices.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No pricing options available yet.</p>
+                      <p className="text-sm">Contact the artist for custom quotes.</p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {standardServices.map((service) => (
+                        <Card
+                          key={service.id}
+                          className={`cursor-pointer transition-all hover-elevate ${
+                            selectedDepositValue?.id === service.id ? "ring-2" : ""
+                          }`}
+                          style={{
+                            borderColor: selectedDepositValue?.id === service.id ? themeColor : undefined,
+                            boxShadow: selectedDepositValue?.id === service.id ? `0 0 20px ${themeColor}20` : undefined,
+                          }}
+                          onClick={() => setSelectedDepositValue(service)}
+                          data-testid={`service-card-${service.id}`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between gap-4">
+                              <div>
+                                <p className="font-semibold">{service.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {Number(service.durationHours)}h session
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-2xl font-bold" style={{ color: themeColor }}>
+                                  {artist.currency === "BRL" ? "R$" : "€"}{Number(service.depositAmount)}
+                                </p>
+                                <p className="text-xs text-muted-foreground">deposit</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="coverup" className="space-y-4">
+                  {coverupServices.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No cover-up pricing available yet.</p>
+                      <p className="text-sm">Contact the artist via WhatsApp for custom quotes.</p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {coverupServices.map((service) => (
+                        <Card
+                          key={service.id}
+                          className={`cursor-pointer transition-all hover-elevate ${
+                            selectedDepositValue?.id === service.id ? "ring-2" : ""
+                          }`}
+                          style={{
+                            borderColor: selectedDepositValue?.id === service.id ? themeColor : undefined,
+                            boxShadow: selectedDepositValue?.id === service.id ? `0 0 20px ${themeColor}20` : undefined,
+                          }}
+                          onClick={() => {
+                            if (service.ctaAction === "whatsapp") {
+                              const phone = artist.instagram?.replace("@", "") || "";
+                              window.open(`https://wa.me/${phone}?text=Olá! Gostaria de agendar uma cobertura XL.`, "_blank");
+                            } else {
+                              setSelectedDepositValue(service);
+                            }
+                          }}
+                          data-testid={`service-card-${service.id}`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between gap-4">
+                              <div>
+                                <p className="font-semibold">{service.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {Number(service.durationHours)}h session
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-2xl font-bold" style={{ color: themeColor }}>
+                                  {artist.currency === "BRL" ? "R$" : "€"}{Number(service.depositAmount)}
+                                </p>
+                                {service.ctaAction === "whatsapp" ? (
+                                  <Badge variant="outline" className="text-xs">
+                                    <SiWhatsapp className="w-3 h-3 mr-1" />
+                                    WhatsApp
+                                  </Badge>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground">deposit</p>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+
+              <div className="flex justify-end mt-6">
+                <Button
+                  onClick={() => setStep("calendar")}
+                  disabled={!selectedDepositValue || selectedDepositValue.ctaAction === "whatsapp"}
+                  style={{ backgroundColor: selectedDepositValue ? themeColor : undefined }}
+                  data-testid="button-continue-to-calendar"
+                >
+                  Continue to Calendar
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Calendar Step */}
         {step === "calendar" && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-              <CardTitle className="text-lg">Select a Date</CardTitle>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => setStep("service")} data-testid="button-back-to-service">
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <CardTitle className="text-lg">Select a Date</CardTitle>
+              </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"

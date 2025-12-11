@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
-import Home from "@/pages/home";
 
 // Artist Dashboard Pages
 import ArtistDashboard from "@/pages/dashboard/artist/index";
@@ -25,53 +24,80 @@ import CEOFinancial from "@/pages/dashboard/ceo/financial";
 // Public Pages
 import BookingPage from "@/pages/book/index";
 
-function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+// Layout Components
+import Navigation from "@/components/navigation";
+import MobileNav from "@/components/mobile-nav";
+import WhatsAppFloat from "@/components/whatsapp-float";
 
-  // Show loading state
+function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
+        <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
+  
+  if (!isAuthenticated) {
+    return <Redirect to="/api/login" />;
+  }
+  
+  return <Component />;
+}
 
+function Router() {
   return (
     <Switch>
+      {/* Landing Page - Always the entry point */}
+      <Route path="/" component={Landing} />
+      
       {/* Public Booking Pages - Always accessible */}
       <Route path="/book/:subdomain" component={BookingPage} />
       
-      {/* Auth-dependent routes */}
-      {!isAuthenticated ? (
-        // Logged out routes
-        <Route path="/" component={Landing} />
-      ) : (
-        // Logged in routes
-        <>
-          <Route path="/" component={Home} />
-          
-          {/* Artist Dashboard Routes */}
-          <Route path="/dashboard/artist" component={ArtistDashboard} />
-          <Route path="/dashboard/artist/calendar" component={ArtistCalendar} />
-          <Route path="/dashboard/artist/earnings" component={ArtistEarnings} />
-          <Route path="/dashboard/artist/tour" component={ArtistTour} />
-          <Route path="/dashboard/artist/personalize" component={ArtistPersonalize} />
-          <Route path="/dashboard/artist/settings" component={ArtistSettings} />
-          <Route path="/dashboard/artist/portfolio" component={ArtistPortfolio} />
-          
-          {/* CEO Dashboard Routes */}
-          <Route path="/dashboard/ceo" component={CEODashboard} />
-          <Route path="/dashboard/ceo/artists" component={CEOArtists} />
-          <Route path="/dashboard/ceo/bookings" component={CEODashboard} />
-          <Route path="/dashboard/ceo/financial" component={CEOFinancial} />
-          <Route path="/dashboard/ceo/reports" component={CEODashboard} />
-          <Route path="/dashboard/ceo/settings" component={CEODashboard} />
-        </>
-      )}
+      {/* Protected Artist Dashboard Routes */}
+      <Route path="/dashboard/artist">
+        {() => <ProtectedRoute component={ArtistDashboard} />}
+      </Route>
+      <Route path="/dashboard/artist/calendar">
+        {() => <ProtectedRoute component={ArtistCalendar} />}
+      </Route>
+      <Route path="/dashboard/artist/earnings">
+        {() => <ProtectedRoute component={ArtistEarnings} />}
+      </Route>
+      <Route path="/dashboard/artist/tour">
+        {() => <ProtectedRoute component={ArtistTour} />}
+      </Route>
+      <Route path="/dashboard/artist/personalize">
+        {() => <ProtectedRoute component={ArtistPersonalize} />}
+      </Route>
+      <Route path="/dashboard/artist/settings">
+        {() => <ProtectedRoute component={ArtistSettings} />}
+      </Route>
+      <Route path="/dashboard/artist/portfolio">
+        {() => <ProtectedRoute component={ArtistPortfolio} />}
+      </Route>
+      
+      {/* Protected CEO Dashboard Routes */}
+      <Route path="/dashboard/ceo">
+        {() => <ProtectedRoute component={CEODashboard} />}
+      </Route>
+      <Route path="/dashboard/ceo/artists">
+        {() => <ProtectedRoute component={CEOArtists} />}
+      </Route>
+      <Route path="/dashboard/ceo/bookings">
+        {() => <ProtectedRoute component={CEODashboard} />}
+      </Route>
+      <Route path="/dashboard/ceo/financial">
+        {() => <ProtectedRoute component={CEOFinancial} />}
+      </Route>
+      <Route path="/dashboard/ceo/reports">
+        {() => <ProtectedRoute component={CEODashboard} />}
+      </Route>
+      <Route path="/dashboard/ceo/settings">
+        {() => <ProtectedRoute component={CEODashboard} />}
+      </Route>
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />
@@ -83,8 +109,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <Navigation />
+        <main className="pt-20 pb-20 md:pb-0">
+          <Router />
+        </main>
+        <MobileNav />
+        <WhatsAppFloat />
         <Toaster />
-        <Router />
       </TooltipProvider>
     </QueryClientProvider>
   );
