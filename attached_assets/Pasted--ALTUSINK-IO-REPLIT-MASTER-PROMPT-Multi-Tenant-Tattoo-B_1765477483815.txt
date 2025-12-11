@@ -1,0 +1,471 @@
+# ALTUSINK.IO — REPLIT MASTER PROMPT
+## Multi-Tenant Tattoo Booking SaaS | Private Agency Platform
+> **COPY THIS ENTIRE DOCUMENT INTO REPLIT AI**
+---
+## 🎯 PROJECT OVERVIEW
+Build ALTUSINK.IO, a **premium private SaaS** for Altus Ink agency to manage tattoo artists and their bookings.
+### Business Model
+- **Private platform** — Invite-only for Altus Ink managed artists
+- **30% agency fee** on all deposits (artist receives 70%)
+- **Non-refundable deposits** — Never show full session price
+- **90-day retention** before payout to artists
+### Core Features
+1. Multi-tenant architecture (subdomain per artist: `artist.altusink.io`)
+2. 4 user roles: CEO (agency), Artist, Vendor 1/2, Vendor Coordinator
+3. Real-time booking with 10-minute slot locking
+4. Tour Mode (address hidden until payment)
+5. Stripe payment integration
+6. Email + WhatsApp notifications
+7. Multi-language support (EN, PT-BR, PT-PT, ES, FR, DE, IT)
+8. GDPR compliant with audit logging
+---
+## ⚙️ TECH STACK
+```bash
+# Initialize project
+npx create-next-app@latest ./ --typescript --tailwind --eslint --app --src-dir=false --import-alias="@/*"
+# Install dependencies
+npm install @supabase/supabase-js @supabase/ssr stripe @stripe/stripe-js framer-motion lucide-react zod next-intl date-fns
+npm install -D @types/node
+```
+---
+## 📱 CRITICAL: MOBILE-FIRST DESIGN
+All components MUST be mobile-first. Apply these patterns:
+```css
+/* globals.css — Mobile-first breakpoints */
+@layer utilities {
+  /* Mobile: default styles */
+  /* Tablet: md: (768px) */
+  /* Desktop: lg: (1024px) */
+}
+/* Touch-friendly minimums */
+button, a { min-height: 44px; min-width: 44px; }
+/* Safe area for mobile */
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+```
+```typescript
+// Component pattern — ALWAYS mobile-first
+<div className="
+  p-4                      // Mobile padding
+  md:p-6                   // Tablet
+  lg:p-8                   // Desktop
+  
+  flex flex-col            // Mobile: stack
+  lg:flex-row              // Desktop: row
+  
+  gap-4                    // Mobile gap
+  lg:gap-6                 // Desktop gap
+  
+  text-base                // Mobile text
+  lg:text-lg               // Desktop text
+">
+```
+---
+## 🗄️ SUPABASE SCHEMA
+Run this SQL in Supabase SQL Editor:
+```sql
+-- Enable extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- ============================================
+-- PROFILES (extends auth.users)
+-- ============================================
+CREATE TABLE public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  full_name TEXT,
+  phone TEXT,
+  role TEXT NOT NULL DEFAULT 'artist' CHECK (role IN ('ceo', 'artist', 'vendor1', 'vendor2', 'coordinator')),
+  avatar_url TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- ============================================
+-- ARTISTS (tenants)
+-- ============================================
+CREATE TABLE public.artists (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  subdomain TEXT UNIQUE NOT NULL,
+  display_name TEXT NOT NULL,
+  bio TEXT,
+  instagram TEXT,
+  deposit_amount DECIMAL(10,2) NOT NULL DEFAULT 100.00,
+  currency TEXT DEFAULT 'EUR' CHECK (currency IN ('EUR', 'CHF', 'USD', 'BRL')),
+  timezone TEXT DEFAULT 'Europe/Berlin',
+  tour_mode_enabled BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  is_approved BOOLEAN DEFAULT false,
+  stripe_account_id TEXT,
+  theme_color TEXT DEFAULT '#F59E0B',
+  font_preset TEXT DEFAULT 'Inter',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- ============================================
+-- ARTIST AVAILABILITY
+-- ============================================
+CREATE TABLE public.artist_availability (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  artist_id UUID REFERENCES public.artists(id) ON DELETE CASCADE,
+  day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  slot_duration_minutes INTEGER DEFAULT 60,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- ============================================
+-- CITY SCHEDULE (Tour Mode)
+-- ============================================
+CREATE TABLE public.city_schedule (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  artist_id UUID REFERENCES public.artists(id) ON DELETE CASCADE,
+  city TEXT NOT NULL,
+  country TEXT NOT NULL,
+  country_code TEXT,
+  full_address TEXT NOT NULL,
+  venue_name TEXT,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- ============================================
+-- BOOKING LOCKS (10-minute hold)
+-- ============================================
+CREATE TABLE public.booking_locks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  artist_id UUID REFERENCES public.artists(id) ON DELETE CASCADE,
+  slot_datetime TIMESTAMPTZ NOT NULL,
+  duration_minutes INTEGER DEFAULT 60,
+  customer_email TEXT NOT NULL,
+  customer_name TEXT NOT NULL,
+  customer_phone TEXT,
+  customer_instagram TEXT,
+  payment_intent_id TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'expired', 'cancelled')),
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- ============================================
+-- BOOKINGS
+-- ============================================
+CREATE TABLE public.bookings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  artist_id UUID REFERENCES public.artists(id) ON DELETE CASCADE,
+  lock_id UUID REFERENCES public.booking_locks(id),
+  city_schedule_id UUID REFERENCES public.city_schedule(id),
+  customer_email TEXT NOT NULL,
+  customer_name TEXT NOT NULL,
+  customer_phone TEXT,
+  customer_instagram TEXT,
+  slot_datetime TIMESTAMPTZ NOT NULL,
+  duration_minutes INTEGER DEFAULT 60,
+  deposit_amount DECIMAL(10,2) NOT NULL,
+  currency TEXT DEFAULT 'EUR',
+  status TEXT DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'completed', 'cancelled', 'no_show')),
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- ============================================
+-- PAYMENTS
+-- ============================================
+CREATE TABLE public.payments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  artist_id UUID REFERENCES public.artists(id),
+  booking_id UUID REFERENCES public.bookings(id),
+  lock_id UUID REFERENCES public.booking_locks(id),
+  amount DECIMAL(10,2) NOT NULL,
+  currency TEXT DEFAULT 'EUR',
+  payment_method TEXT DEFAULT 'stripe',
+  payment_intent_id TEXT UNIQUE,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'succeeded', 'failed', 'refunded')),
+  error_message TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- ============================================
+-- DEPOSITS (with 90-day retention)
+-- ============================================
+CREATE TABLE public.deposits (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  payment_id UUID REFERENCES public.payments(id),
+  artist_id UUID REFERENCES public.artists(id),
+  booking_id UUID REFERENCES public.bookings(id),
+  amount DECIMAL(10,2) NOT NULL,
+  currency TEXT DEFAULT 'EUR',
+  platform_fee DECIMAL(10,2) NOT NULL, -- 30%
+  artist_amount DECIMAL(10,2) GENERATED ALWAYS AS (amount - platform_fee) STORED,
+  is_refundable BOOLEAN DEFAULT false, -- Always false
+  status TEXT DEFAULT 'held' CHECK (status IN ('held', 'available', 'released', 'forfeited')),
+  retention_until TIMESTAMPTZ,
+  released_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Trigger: Set retention_until to 90 days
+CREATE OR REPLACE FUNCTION set_retention_date()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.retention_until := NOW() + INTERVAL '90 days';
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER deposit_retention_trigger
+BEFORE INSERT ON public.deposits
+FOR EACH ROW EXECUTE FUNCTION set_retention_date();
+-- ============================================
+-- NOTIFICATIONS
+-- ============================================
+CREATE TABLE public.notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.profiles(id),
+  artist_id UUID REFERENCES public.artists(id),
+  booking_id UUID REFERENCES public.bookings(id),
+  type TEXT NOT NULL CHECK (type IN ('email', 'whatsapp', 'push', 'sms')),
+  template TEXT NOT NULL,
+  recipient TEXT NOT NULL,
+  subject TEXT,
+  data JSONB DEFAULT '{}',
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed')),
+  attempts INTEGER DEFAULT 0,
+  sent_at TIMESTAMPTZ,
+  scheduled_for TIMESTAMPTZ DEFAULT NOW(),
+  error_message TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- ============================================
+-- FINANCIAL LEDGER
+-- ============================================
+CREATE TABLE public.financial_ledger (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  artist_id UUID REFERENCES public.artists(id),
+  transaction_type TEXT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  currency TEXT DEFAULT 'EUR',
+  description TEXT,
+  reference_type TEXT,
+  reference_id UUID,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- ============================================
+-- AUDIT LOG
+-- ============================================
+CREATE TABLE public.audit_log (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID,
+  artist_id UUID,
+  action TEXT NOT NULL,
+  table_name TEXT,
+  record_id UUID,
+  old_data JSONB,
+  new_data JSONB,
+  ip_address INET,
+  user_agent TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- ============================================
+-- GLOBAL SETTINGS
+-- ============================================
+CREATE TABLE public.global_settings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  key TEXT UNIQUE NOT NULL,
+  value TEXT NOT NULL,
+  description TEXT,
+  is_public BOOLEAN DEFAULT false,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Insert defaults
+INSERT INTO public.global_settings (key, value, description, is_public) VALUES
+  ('platform_fee_percentage', '30', 'Agency fee (Altus Ink)', false),
+  ('retention_days', '90', 'Days before deposit release', false),
+  ('lock_duration_minutes', '10', 'Booking lock duration', true);
+-- ============================================
+-- ROW LEVEL SECURITY
+-- ============================================
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.artists ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.booking_locks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.deposits ENABLE ROW LEVEL SECURITY;
+-- CEO sees everything
+CREATE POLICY "CEO full access" ON public.artists FOR ALL
+  USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'ceo');
+-- Artists see only their own
+CREATE POLICY "Artists own data" ON public.artists FOR ALL
+  USING (user_id = auth.uid());
+-- Public booking pages (read-only, limited fields)
+CREATE POLICY "Public artist profiles" ON public.artists FOR SELECT
+  USING (is_active = true AND is_approved = true);
+-- Indexes for performance
+CREATE INDEX idx_bookings_artist_date ON public.bookings(artist_id, slot_datetime);
+CREATE INDEX idx_locks_expires ON public.booking_locks(expires_at) WHERE status = 'pending';
+CREATE INDEX idx_deposits_retention ON public.deposits(retention_until) WHERE status = 'held';
+```
+---
+## 📁 FILE STRUCTURE
+```
+app/
+├── page.tsx                           # Landing page
+├── globals.css                        # Dark theme + utilities
+├── layout.tsx                         # Root layout
+├── (auth)/
+│   ├── login/page.tsx
+│   └── register/page.tsx
+├── (marketing)/
+│   └── [artist]/page.tsx              # Public artist page
+├── book/
+│   └── [artist]/page.tsx              # Booking flow
+├── dashboard/
+│   ├── layout.tsx                     # Sidebar + navigation
+│   ├── artist/
+│   │   ├── page.tsx                   # Artist dashboard
+│   │   ├── calendar/page.tsx
+│   │   ├── personalize/page.tsx
+│   │   ├── tour/page.tsx
+│   │   ├── earnings/page.tsx
+│   │   └── settings/page.tsx
+│   └── ceo/
+│       ├── page.tsx                   # CEO dashboard
+│       ├── artists/page.tsx
+│       ├── finance/page.tsx
+│       └── settings/page.tsx
+├── api/
+│   ├── bookings/
+│   │   └── lock/route.ts
+│   ├── webhooks/
+│   │   └── stripe/route.ts
+│   ├── dashboard/
+│   │   ├── artist/route.ts
+│   │   └── ceo/route.ts
+│   ├── tour/route.ts
+│   └── cron/route.ts
+components/
+├── booking/
+│   ├── Calendar.tsx
+│   └── PaymentForm.tsx
+├── dashboard/
+│   ├── Sidebar.tsx
+│   └── StatCard.tsx
+└── ui/
+    ├── AnimatedPage.tsx
+    └── Skeleton.tsx
+lib/
+├── supabase/
+│   ├── client.ts
+│   ├── server.ts
+│   └── types.ts
+├── stripe.ts
+├── booking.ts
+├── notifications.ts
+├── validation.ts
+├── rate-limit.ts
+├── config.ts
+├── analytics.ts
+└── error-tracking.ts
+middleware.ts                          # Subdomain routing
+```
+---
+## 🎨 DESIGN SYSTEM
+### Colors (Dark Theme)
+```css
+--background: #0A0A0A;
+--foreground: #FAFAFA;
+--zinc-900: #18181B;
+--zinc-800: #27272A;
+--amber-500: #F59E0B;  /* Primary accent */
+--emerald-500: #10B981; /* Success */
+--red-500: #EF4444;    /* Error */
+```
+### Typography
+- Headings: `font-bold tracking-tight`
+- Body: `text-zinc-400`
+- Links: `text-amber-500 hover:text-amber-400`
+### Animations (Framer Motion)
+```typescript
+// Page enter
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  enter: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+// Stagger children
+const stagger = { staggerChildren: 0.05 };
+// Hover scale
+whileHover={{ scale: 1.02 }}
+whileTap={{ scale: 0.98 }}
+```
+### Mobile Components
+```typescript
+// Touch-friendly button
+<button className="
+  w-full py-4 rounded-xl
+  text-lg font-semibold
+  active:scale-95 transition-transform
+  touch-manipulation
+">
+// Bottom sheet pattern
+<div className="
+  fixed bottom-0 left-0 right-0
+  bg-zinc-900 rounded-t-3xl
+  p-4 pb-[env(safe-area-inset-bottom)]
+  lg:relative lg:rounded-2xl
+">
+// Swipeable cards
+<motion.div
+  drag="x"
+  dragConstraints={{ left: -100, right: 0 }}
+>
+```
+---
+## 🔐 ENVIRONMENT VARIABLES (Replit Secrets)
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+STRIPE_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+RESEND_API_KEY=re_...
+ZAPI_INSTANCE_ID=your-instance
+ZAPI_TOKEN=your-token
+NEXT_PUBLIC_APP_URL=https://altusink.io
+CRON_SECRET=your-random-secret
+```
+---
+## 📝 CRITICAL RULES FOR REPLIT AI
+1. **MOBILE-FIRST** — All components must work on 320px width
+2. **DARK THEME ONLY** — No light mode, ever
+3. **30% AGENCY FEE** — `platformFee = amount * 0.30`
+4. **PRIVATE PLATFORM** — No public registration, invite-only
+5. **NON-REFUNDABLE** — Deposits are NEVER refundable
+6. **10-MINUTE LOCKS** — Slots are held for 10 minutes max
+7. **90-DAY RETENTION** — Deposits held before artist payout
+8. **TOUR MODE** — Address hidden until payment confirmed
+9. **PREMIUM UX** — Framer Motion animations everywhere
+10. **TYPE SAFETY** — TypeScript strict mode, no `any`
+---
+## 🚀 BUILD ORDER
+1. **Foundation**: `lib/supabase/*`, `lib/config.ts`, `middleware.ts`
+2. **Auth**: Login, register, session management
+3. **Public**: Landing page, artist profile page
+4. **Booking**: Calendar, lock system, payment form
+5. **API**: Lock creation, Stripe webhook, dashboard endpoints
+6. **Dashboards**: Artist dashboard, CEO dashboard
+7. **Features**: Tour mode, personalization, notifications
+8. **Polish**: Loading states, error handling, animations
+---
+## ✅ VALIDATION CHECKLIST
+Before deploying, verify:
+- [ ] Mobile responsive on all pages (320px-1920px)
+- [ ] Touch targets ≥44px on mobile
+- [ ] Bottom navigation accessible with thumb
+- [ ] Stripe payment works in test mode
+- [ ] Booking locks expire after 10 minutes
+- [ ] 30% fee calculated correctly
+- [ ] Tour mode hides address until payment
+- [ ] CEO can approve/reject artists
+- [ ] Rate limiting on booking endpoints
+- [ ] Error tracking captures failures
+- [ ] All text is translatable (i18n ready)
+---
+**END OF PROMPT — COPY EVERYTHING ABOVE INTO REPLIT AI**
