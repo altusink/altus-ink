@@ -20,6 +20,18 @@ The application is functional with core features implemented:
 
 ## Key Features
 
+### Internationalization (i18n)
+- 8 languages supported: EN, PT-BR, PT-PT, ES, FR, DE, IT, NL
+- LocaleProvider context for global language state management
+- Language Selector modal on first visit (stored in localStorage)
+- Language Switcher in navigation header for changing language
+- All UI components use translation keys from `client/src/lib/i18n/translations.ts`
+
+### Premium Gold Branding
+- Pure gold color scheme: hsl(45, 93%, 47%) - no amber/orange
+- Gold gradient variants for hover and active states
+- Consistent gold styling across navigation, buttons, and accents
+
 ### Multi-Tenant Architecture
 - Artists have personalized booking pages at `artist.altusink.io` or `/book/:subdomain`
 - Each artist can customize their theme color, bio, and branding
@@ -60,7 +72,10 @@ client/src/
 ├── hooks/
 │   └── useAuth.ts       # Authentication hook
 └── lib/
-    └── queryClient.ts   # TanStack Query config
+    ├── queryClient.ts   # TanStack Query config
+    └── i18n/
+        ├── translations.ts    # All translation strings (8 languages)
+        └── locale-context.tsx # LocaleProvider context
 
 server/
 ├── routes.ts            # API endpoints
@@ -106,7 +121,7 @@ shared/
 The application runs on port 5000. Use `npm run dev` to start the development server.
 
 ## Planned Features (Not Yet Implemented)
-- Multi-language support (EN, PT-BR, PT-PT, ES, FR, DE, IT)
-- Email notifications for booking confirmations
-- Stripe checkout integration (webhooks configured)
+- Email notifications for booking confirmations (Resend integration)
+- WhatsApp notifications (Z-API integration)
 - Full subdomain routing (artist.altusink.io)
+- Tour mode payment-gated address display UI
