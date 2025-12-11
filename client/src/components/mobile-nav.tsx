@@ -48,7 +48,7 @@ export default function MobileNav() {
       <div className="flex justify-around items-end py-3 px-2">
         <NavItem href="/" icon={Home} label={t.common.home} active={location === "/"} />
         <NavItem href="/book/demo" icon={Calendar} label={t.common.bookNow} highlight />
-        <NavItem href="/api/login" icon={User} label={t.common.login} />
+        <NavItem href="/login" icon={User} label={t.common.login} />
       </div>
     </nav>
   );

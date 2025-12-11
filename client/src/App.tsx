@@ -24,6 +24,7 @@ import CEOFinancial from "@/pages/dashboard/ceo/financial";
 
 // Public Pages
 import BookingPage from "@/pages/book/index";
+import LoginPage from "@/pages/login";
 
 // Layout Components
 import Navigation from "@/components/navigation";
@@ -54,6 +55,9 @@ function Router() {
     <Switch>
       {/* Landing Page - Always the entry point */}
       <Route path="/" component={Landing} />
+      
+      {/* Login Page */}
+      <Route path="/login" component={LoginPage} />
       
       {/* Public Booking Pages - Always accessible */}
       <Route path="/book/:subdomain" component={BookingPage} />

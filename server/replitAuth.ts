@@ -148,37 +148,45 @@ export async function setupAuth(app: Express) {
     }
   }
 
+  // Username/password login route (always available)
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+      
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user || user.password !== password) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+      
+      if (!user.isActive) {
+        return res.status(403).json({ message: "Account is disabled" });
+      }
+      
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        res.json({ user: { id: user.id, role: user.role, firstName: user.firstName } });
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Dev mode login routes (when OIDC is not available)
   if (!isReplitDeployment()) {
     console.log("Running in development mode - using simplified auth");
     
-    // Simple dev login that creates a demo user
-    app.get("/api/login", async (req, res) => {
-      try {
-        // Create or get demo user
-        let user = await storage.getUserByEmail("demo@altusink.io");
-        
-        if (!user) {
-          user = await storage.upsertUser({
-            id: "demo-user-1",
-            email: "demo@altusink.io",
-            firstName: "Demo",
-            lastName: "Artist",
-            role: "artist",
-          });
-        }
-        
-        req.login(user, (err) => {
-          if (err) {
-            console.error("Login error:", err);
-            return res.redirect("/?error=login_failed");
-          }
-          res.redirect("/");
-        });
-      } catch (error) {
-        console.error("Dev login error:", error);
-        res.redirect("/?error=login_failed");
-      }
+    // Redirect to login page instead of auto-login
+    app.get("/api/login", (req, res) => {
+      res.redirect("/login");
     });
 
     app.get("/api/callback", (req, res) => {

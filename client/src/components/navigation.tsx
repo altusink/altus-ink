@@ -49,9 +49,14 @@ export default function Navigation() {
             </>
           ) : (
             <>
-              <Link href="/api/login" className="text-zinc-400 hover:text-white hidden sm:block" data-testid="nav-login">
+              <Button
+                variant="outline"
+                className="border-gold text-gold hover:bg-gold hover:text-black"
+                onClick={() => window.location.href = "/login"}
+                data-testid="button-login"
+              >
                 {t.common.login}
-              </Link>
+              </Button>
               <Button
                 className="bg-gold hover:bg-gold-light text-black font-bold px-6"
                 onClick={() => {
