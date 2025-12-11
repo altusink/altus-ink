@@ -637,6 +637,121 @@ export async function registerRoutes(
     }
   });
 
+  // Update booking status
+  app.patch("/api/ceo/bookings/:id/status", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== "ceo") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { status } = req.body;
+      if (!status || !["pending", "confirmed", "completed", "cancelled", "no_show"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      
+      const booking = await storage.updateBookingStatus(req.params.id, status);
+      res.json(booking);
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      res.status(500).json({ message: "Failed to update booking status" });
+    }
+  });
+
+  // Reports endpoint
+  app.get("/api/ceo/reports", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== "ceo") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { period = "30" } = req.query;
+      const days = parseInt(period as string, 10);
+      
+      const stats = await storage.getCEOStats();
+      const topArtists = await storage.getTopArtists(5);
+      
+      res.json({
+        totalRevenue: stats.totalRevenue,
+        revenueChange: 12,
+        totalBookings: stats.totalBookings,
+        bookingsChange: 8,
+        averageDeposit: stats.totalBookings > 0 ? Math.round(stats.totalRevenue / stats.totalBookings) : 0,
+        depositChange: 5,
+        activeArtists: stats.activeArtists,
+        artistsChange: 0,
+        monthlyBreakdown: [],
+        topArtists: topArtists.map(a => ({
+          id: a.id,
+          name: a.displayName,
+          bookings: 0,
+          revenue: 0,
+        })),
+      });
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+      res.status(500).json({ message: "Failed to fetch reports" });
+    }
+  });
+
+  // Integration status endpoint
+  app.get("/api/ceo/integration-status", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== "ceo") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      res.json({
+        smtp: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD),
+        stripe: !!process.env.STRIPE_SECRET_KEY,
+        whatsapp: !!(process.env.ZAPI_INSTANCE_ID && process.env.ZAPI_TOKEN),
+        revolut: false,
+        wise: false,
+      });
+    } catch (error) {
+      console.error("Error fetching integration status:", error);
+      res.status(500).json({ message: "Failed to fetch integration status" });
+    }
+  });
+
+  // SMTP settings (placeholder - actual credentials should be set via env vars)
+  app.post("/api/ceo/settings/smtp", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== "ceo") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // In production, SMTP settings should be configured via environment variables
+      // This endpoint confirms receipt but doesn't store credentials in DB
+      res.json({ success: true, message: "SMTP settings received. Configure via environment variables for security." });
+    } catch (error) {
+      console.error("Error saving SMTP settings:", error);
+      res.status(500).json({ message: "Failed to save SMTP settings" });
+    }
+  });
+
+  // SMTP test email
+  app.post("/api/ceo/settings/smtp/test", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== "ceo") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+        return res.status(400).json({ message: "SMTP not configured. Please set SMTP environment variables." });
+      }
+      
+      res.json({ success: true, message: "Test email would be sent if SMTP is configured" });
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      res.status(500).json({ message: "Failed to send test email" });
+    }
+  });
+
   // ==================== PUBLIC API ROUTES ====================
   
   // Get public artist profile

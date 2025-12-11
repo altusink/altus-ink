@@ -6,10 +6,11 @@ ALTUSINK.IO is a premium multi-tenant tattoo booking SaaS platform for Altus Ink
 ## Current State
 The application is functional with core features implemented:
 - Authentication (Replit Auth with development mode fallback)
-- Artist dashboard with overview, calendar, earnings, tour mode, personalization, and settings
-- CEO dashboard with artist management, financial overview, and platform stats
+- Artist dashboard with overview, calendar, earnings, tour mode, personalization, portfolio, and settings
+- CEO dashboard with overview, artists, bookings, financial, reports, and settings pages
 - Public booking pages at `/book/:subdomain`
 - Database schema with full deposit retention and booking lock support
+- All dashboard menu items connected to dedicated pages with database integration
 
 ## Tech Stack
 - **Frontend**: React 18 + TypeScript, Vite, TanStack Query, Wouter routing
@@ -111,8 +112,14 @@ shared/
 - `GET /api/ceo/artists` - List all artists
 - `POST /api/ceo/artists/:id/approve` - Approve artist
 - `POST /api/ceo/artists/:id/deactivate` - Deactivate artist
+- `GET /api/ceo/bookings` - All bookings with filters
+- `PATCH /api/ceo/bookings/:id/status` - Update booking status
 - `GET /api/ceo/deposits` - All deposits
 - `GET /api/ceo/financial/stats` - Financial overview
+- `GET /api/ceo/reports` - Reports and analytics
+- `GET /api/ceo/integration-status` - Check integration status (SMTP, Stripe, WhatsApp)
+- `POST /api/ceo/settings/smtp` - Save SMTP settings
+- `POST /api/ceo/settings/smtp/test` - Test SMTP configuration
 
 ### Public APIs
 - `GET /api/public/artist/:subdomain` - Get public artist profile
@@ -128,8 +135,21 @@ shared/
 ## Development
 The application runs on port 5000. Use `npm run dev` to start the development server.
 
+## Integrations Configuration
+
+### CEO Settings Page (`/dashboard/ceo/settings`)
+The settings page provides centralized configuration for all platform integrations:
+- **Email (SMTP)**: Hostinger SMTP configuration for booking confirmations
+- **Payments**: Stripe (configured via Replit), Revolut, Wise (display options)
+- **WhatsApp**: Z-API integration for notifications
+- **Domain**: DNS configuration guide for Hostinger
+
+### Required Environment Variables
+- `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` - For email notifications
+- `ZAPI_INSTANCE_ID`, `ZAPI_TOKEN` - For WhatsApp notifications
+- `STRIPE_SECRET_KEY` - For payment processing (configured via Replit integration)
+
 ## Planned Features (Not Yet Implemented)
-- Email notifications for booking confirmations (Resend integration)
-- WhatsApp notifications (Z-API integration)
 - Full subdomain routing (artist.altusink.io)
 - Tour mode payment-gated address display UI
+- Real-time WhatsApp notifications

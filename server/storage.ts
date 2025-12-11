@@ -87,6 +87,8 @@ export interface IStorage {
   createBooking(data: InsertBooking): Promise<Booking>;
   getAllBookings(): Promise<Booking[]>;
   getRecentBookings(limit?: number): Promise<Booking[]>;
+  updateBookingStatus(id: string, status: string): Promise<Booking | undefined>;
+  getTopArtists(limit?: number): Promise<Artist[]>;
   
   // Deposit operations
   getArtistDeposits(artistId: string): Promise<Deposit[]>;
@@ -397,6 +399,24 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(bookings)
       .orderBy(desc(bookings.createdAt))
+      .limit(limit);
+  }
+
+  async updateBookingStatus(id: string, status: string): Promise<Booking | undefined> {
+    const [booking] = await db
+      .update(bookings)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(bookings.id, id))
+      .returning();
+    return booking;
+  }
+
+  async getTopArtists(limit = 5): Promise<Artist[]> {
+    return db
+      .select()
+      .from(artists)
+      .where(eq(artists.isActive, true))
+      .orderBy(desc(artists.createdAt))
       .limit(limit);
   }
 

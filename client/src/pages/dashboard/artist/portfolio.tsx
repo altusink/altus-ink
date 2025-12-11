@@ -50,10 +50,7 @@ export default function PortfolioPage() {
 
   const createCategoryMutation = useMutation({
     mutationFn: async (data: { name: string; description: string }) => {
-      return apiRequest("/api/artist/portfolio/categories", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", "/api/artist/portfolio/categories", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artist/portfolio/categories"] });
@@ -69,7 +66,7 @@ export default function PortfolioPage() {
 
   const deleteCategoryMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/artist/portfolio/categories/${id}`, { method: "DELETE" });
+      return apiRequest("DELETE", `/api/artist/portfolio/categories/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artist/portfolio/categories"] });
@@ -83,10 +80,7 @@ export default function PortfolioPage() {
 
   const addPhotoMutation = useMutation({
     mutationFn: async (data: { photoUrl: string; description: string }) => {
-      return apiRequest(`/api/artist/portfolio/categories/${selectedCategory}/photos`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", `/api/artist/portfolio/categories/${selectedCategory}/photos`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artist/portfolio/categories", selectedCategory, "photos"] });
@@ -102,7 +96,7 @@ export default function PortfolioPage() {
 
   const deletePhotoMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/artist/portfolio/photos/${id}`, { method: "DELETE" });
+      return apiRequest("DELETE", `/api/artist/portfolio/photos/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/artist/portfolio/categories", selectedCategory, "photos"] });
