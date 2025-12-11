@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -38,8 +39,11 @@ import {
   DollarSign,
   AlertTriangle,
   CheckCircle2,
+  Plus,
+  Trash2,
+  Loader2,
 } from "lucide-react";
-import type { Artist } from "@shared/schema";
+import type { Artist, DepositValue } from "@shared/schema";
 
 const CURRENCIES = [
   { value: "EUR", label: "Euro (€)", symbol: "€" },
@@ -71,6 +75,10 @@ type SettingsFormData = z.infer<typeof settingsSchema>;
 export default function ArtistSettings() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const [showDepositDialog, setShowDepositDialog] = useState(false);
+  const [newDepositName, setNewDepositName] = useState("");
+  const [newDepositHours, setNewDepositHours] = useState("1");
+  const [newDepositAmount, setNewDepositAmount] = useState("");
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -88,6 +96,45 @@ export default function ArtistSettings() {
   const { data: artist, isLoading: artistLoading } = useQuery<Artist>({
     queryKey: ["/api/artist/me"],
     enabled: isAuthenticated,
+  });
+
+  const { data: depositValues = [] } = useQuery<DepositValue[]>({
+    queryKey: ["/api/artist/deposit-values"],
+    enabled: isAuthenticated,
+  });
+
+  const createDepositValueMutation = useMutation({
+    mutationFn: async (data: { name: string; durationHours: string; depositAmount: string }) => {
+      return apiRequest("POST", "/api/artist/deposit-values", {
+        name: data.name,
+        durationHours: parseInt(data.durationHours, 10),
+        depositAmount: parseFloat(data.depositAmount),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/artist/deposit-values"] });
+      setShowDepositDialog(false);
+      setNewDepositName("");
+      setNewDepositHours("1");
+      setNewDepositAmount("");
+      toast({ title: "Deposit option added" });
+    },
+    onError: () => {
+      toast({ title: "Failed to add deposit option", variant: "destructive" });
+    },
+  });
+
+  const deleteDepositValueMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/artist/deposit-values/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/artist/deposit-values"] });
+      toast({ title: "Deposit option removed" });
+    },
+    onError: () => {
+      toast({ title: "Failed to remove deposit option", variant: "destructive" });
+    },
   });
 
   const form = useForm<SettingsFormData>({
@@ -306,6 +353,63 @@ export default function ArtistSettings() {
           </CardContent>
         </Card>
 
+        {/* Deposit Values by Duration */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Session Deposit Options
+            </CardTitle>
+            <Button size="sm" onClick={() => setShowDepositDialog(true)} data-testid="button-add-deposit-value">
+              <Plus className="w-4 h-4 mr-1" />
+              Add Option
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Define different deposit amounts based on session duration. Clients will select their preferred option when booking.
+            </p>
+            {depositValues.length === 0 ? (
+              <div className="text-center py-6 bg-muted/30 rounded-lg">
+                <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No deposit options defined yet</p>
+                <p className="text-xs text-muted-foreground">Add options to let clients choose session duration</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {depositValues.map((dv) => (
+                  <div
+                    key={dv.id}
+                    className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+                    data-testid={`deposit-value-${dv.id}`}
+                  >
+                    <div>
+                      <p className="font-medium text-sm">{dv.name}</p>
+                      <p className="text-xs text-muted-foreground">{dv.durationHours} hour{dv.durationHours > 1 ? "s" : ""}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <p className="font-semibold">{selectedCurrency?.symbol}{dv.depositAmount}</p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteDepositValueMutation.mutate(dv.id)}
+                        disabled={deleteDepositValueMutation.isPending}
+                        data-testid={`button-delete-deposit-${dv.id}`}
+                      >
+                        {deleteDepositValueMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Stripe Connection */}
         <Card>
           <CardHeader>
@@ -360,6 +464,76 @@ export default function ArtistSettings() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Add Deposit Value Dialog */}
+      <Dialog open={showDepositDialog} onOpenChange={setShowDepositDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Session Deposit Option</DialogTitle>
+            <DialogDescription>Create a deposit option for a specific session duration</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Option Name</Label>
+              <Input
+                placeholder="e.g., Small Tattoo, Full Day Session..."
+                value={newDepositName}
+                onChange={(e) => setNewDepositName(e.target.value)}
+                data-testid="input-new-deposit-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Duration (hours)</Label>
+              <Select value={newDepositHours} onValueChange={setNewDepositHours}>
+                <SelectTrigger data-testid="select-new-deposit-hours">
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 hour</SelectItem>
+                  <SelectItem value="2">2 hours</SelectItem>
+                  <SelectItem value="3">3 hours</SelectItem>
+                  <SelectItem value="4">4 hours</SelectItem>
+                  <SelectItem value="5">5 hours</SelectItem>
+                  <SelectItem value="6">6 hours</SelectItem>
+                  <SelectItem value="7">7 hours</SelectItem>
+                  <SelectItem value="8">8 hours (Full Day)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Deposit Amount ({selectedCurrency?.symbol || "€"})</Label>
+              <Input
+                type="number"
+                min="10"
+                step="0.01"
+                placeholder="100.00"
+                value={newDepositAmount}
+                onChange={(e) => setNewDepositAmount(e.target.value)}
+                data-testid="input-new-deposit-amount"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDepositDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => createDepositValueMutation.mutate({
+                name: newDepositName,
+                durationHours: newDepositHours,
+                depositAmount: newDepositAmount,
+              })}
+              disabled={!newDepositName || !newDepositAmount || createDepositValueMutation.isPending}
+              data-testid="button-save-deposit-value"
+            >
+              {createDepositValueMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : null}
+              Add Option
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

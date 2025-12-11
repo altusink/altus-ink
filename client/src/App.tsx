@@ -15,6 +15,7 @@ import ArtistEarnings from "@/pages/dashboard/artist/earnings";
 import ArtistTour from "@/pages/dashboard/artist/tour";
 import ArtistPersonalize from "@/pages/dashboard/artist/personalize";
 import ArtistSettings from "@/pages/dashboard/artist/settings";
+import ArtistPortfolio from "@/pages/dashboard/artist/portfolio";
 
 // CEO Dashboard Pages
 import CEODashboard from "@/pages/dashboard/ceo/index";
@@ -60,6 +61,7 @@ function Router() {
           <Route path="/dashboard/artist/tour" component={ArtistTour} />
           <Route path="/dashboard/artist/personalize" component={ArtistPersonalize} />
           <Route path="/dashboard/artist/settings" component={ArtistSettings} />
+          <Route path="/dashboard/artist/portfolio" component={ArtistPortfolio} />
           
           {/* CEO Dashboard Routes */}
           <Route path="/dashboard/ceo" component={CEODashboard} />

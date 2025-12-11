@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, gte, lte } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, count } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
@@ -12,6 +12,13 @@ import {
   notifications,
   financialLedger,
   globalSettings,
+  portfolioCategories,
+  portfolioPhotos,
+  depositValues,
+  vendorGoals,
+  vendorCommissions,
+  waitingList,
+  emailTemplates,
   type User,
   type UpsertUser,
   type Artist,
@@ -28,6 +35,18 @@ import {
   type InsertPayment,
   type Deposit,
   type InsertDeposit,
+  type PortfolioCategory,
+  type InsertPortfolioCategory,
+  type PortfolioPhoto,
+  type InsertPortfolioPhoto,
+  type DepositValue,
+  type InsertDepositValue,
+  type VendorGoal,
+  type InsertVendorGoal,
+  type VendorCommission,
+  type InsertVendorCommission,
+  type WaitingListEntry,
+  type InsertWaitingList,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -72,6 +91,33 @@ export interface IStorage {
   getArtistDeposits(artistId: string): Promise<Deposit[]>;
   getAllDeposits(): Promise<Deposit[]>;
   createDeposit(data: InsertDeposit): Promise<Deposit>;
+  
+  // Portfolio operations
+  getPortfolioCategories(artistId: string): Promise<PortfolioCategory[]>;
+  createPortfolioCategory(data: InsertPortfolioCategory): Promise<PortfolioCategory>;
+  updatePortfolioCategory(id: string, data: Partial<InsertPortfolioCategory>): Promise<PortfolioCategory | undefined>;
+  deletePortfolioCategory(id: string): Promise<void>;
+  getPortfolioPhotos(categoryId: string): Promise<PortfolioPhoto[]>;
+  getAllArtistPhotos(artistId: string): Promise<PortfolioPhoto[]>;
+  createPortfolioPhoto(data: InsertPortfolioPhoto): Promise<PortfolioPhoto>;
+  deletePortfolioPhoto(id: string): Promise<void>;
+  getPhotosCountByCategory(categoryId: string): Promise<number>;
+  
+  // Deposit values operations
+  getDepositValues(artistId: string): Promise<DepositValue[]>;
+  createDepositValue(data: InsertDepositValue): Promise<DepositValue>;
+  updateDepositValue(id: string, data: Partial<InsertDepositValue>): Promise<DepositValue | undefined>;
+  deleteDepositValue(id: string): Promise<void>;
+  
+  // Vendor operations
+  getVendorGoals(vendorId: string): Promise<VendorGoal[]>;
+  createVendorGoal(data: InsertVendorGoal): Promise<VendorGoal>;
+  getVendorCommissions(vendorId: string): Promise<VendorCommission[]>;
+  createVendorCommission(data: InsertVendorCommission): Promise<VendorCommission>;
+  
+  // Waiting list operations
+  getWaitingList(artistId: string): Promise<WaitingListEntry[]>;
+  addToWaitingList(data: InsertWaitingList): Promise<WaitingListEntry>;
   
   // Stats
   getArtistStats(artistId: string): Promise<{
@@ -364,6 +410,134 @@ export class DatabaseStorage implements IStorage {
   async createDeposit(data: InsertDeposit): Promise<Deposit> {
     const [deposit] = await db.insert(deposits).values(data).returning();
     return deposit;
+  }
+
+  // Portfolio operations
+  async getPortfolioCategories(artistId: string): Promise<PortfolioCategory[]> {
+    return db
+      .select()
+      .from(portfolioCategories)
+      .where(eq(portfolioCategories.artistId, artistId))
+      .orderBy(portfolioCategories.sortOrder);
+  }
+
+  async createPortfolioCategory(data: InsertPortfolioCategory): Promise<PortfolioCategory> {
+    const [category] = await db.insert(portfolioCategories).values(data).returning();
+    return category;
+  }
+
+  async updatePortfolioCategory(id: string, data: Partial<InsertPortfolioCategory>): Promise<PortfolioCategory | undefined> {
+    const [category] = await db
+      .update(portfolioCategories)
+      .set(data)
+      .where(eq(portfolioCategories.id, id))
+      .returning();
+    return category;
+  }
+
+  async deletePortfolioCategory(id: string): Promise<void> {
+    await db.delete(portfolioCategories).where(eq(portfolioCategories.id, id));
+  }
+
+  async getPortfolioPhotos(categoryId: string): Promise<PortfolioPhoto[]> {
+    return db
+      .select()
+      .from(portfolioPhotos)
+      .where(eq(portfolioPhotos.categoryId, categoryId))
+      .orderBy(portfolioPhotos.sortOrder);
+  }
+
+  async getAllArtistPhotos(artistId: string): Promise<PortfolioPhoto[]> {
+    return db
+      .select()
+      .from(portfolioPhotos)
+      .where(eq(portfolioPhotos.artistId, artistId))
+      .orderBy(portfolioPhotos.sortOrder);
+  }
+
+  async createPortfolioPhoto(data: InsertPortfolioPhoto): Promise<PortfolioPhoto> {
+    const [photo] = await db.insert(portfolioPhotos).values(data).returning();
+    return photo;
+  }
+
+  async deletePortfolioPhoto(id: string): Promise<void> {
+    await db.delete(portfolioPhotos).where(eq(portfolioPhotos.id, id));
+  }
+
+  async getPhotosCountByCategory(categoryId: string): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(portfolioPhotos)
+      .where(eq(portfolioPhotos.categoryId, categoryId));
+    return result[0]?.count ?? 0;
+  }
+
+  // Deposit values operations
+  async getDepositValues(artistId: string): Promise<DepositValue[]> {
+    return db
+      .select()
+      .from(depositValues)
+      .where(eq(depositValues.artistId, artistId))
+      .orderBy(depositValues.sortOrder);
+  }
+
+  async createDepositValue(data: InsertDepositValue): Promise<DepositValue> {
+    const [value] = await db.insert(depositValues).values(data).returning();
+    return value;
+  }
+
+  async updateDepositValue(id: string, data: Partial<InsertDepositValue>): Promise<DepositValue | undefined> {
+    const [value] = await db
+      .update(depositValues)
+      .set(data)
+      .where(eq(depositValues.id, id))
+      .returning();
+    return value;
+  }
+
+  async deleteDepositValue(id: string): Promise<void> {
+    await db.delete(depositValues).where(eq(depositValues.id, id));
+  }
+
+  // Vendor operations
+  async getVendorGoals(vendorId: string): Promise<VendorGoal[]> {
+    return db
+      .select()
+      .from(vendorGoals)
+      .where(eq(vendorGoals.vendorId, vendorId))
+      .orderBy(desc(vendorGoals.year), desc(vendorGoals.month));
+  }
+
+  async createVendorGoal(data: InsertVendorGoal): Promise<VendorGoal> {
+    const [goal] = await db.insert(vendorGoals).values(data).returning();
+    return goal;
+  }
+
+  async getVendorCommissions(vendorId: string): Promise<VendorCommission[]> {
+    return db
+      .select()
+      .from(vendorCommissions)
+      .where(eq(vendorCommissions.vendorId, vendorId))
+      .orderBy(desc(vendorCommissions.createdAt));
+  }
+
+  async createVendorCommission(data: InsertVendorCommission): Promise<VendorCommission> {
+    const [commission] = await db.insert(vendorCommissions).values(data).returning();
+    return commission;
+  }
+
+  // Waiting list operations
+  async getWaitingList(artistId: string): Promise<WaitingListEntry[]> {
+    return db
+      .select()
+      .from(waitingList)
+      .where(and(eq(waitingList.artistId, artistId), eq(waitingList.status, "waiting")))
+      .orderBy(waitingList.createdAt);
+  }
+
+  async addToWaitingList(data: InsertWaitingList): Promise<WaitingListEntry> {
+    const [entry] = await db.insert(waitingList).values(data).returning();
+    return entry;
   }
 
   // Stats

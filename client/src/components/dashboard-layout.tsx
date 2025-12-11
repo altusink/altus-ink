@@ -20,6 +20,7 @@ import {
 import {
   Calendar,
   Home,
+  Image,
   LogOut,
   MapPin,
   Palette,
@@ -39,6 +40,7 @@ interface DashboardLayoutProps {
 const artistMenuItems = [
   { title: "Dashboard", url: "/dashboard/artist", icon: Home },
   { title: "Calendar", url: "/dashboard/artist/calendar", icon: Calendar },
+  { title: "Portfolio", url: "/dashboard/artist/portfolio", icon: Image },
   { title: "Tour Mode", url: "/dashboard/artist/tour", icon: MapPin },
   { title: "Earnings", url: "/dashboard/artist/earnings", icon: TrendingUp },
   { title: "Personalize", url: "/dashboard/artist/personalize", icon: Palette },

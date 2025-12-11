@@ -55,6 +55,8 @@ export default function BookingPage() {
   const [lockId, setLockId] = useState<string | null>(null);
   const [lockExpiresAt, setLockExpiresAt] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(600); // 10 minutes in seconds
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [quickEmail, setQuickEmail] = useState("");
 
   const { data: artist, isLoading: artistLoading, error: artistError } = useQuery<Artist>({
     queryKey: ["/api/public/artist", subdomain],
@@ -69,6 +71,24 @@ export default function BookingPage() {
   const { data: citySchedules } = useQuery<CitySchedule[]>({
     queryKey: ["/api/public/artist", subdomain, "city-schedules"],
     enabled: !!subdomain && !!artist?.tourModeEnabled,
+  });
+
+  interface PortfolioPhotoData {
+    id: string;
+    photoUrl: string;
+    description: string | null;
+  }
+
+  interface PortfolioCategoryWithPhotos {
+    id: string;
+    name: string;
+    description: string | null;
+    photos: PortfolioPhotoData[];
+  }
+
+  const { data: portfolio } = useQuery<PortfolioCategoryWithPhotos[]>({
+    queryKey: [`/api/public/artist/${subdomain}/portfolio/categories`],
+    enabled: !!subdomain && !!artist,
   });
 
   const form = useForm<BookingFormData>({
@@ -107,14 +127,19 @@ export default function BookingPage() {
   }, [lockExpiresAt, toast]);
 
   const createLockMutation = useMutation({
-    mutationFn: async (data: { slotDatetime: string; customerEmail: string; customerName: string }) => {
+    mutationFn: async (data: { slotDatetime: string; customerEmail: string; customerName: string; customerPhone: string }) => {
       const response = await apiRequest("POST", `/api/public/artist/${subdomain}/lock`, data);
       return response.json();
     },
     onSuccess: (data) => {
       setLockId(data.lockId);
       setLockExpiresAt(new Date(data.expiresAt));
+      setShowEmailDialog(false);
       setStep("details");
+      toast({
+        title: "Slot Reserved!",
+        description: "You have 10 minutes to complete your booking.",
+      });
     },
     onError: () => {
       toast({
@@ -122,6 +147,7 @@ export default function BookingPage() {
         description: "This time slot is no longer available. Please choose another.",
         variant: "destructive",
       });
+      setShowEmailDialog(false);
     },
   });
 
@@ -223,14 +249,24 @@ export default function BookingPage() {
 
   const handleProceedToDetails = () => {
     if (!selectedDate || !selectedTime) return;
+    setShowEmailDialog(true);
+  };
+
+  const handleCreateLock = () => {
+    if (!selectedDate || !selectedTime || !quickEmail) return;
     
     const datetime = new Date(selectedDate);
     const [hours, mins] = selectedTime.split(":").map(Number);
     datetime.setHours(hours, mins, 0, 0);
 
-    // For now, skip lock creation and go directly to details
-    // In production, this would create a lock first
-    setStep("details");
+    form.setValue("customerEmail", quickEmail);
+    
+    createLockMutation.mutate({
+      slotDatetime: datetime.toISOString(),
+      customerEmail: quickEmail,
+      customerName: "Guest",
+      customerPhone: "",
+    });
   };
 
   const onSubmit = (data: BookingFormData) => {
@@ -705,7 +741,100 @@ export default function BookingPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Portfolio Gallery */}
+        {step === "calendar" && portfolio && portfolio.length > 0 && (
+          <div className="mt-6 space-y-4">
+            <h3 className="font-semibold">Portfolio</h3>
+            {portfolio.map((category) => (
+              category.photos.length > 0 && (
+                <div key={category.id} className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{category.name}</Badge>
+                    {category.description && (
+                      <span className="text-xs text-muted-foreground">{category.description}</span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                    {category.photos.slice(0, 10).map((photo) => (
+                      <div
+                        key={photo.id}
+                        className="aspect-square rounded-md overflow-hidden cursor-pointer hover-elevate"
+                        data-testid={`portfolio-photo-${photo.id}`}
+                      >
+                        <img
+                          src={photo.photoUrl}
+                          alt={photo.description || "Portfolio work"}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                    {category.photos.length > 10 && (
+                      <div className="aspect-square rounded-md bg-muted flex items-center justify-center text-sm text-muted-foreground">
+                        +{category.photos.length - 10} more
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            ))}
+          </div>
+        )}
       </main>
+
+      {/* Email Dialog for Lock Creation */}
+      <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="w-5 h-5" style={{ color: artist?.themeColor || "#F59E0B" }} />
+              Reserve Your Slot
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Enter your email to reserve this slot for 10 minutes while you complete the booking.
+            </p>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email Address</label>
+              <Input
+                type="email"
+                placeholder="your@email.com"
+                value={quickEmail}
+                onChange={(e) => setQuickEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleCreateLock()}
+                data-testid="input-quick-email"
+              />
+            </div>
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <Shield className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>
+                Your slot will be reserved for 10 minutes. If the timer runs out,
+                you'll need to select a new time.
+              </span>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setShowEmailDialog(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateLock}
+              disabled={!quickEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(quickEmail) || createLockMutation.isPending}
+              className="flex-1"
+              style={{ backgroundColor: artist?.themeColor || "#F59E0B" }}
+              data-testid="button-reserve-slot"
+            >
+              {createLockMutation.isPending ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                "Reserve Slot"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Footer */}
       <footer className="border-t border-border/50 py-6 mt-8">

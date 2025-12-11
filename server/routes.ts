@@ -259,6 +259,214 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== PORTFOLIO ROUTES ====================
+  
+  // Get artist portfolio categories
+  app.get("/api/artist/portfolio/categories", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const artist = await storage.getArtistByUserId(userId);
+      
+      if (!artist) {
+        return res.json([]);
+      }
+      
+      const categories = await storage.getPortfolioCategories(artist.id);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching portfolio categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  // Create portfolio category
+  app.post("/api/artist/portfolio/categories", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const artist = await storage.getArtistByUserId(userId);
+      
+      if (!artist) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+      
+      const { name, description } = req.body;
+      if (!name || name.length < 2) {
+        return res.status(400).json({ message: "Category name must be at least 2 characters" });
+      }
+      
+      const category = await storage.createPortfolioCategory({
+        artistId: artist.id,
+        name,
+        description,
+      });
+      
+      res.json(category);
+    } catch (error) {
+      console.error("Error creating portfolio category:", error);
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  // Update portfolio category
+  app.patch("/api/artist/portfolio/categories/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { name, description, sortOrder, isActive } = req.body;
+      const category = await storage.updatePortfolioCategory(req.params.id, {
+        name,
+        description,
+        sortOrder,
+        isActive,
+      });
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating portfolio category:", error);
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  // Delete portfolio category
+  app.delete("/api/artist/portfolio/categories/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      await storage.deletePortfolioCategory(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting portfolio category:", error);
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
+  // Get photos by category
+  app.get("/api/artist/portfolio/categories/:categoryId/photos", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const photos = await storage.getPortfolioPhotos(req.params.categoryId);
+      res.json(photos);
+    } catch (error) {
+      console.error("Error fetching portfolio photos:", error);
+      res.status(500).json({ message: "Failed to fetch photos" });
+    }
+  });
+
+  // Get all artist photos
+  app.get("/api/artist/portfolio/photos", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const artist = await storage.getArtistByUserId(userId);
+      
+      if (!artist) {
+        return res.json([]);
+      }
+      
+      const photos = await storage.getAllArtistPhotos(artist.id);
+      res.json(photos);
+    } catch (error) {
+      console.error("Error fetching portfolio photos:", error);
+      res.status(500).json({ message: "Failed to fetch photos" });
+    }
+  });
+
+  // Add photo to category (max 20)
+  app.post("/api/artist/portfolio/categories/:categoryId/photos", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const artist = await storage.getArtistByUserId(userId);
+      
+      if (!artist) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+      
+      // Check photo limit (max 20 per category)
+      const count = await storage.getPhotosCountByCategory(req.params.categoryId);
+      if (count >= 20) {
+        return res.status(400).json({ message: "Maximum 20 photos per category" });
+      }
+      
+      const { photoUrl, description } = req.body;
+      if (!photoUrl) {
+        return res.status(400).json({ message: "Photo URL is required" });
+      }
+      
+      const photo = await storage.createPortfolioPhoto({
+        categoryId: req.params.categoryId,
+        artistId: artist.id,
+        photoUrl,
+        description,
+      });
+      
+      res.json(photo);
+    } catch (error) {
+      console.error("Error adding portfolio photo:", error);
+      res.status(500).json({ message: "Failed to add photo" });
+    }
+  });
+
+  // Delete photo
+  app.delete("/api/artist/portfolio/photos/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      await storage.deletePortfolioPhoto(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting portfolio photo:", error);
+      res.status(500).json({ message: "Failed to delete photo" });
+    }
+  });
+
+  // ==================== DEPOSIT VALUES ROUTES ====================
+  
+  // Get deposit values
+  app.get("/api/artist/deposit-values", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const artist = await storage.getArtistByUserId(userId);
+      
+      if (!artist) {
+        return res.json([]);
+      }
+      
+      const values = await storage.getDepositValues(artist.id);
+      res.json(values);
+    } catch (error) {
+      console.error("Error fetching deposit values:", error);
+      res.status(500).json({ message: "Failed to fetch deposit values" });
+    }
+  });
+
+  // Create deposit value
+  app.post("/api/artist/deposit-values", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const artist = await storage.getArtistByUserId(userId);
+      
+      if (!artist) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+      
+      const { name, durationHours, depositAmount } = req.body;
+      
+      const value = await storage.createDepositValue({
+        artistId: artist.id,
+        name,
+        durationHours: parseInt(durationHours),
+        depositAmount,
+      });
+      
+      res.json(value);
+    } catch (error) {
+      console.error("Error creating deposit value:", error);
+      res.status(500).json({ message: "Failed to create deposit value" });
+    }
+  });
+
+  // Delete deposit value
+  app.delete("/api/artist/deposit-values/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      await storage.deleteDepositValue(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting deposit value:", error);
+      res.status(500).json({ message: "Failed to delete deposit value" });
+    }
+  });
+
   // Get artist earnings stats
   app.get("/api/artist/earnings/stats", isAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -505,6 +713,52 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching public city schedules:", error);
       res.status(500).json({ message: "Failed to fetch city schedules" });
+    }
+  });
+
+  // Get public artist portfolio categories
+  app.get("/api/public/artist/:subdomain/portfolio", async (req: Request, res: Response) => {
+    try {
+      const artist = await storage.getArtistBySubdomain(req.params.subdomain);
+      
+      if (!artist || !artist.isActive || !artist.isApproved) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+      
+      const categories = await storage.getPortfolioCategories(artist.id);
+      
+      // Get photos for each category
+      const categoriesWithPhotos = await Promise.all(
+        categories.filter(c => c.isActive).map(async (category) => {
+          const photos = await storage.getPortfolioPhotos(category.id);
+          return {
+            ...category,
+            photos,
+          };
+        })
+      );
+      
+      res.json(categoriesWithPhotos);
+    } catch (error) {
+      console.error("Error fetching public portfolio:", error);
+      res.status(500).json({ message: "Failed to fetch portfolio" });
+    }
+  });
+
+  // Get public deposit values
+  app.get("/api/public/artist/:subdomain/deposit-values", async (req: Request, res: Response) => {
+    try {
+      const artist = await storage.getArtistBySubdomain(req.params.subdomain);
+      
+      if (!artist || !artist.isActive || !artist.isApproved) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+      
+      const values = await storage.getDepositValues(artist.id);
+      res.json(values.filter(v => v.isActive));
+    } catch (error) {
+      console.error("Error fetching public deposit values:", error);
+      res.status(500).json({ message: "Failed to fetch deposit values" });
     }
   });
 

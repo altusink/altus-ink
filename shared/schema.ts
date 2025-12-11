@@ -86,6 +86,7 @@ export const citySchedule = pgTable("city_schedule", {
   venueName: varchar("venue_name", { length: 200 }),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
+  addressVisibleAfterPayment: boolean("address_visible_after_payment").default(true),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -102,6 +103,11 @@ export const bookingLocks = pgTable(
     customerName: varchar("customer_name", { length: 200 }).notNull(),
     customerPhone: varchar("customer_phone", { length: 50 }),
     customerInstagram: varchar("customer_instagram", { length: 100 }),
+    referenceImageUrl: text("reference_image_url"),
+    tattooDescription: text("tattoo_description"),
+    authorizePortfolio: boolean("authorize_portfolio").default(false),
+    confirmationChannel: varchar("confirmation_channel", { length: 20 }).default("whatsapp"),
+    depositValueId: varchar("deposit_value_id"),
     paymentIntentId: varchar("payment_intent_id"),
     status: varchar("status", { length: 20 }).default("pending"),
     expiresAt: timestamp("expires_at").notNull(),
@@ -122,12 +128,19 @@ export const bookings = pgTable(
     customerName: varchar("customer_name", { length: 200 }).notNull(),
     customerPhone: varchar("customer_phone", { length: 50 }),
     customerInstagram: varchar("customer_instagram", { length: 100 }),
+    referenceImageUrl: text("reference_image_url"),
+    tattooDescription: text("tattoo_description"),
+    authorizePortfolio: boolean("authorize_portfolio").default(false),
     slotDatetime: timestamp("slot_datetime").notNull(),
     durationMinutes: integer("duration_minutes").default(60),
     depositAmount: decimal("deposit_amount", { precision: 10, scale: 2 }).notNull(),
     currency: varchar("currency", { length: 3 }).default("EUR"),
     status: varchar("status", { length: 20 }).default("confirmed"),
     notes: text("notes"),
+    resultPhotoUrl: text("result_photo_url"),
+    ratingStars: integer("rating_stars"),
+    ratingText: text("rating_text"),
+    addedToPortfolio: boolean("added_to_portfolio").default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -227,6 +240,116 @@ export const globalSettings = pgTable("global_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Portfolio categories
+export const portfolioCategories = pgTable("portfolio_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  artistId: varchar("artist_id").references(() => artists.id, { onDelete: "cascade" }).notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Portfolio photos (max 20 per category enforced in application)
+export const portfolioPhotos = pgTable(
+  "portfolio_photos",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    categoryId: varchar("category_id").references(() => portfolioCategories.id, { onDelete: "cascade" }).notNull(),
+    artistId: varchar("artist_id").references(() => artists.id, { onDelete: "cascade" }).notNull(),
+    photoUrl: text("photo_url").notNull(),
+    description: text("description"),
+    sortOrder: integer("sort_order").default(0),
+    fromBookingId: varchar("from_booking_id").references(() => bookings.id),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("idx_photos_category").on(table.categoryId)]
+);
+
+// Deposit values by duration
+export const depositValues = pgTable("deposit_values", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  artistId: varchar("artist_id").references(() => artists.id, { onDelete: "cascade" }).notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  durationHours: integer("duration_hours").notNull(),
+  depositAmount: decimal("deposit_amount", { precision: 10, scale: 2 }).notNull(),
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Vendor goals
+export const vendorGoals = pgTable(
+  "vendor_goals",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    vendorId: varchar("vendor_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+    setBy: varchar("set_by").references(() => users.id),
+    month: integer("month").notNull(),
+    year: integer("year").notNull(),
+    goalAmount: decimal("goal_amount", { precision: 10, scale: 2 }).notNull(),
+    achievedAmount: decimal("achieved_amount", { precision: 10, scale: 2 }).default("0"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("idx_vendor_goals").on(table.vendorId, table.year, table.month)]
+);
+
+// Vendor commissions (2%)
+export const vendorCommissions = pgTable("vendor_commissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  bookingId: varchar("booking_id").references(() => bookings.id),
+  saleAmount: decimal("sale_amount", { precision: 10, scale: 2 }).notNull(),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("2.00"),
+  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }).notNull(),
+  status: varchar("status", { length: 20 }).default("pending"),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Waiting list
+export const waitingList = pgTable(
+  "waiting_list",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    artistId: varchar("artist_id").references(() => artists.id, { onDelete: "cascade" }).notNull(),
+    cityScheduleId: varchar("city_schedule_id").references(() => citySchedule.id),
+    email: varchar("email", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 50 }).notNull(),
+    name: varchar("name", { length: 200 }).notNull(),
+    desiredDurationHours: integer("desired_duration_hours").notNull(),
+    status: varchar("status", { length: 20 }).default("waiting"),
+    notifiedAt: timestamp("notified_at"),
+    expiresAt: timestamp("expires_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("idx_waiting_list").on(table.artistId, table.status)]
+);
+
+// Email templates
+export const emailTemplates = pgTable("email_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  templateKey: varchar("template_key", { length: 100 }).unique().notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  htmlBody: text("html_body").notNull(),
+  variables: text("variables").array(),
+  isActive: boolean("is_active").default(true),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Terms acceptance
+export const termsAcceptance = pgTable("terms_acceptance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  clientEmail: varchar("client_email", { length: 255 }),
+  termType: varchar("term_type", { length: 50 }).notNull(),
+  version: varchar("version", { length: 20 }).default("v1.0"),
+  ipAddress: inet("ip_address"),
+  userAgent: text("user_agent"),
+  acceptedAt: timestamp("accepted_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one }) => ({
   artist: one(artists, {
@@ -301,6 +424,41 @@ export const insertDepositSchema = createInsertSchema(deposits).omit({
   createdAt: true,
 });
 
+export const insertPortfolioCategorySchema = createInsertSchema(portfolioCategories).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPortfolioPhotoSchema = createInsertSchema(portfolioPhotos).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDepositValueSchema = createInsertSchema(depositValues).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertVendorGoalSchema = createInsertSchema(vendorGoals).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertVendorCommissionSchema = createInsertSchema(vendorCommissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertWaitingListSchema = createInsertSchema(waitingList).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit({
+  id: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -322,6 +480,21 @@ export type Notification = typeof notifications.$inferSelect;
 export type FinancialLedger = typeof financialLedger.$inferSelect;
 export type AuditLog = typeof auditLog.$inferSelect;
 export type GlobalSetting = typeof globalSettings.$inferSelect;
+export type InsertPortfolioCategory = z.infer<typeof insertPortfolioCategorySchema>;
+export type PortfolioCategory = typeof portfolioCategories.$inferSelect;
+export type InsertPortfolioPhoto = z.infer<typeof insertPortfolioPhotoSchema>;
+export type PortfolioPhoto = typeof portfolioPhotos.$inferSelect;
+export type InsertDepositValue = z.infer<typeof insertDepositValueSchema>;
+export type DepositValue = typeof depositValues.$inferSelect;
+export type InsertVendorGoal = z.infer<typeof insertVendorGoalSchema>;
+export type VendorGoal = typeof vendorGoals.$inferSelect;
+export type InsertVendorCommission = z.infer<typeof insertVendorCommissionSchema>;
+export type VendorCommission = typeof vendorCommissions.$inferSelect;
+export type InsertWaitingList = z.infer<typeof insertWaitingListSchema>;
+export type WaitingListEntry = typeof waitingList.$inferSelect;
+export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+export type TermsAcceptance = typeof termsAcceptance.$inferSelect;
 
 // Booking form schema for frontend validation
 export const bookingFormSchema = z.object({
