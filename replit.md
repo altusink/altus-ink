@@ -15,8 +15,9 @@ The application is functional with core features implemented:
 - **Frontend**: React 18 + TypeScript, Vite, TanStack Query, Wouter routing
 - **Backend**: Express.js, PostgreSQL with Drizzle ORM
 - **UI**: Shadcn/ui components, Tailwind CSS, Lucide icons
-- **Auth**: Replit OpenID Connect (with dev mode fallback)
+- **Auth**: Dual auth system - Replit OpenID Connect (production) + Username/Password (development)
 - **Payments**: Stripe integration (configured)
+- **Security**: bcrypt for password hashing
 
 ## Key Features
 
@@ -52,6 +53,13 @@ The application is functional with core features implemented:
 - Artists can enable tour mode for traveling
 - City schedules with venue information
 - Payment-gated address exposure (address revealed after deposit payment)
+
+### Authentication System
+- Dual auth: Replit OIDC for production, Username/Password for development
+- Login page at `/login` with username/password form
+- Passwords stored securely with bcrypt hashing
+- CEO account: username "Jander" (password hashed with bcrypt)
+- All user creation and password reset flows must use bcrypt for hashing
 
 ### Role-Based Access
 - **CEO**: Full platform access, artist approval, financial overview
