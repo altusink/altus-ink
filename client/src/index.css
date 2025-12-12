@@ -7,159 +7,167 @@
    Premium Tattoo Booking SaaS
    ============================================ */
 
-/* ALTUS INK - CLEAN + NEON REDESIGN */
+/* APPLE GAMING INSPIRED - PREMIUM DARK */
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  /* === CLEAN + NEON PALETTE === */
-  --button-outline: rgba(0, 0, 0, .08);
-  --badge-outline: rgba(0, 0, 0, .05);
+  /* === APPLE DARK PALETTE === */
+  --button-outline: rgba(255, 255, 255, .12);
+  --badge-outline: rgba(255, 255, 255, .08);
   --opaque-button-border-intensity: 10;
-  --elevate-1: rgba(0, 0, 0, .03);
-  --elevate-2: rgba(0, 0, 0, .06);
+  --elevate-1: rgba(255, 255, 255, .05);
+  --elevate-2: rgba(255, 255, 255, .10);
 
-  /* Background - Clean Off-White */
-  --background: 0 0% 98%;
-  /* #FAFAFA */
-  --foreground: 240 10% 10%;
-  /* #1A1A2E - Almost black */
+  /* Background - Rich Black (not pure black for softer look) */
+  --background: 0 0% 10%;
+  /* #1A1A1A */
+  --foreground: 0 0% 94%;
+  /* #F0F0F0 - Off-white for readability */
 
-  /* Borders */
-  --border: 0 0% 90%;
+  /* Borders - Subtle */
+  --border: 0 0% 18%;
+  /* #2E2E2E */
 
-  /* Cards - White with subtle shadow */
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 10%;
-  --card-border: 0 0% 92%;
+  /* Cards - Elevated surfaces (slightly lighter than bg) */
+  --card: 0 0% 13%;
+  /* #212121 */
+  --card-foreground: 0 0% 94%;
+  --card-border: 0 0% 20%;
 
-  /* Sidebar - Dark for contrast */
-  --sidebar: 240 20% 8%;
-  --sidebar-foreground: 0 0% 98%;
-  --sidebar-border: 240 20% 15%;
-  --sidebar-primary: 45 100% 50%;
-  --sidebar-primary-foreground: 240 10% 10%;
-  --sidebar-accent: 240 20% 15%;
-  --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-ring: 45 100% 50%;
+  /* Sidebar - Darker base */
+  --sidebar: 0 0% 8%;
+  /* #141414 */
+  --sidebar-foreground: 0 0% 94%;
+  --sidebar-border: 0 0% 15%;
+  --sidebar-primary: 145 100% 50%;
+  /* Neon Green */
+  --sidebar-primary-foreground: 0 0% 10%;
+  --sidebar-accent: 0 0% 15%;
+  --sidebar-accent-foreground: 0 0% 94%;
+  --sidebar-ring: 145 100% 50%;
 
-  /* Popover */
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 10%;
-  --popover-border: 0 0% 90%;
+  /* Popover - Elevated */
+  --popover: 0 0% 14%;
+  --popover-foreground: 0 0% 94%;
+  --popover-border: 0 0% 22%;
 
-  /* === PRIMARY - NEON CYAN === */
-  --primary: 185 100% 50%;
-  /* #00D4FF */
-  --primary-foreground: 240 10% 10%;
+  /* === PRIMARY - NEON GREEN (Apple Gaming Accent) === */
+  --primary: 145 100% 50%;
+  /* #00FF85 - Vibrant green */
+  --primary-foreground: 0 0% 8%;
 
-  /* Secondary - Purple */
-  --secondary: 260 80% 60%;
-  /* #7B2FFF */
+  /* Secondary - Electric Blue */
+  --secondary: 210 100% 55%;
+  /* #1E90FF */
   --secondary-foreground: 0 0% 100%;
 
   /* Muted */
-  --muted: 0 0% 95%;
-  --muted-foreground: 0 0% 45%;
+  --muted: 0 0% 16%;
+  --muted-foreground: 0 0% 55%;
 
-  /* Accent - Neon Green */
-  --accent: 150 100% 50%;
-  /* #00FF88 */
-  --accent-foreground: 240 10% 10%;
+  /* Accent - Hot Pink */
+  --accent: 330 100% 60%;
+  /* #FF0080 */
+  --accent-foreground: 0 0% 100%;
 
   /* Destructive */
-  --destructive: 345 100% 60%;
-  /* #FF3366 */
+  --destructive: 0 85% 55%;
+  /* #E63946 */
   --destructive-foreground: 0 0% 100%;
 
   /* Input */
-  --input: 0 0% 92%;
-  --ring: 185 100% 50%;
+  --input: 0 0% 20%;
+  --ring: 145 100% 50%;
 
-  /* === NEON COLOR PALETTE === */
+  /* === NEON ACCENT PALETTE (Gaming Vibrant) === */
 
-  /* Gold (CTA) */
-  --gold: 45 100% 50%;
+  /* Gold - CTA / Important */
+  --gold: 45 100% 55%;
   /* #FFD700 */
   --gold-dark: 45 100% 40%;
-  --gold-light: 45 100% 60%;
-  --gold-glow: rgba(255, 215, 0, 0.5);
-  --neon-gold: 45 100% 55%;
+  --gold-light: 45 100% 65%;
+  --gold-glow: rgba(255, 215, 0, 0.4);
 
-  /* Cyan */
+  /* Cyan - Info */
   --neon-cyan: 185 100% 50%;
-  /* #00D4FF */
-  --neon-cyan-glow: rgba(0, 212, 255, 0.4);
+  /* #00E5FF */
+  --neon-cyan-glow: rgba(0, 229, 255, 0.3);
 
-  /* Purple */
-  --neon-purple: 260 80% 60%;
-  /* #7B2FFF */
-  --neon-purple-glow: rgba(123, 47, 255, 0.4);
+  /* Green - Primary Gaming */
+  --neon-green: 145 100% 50%;
+  /* #00FF85 */
+  --neon-green-glow: rgba(0, 255, 133, 0.3);
 
-  /* Green */
-  --neon-green: 150 100% 50%;
-  /* #00FF88 */
-  --neon-green-glow: rgba(0, 255, 136, 0.4);
+  /* Blue - Secondary */
+  --neon-blue: 210 100% 55%;
+  /* #1E90FF */
+  --neon-blue-glow: rgba(30, 144, 255, 0.3);
 
-  /* Red */
-  --neon-red: 345 100% 60%;
-  /* #FF3366 */
-  --neon-red-glow: rgba(255, 51, 102, 0.4);
+  /* Magenta - Accent */
+  --neon-magenta: 330 100% 60%;
+  /* #FF0080 */
+  --neon-magenta-glow: rgba(255, 0, 128, 0.3);
 
-  /* Blue */
-  --neon-blue: 220 100% 55%;
-  /* #2962FF */
-  --neon-blue-glow: rgba(41, 98, 255, 0.4);
+  /* Purple - Premium */
+  --neon-purple: 270 80% 60%;
+  /* #A855F7 */
+  --neon-purple-glow: rgba(168, 85, 247, 0.3);
 
-  /* Magenta */
-  --neon-magenta: 300 100% 55%;
-  /* #FF00FF */
-  --neon-magenta-glow: rgba(255, 0, 255, 0.3);
+  /* Red - Warning/Danger */
+  --neon-red: 0 85% 55%;
+  /* #E63946 */
+  --neon-red-glow: rgba(230, 57, 70, 0.3);
 
   /* === GLASSMORPHISM === */
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-hover: rgba(0, 0, 0, 0.12);
+  --glass-bg: rgba(26, 26, 26, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-hover: rgba(255, 255, 255, 0.15);
 
   /* === CHART COLORS === */
-  --chart-1: 185 100% 50%;
-  --chart-2: 260 80% 60%;
-  --chart-3: 150 100% 50%;
-  --chart-4: 45 100% 50%;
-  --chart-5: 345 100% 60%;
+  --chart-1: 145 100% 50%;
+  /* Green */
+  --chart-2: 210 100% 55%;
+  /* Blue */
+  --chart-3: 330 100% 60%;
+  /* Magenta */
+  --chart-4: 45 100% 55%;
+  /* Gold */
+  --chart-5: 270 80% 60%;
+  /* Purple */
 
   /* === TYPOGRAPHY === */
-  --font-sans: 'Inter', 'Poppins', system-ui, sans-serif;
-  --font-display: 'Bebas Neue', 'Montserrat', system-ui, sans-serif;
+  --font-sans: 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  --font-display: 'SF Pro Display', 'Inter', system-ui, sans-serif;
   --font-serif: Georgia, serif;
-  --font-mono: 'JetBrains Mono', Menlo, monospace;
+  --font-mono: 'SF Mono', 'JetBrains Mono', Menlo, monospace;
 
   /* === SPACING & SIZING === */
-  --radius: 1rem;
+  --radius: 0.875rem;
   --spacing: 0.25rem;
 
-  /* === SHADOWS - NEON ENHANCED === */
-  --shadow-2xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.15);
-  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.2);
+  /* === SHADOWS - APPLE STYLE (Subtle) === */
+  --shadow-2xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.7);
+  --shadow-2xl: 0 32px 80px rgba(0, 0, 0, 0.8);
 
-  /* Neon shadows for hover */
-  --shadow-neon-cyan: 0 0 20px var(--neon-cyan-glow), 0 0 40px var(--neon-cyan-glow);
-  --shadow-neon-purple: 0 0 20px var(--neon-purple-glow), 0 0 40px var(--neon-purple-glow);
-  --shadow-neon-gold: 0 0 20px var(--gold-glow), 0 0 40px var(--gold-glow);
+  /* Neon glow shadows */
+  --shadow-neon-green: 0 0 20px var(--neon-green-glow), 0 0 40px var(--neon-green-glow);
+  --shadow-neon-blue: 0 0 20px var(--neon-blue-glow), 0 0 40px var(--neon-blue-glow);
+  --shadow-neon-gold: 0 0 15px var(--gold-glow), 0 0 30px var(--gold-glow);
 
   /* Border derived colors */
-  --primary-border: hsl(185 100% 50%);
-  --secondary-border: hsl(260 80% 60%);
-  --muted-border: hsl(0 0% 90%);
-  --accent-border: hsl(150 100% 50%);
-  --destructive-border: hsl(345 100% 60%);
-  --sidebar-primary-border: hsl(45 100% 50%);
-  --sidebar-accent-border: hsl(240 20% 20%);
+  --primary-border: hsl(145 100% 50%);
+  --secondary-border: hsl(210 100% 55%);
+  --muted-border: hsl(0 0% 22%);
+  --accent-border: hsl(330 100% 60%);
+  --destructive-border: hsl(0 85% 55%);
+  --sidebar-primary-border: hsl(145 100% 50%);
+  --sidebar-accent-border: hsl(0 0% 20%);
 }
 
 /* Light mode override (for compatibility, but dark is default) */
@@ -202,9 +210,8 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
     background-image:
-      radial-gradient(ellipse at top right, rgba(0, 212, 255, 0.08) 0%, transparent 40%),
-      radial-gradient(ellipse at bottom left, rgba(123, 47, 255, 0.06) 0%, transparent 40%),
-      radial-gradient(ellipse at center, rgba(0, 255, 136, 0.03) 0%, transparent 50%);
+      radial-gradient(ellipse at top right, rgba(0, 255, 133, 0.05) 0%, transparent 35%),
+      radial-gradient(ellipse at bottom left, rgba(30, 144, 255, 0.04) 0%, transparent 35%);
     min-height: 100vh;
   }
 
