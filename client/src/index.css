@@ -12,27 +12,27 @@
   /* Force dark mode by default */
   color-scheme: dark;
 
-  /* === BASE COLORS === */
-  --button-outline: rgba(255, 255, 255, .10);
-  --badge-outline: rgba(255, 255, 255, .05);
+  /* === BASE COLORS - VIBRANT NAVY === */
+  --button-outline: rgba(255, 255, 255, .12);
+  --badge-outline: rgba(255, 255, 255, .08);
   --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255, 255, 255, .04);
-  --elevate-2: rgba(255, 255, 255, .09);
+  --elevate-1: rgba(255, 255, 255, .06);
+  --elevate-2: rgba(255, 255, 255, .12);
 
-  /* Core Background - Deep Black */
-  --background: 0 0% 4%;
-  /* #0a0a0a */
-  --foreground: 0 0% 95%;
-  /* Off-white */
+  /* Core Background - Deep Navy (not pure black) */
+  --background: 235 25% 7%;
+  /* #0a0a1a - Deep navy with blue undertone */
+  --foreground: 0 0% 98%;
+  /* Brighter off-white */
 
-  /* Borders */
-  --border: 0 0% 14%;
-  /* Subtle gray */
+  /* Borders - Slightly brighter */
+  --border: 235 15% 18%;
+  /* Navy-tinted border */
 
-  /* Cards - Slightly elevated */
-  --card: 0 0% 7%;
-  /* #121212 */
-  --card-foreground: 0 0% 95%;
+  /* Cards - Navy elevated */
+  --card: 235 20% 10%;
+  /* #121220 - Navy card */
+  --card-foreground: 0 0% 98%;
   --card-border: 0 0% 12%;
 
   /* Sidebar */
