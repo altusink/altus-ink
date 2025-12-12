@@ -583,10 +583,10 @@ export default function Landing() {
             <div>
               <h4 className="text-white font-semibold mb-6">{t.footer.legal}</h4>
               <ul className="space-y-3">
-                <li><a href="#" className="text-zinc-400 hover:text-gold transition-colors">{t.footer.privacy}</a></li>
-                <li><a href="#" className="text-zinc-400 hover:text-gold transition-colors">{t.footer.terms}</a></li>
-                <li><a href="#" className="text-zinc-400 hover:text-gold transition-colors">{t.footer.cancellation}</a></li>
-                <li><a href="#" className="text-zinc-400 hover:text-gold transition-colors">{t.footer.cookies}</a></li>
+                <li><Link href="/privacy" className="text-zinc-400 hover:text-gold transition-colors">{t.footer.privacy}</Link></li>
+                <li><Link href="/terms" className="text-zinc-400 hover:text-gold transition-colors">{t.footer.terms}</Link></li>
+                <li><Link href="/cancellation" className="text-zinc-400 hover:text-gold transition-colors">{t.footer.cancellation}</Link></li>
+                <li><Link href="/cookies" className="text-zinc-400 hover:text-gold transition-colors">{t.footer.cookies}</Link></li>
               </ul>
             </div>
           </div>

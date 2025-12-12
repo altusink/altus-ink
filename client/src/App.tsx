@@ -34,6 +34,7 @@ import VendorDashboard from "@/pages/dashboard/vendor/index";
 // Public Pages
 import BookingPage from "@/pages/book/index";
 import LoginPage from "@/pages/login";
+import { PrivacyPage, TermsPage, CancellationPage, CookiesPage } from "@/pages/legal";
 
 // Layout Components
 import Navigation from "@/components/navigation";
@@ -43,7 +44,7 @@ import { LanguageSelector } from "@/components/language-selector";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -51,17 +52,17 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
     return <Redirect to="/api/login" />;
   }
-  
+
   return <Component />;
 }
 
 function RoleProtectedRoute({ component: Component, allowedRoles }: { component: React.ComponentType, allowedRoles: string[] }) {
   const { user, isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -69,16 +70,16 @@ function RoleProtectedRoute({ component: Component, allowedRoles }: { component:
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
     return <Redirect to="/api/login" />;
   }
-  
+
   const userRole = (user as any)?.role || "artist";
   if (!allowedRoles.includes(userRole)) {
     return <Redirect to="/" />;
   }
-  
+
   return <Component />;
 }
 
@@ -87,13 +88,19 @@ function Router() {
     <Switch>
       {/* Landing Page - Always the entry point */}
       <Route path="/" component={Landing} />
-      
+
+      {/* Legal Pages */}
+      <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/terms" component={TermsPage} />
+      <Route path="/cancellation" component={CancellationPage} />
+      <Route path="/cookies" component={CookiesPage} />
+
       {/* Login Page */}
       <Route path="/login" component={LoginPage} />
-      
+
       {/* Public Booking Pages - Always accessible */}
       <Route path="/book/:subdomain" component={BookingPage} />
-      
+
       {/* Protected Artist Dashboard Routes */}
       <Route path="/dashboard/artist">
         {() => <ProtectedRoute component={ArtistDashboard} />}
@@ -116,7 +123,7 @@ function Router() {
       <Route path="/dashboard/artist/portfolio">
         {() => <ProtectedRoute component={ArtistPortfolio} />}
       </Route>
-      
+
       {/* Protected CEO Dashboard Routes */}
       <Route path="/dashboard/ceo">
         {() => <RoleProtectedRoute component={CEODashboard} allowedRoles={["ceo"]} />}
@@ -136,17 +143,17 @@ function Router() {
       <Route path="/dashboard/ceo/settings">
         {() => <RoleProtectedRoute component={CEOSettings} allowedRoles={["ceo"]} />}
       </Route>
-      
+
       {/* Protected Coordinator Dashboard Routes */}
       <Route path="/dashboard/coordinator">
         {() => <RoleProtectedRoute component={CoordinatorDashboard} allowedRoles={["coordinator"]} />}
       </Route>
-      
+
       {/* Protected Vendor Dashboard Routes */}
       <Route path="/dashboard/vendor">
         {() => <RoleProtectedRoute component={VendorDashboard} allowedRoles={["vendor"]} />}
       </Route>
-      
+
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
