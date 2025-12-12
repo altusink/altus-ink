@@ -162,7 +162,7 @@ async function handleCheckoutCompleted(session: any) {
     });
     
     // Create payment record
-    await storage.createPayment({
+    const payment = await storage.createPayment({
       artistId: lock.artistId,
       bookingId: booking.id,
       lockId: lock.id,
@@ -171,6 +171,23 @@ async function handleCheckoutCompleted(session: any) {
       paymentMethod: 'stripe',
       paymentIntentId: payment_intent,
       status: 'completed',
+    });
+    
+    // Create payment split for audit trail (68/30/2 split)
+    await storage.createPaymentSplit({
+      paymentId: payment.id,
+      bookingId: booking.id,
+      studioId: studioId,
+      grossAmount: depositAmount.toFixed(2),
+      currency: currency?.toUpperCase() || 'EUR',
+      platformAmount: platformFee.toFixed(2),
+      platformRate: "30.00",
+      artistId: lock.artistId,
+      artistAmount: artistAmount.toFixed(2),
+      artistRate: "68.00",
+      vendorId: vendorId,
+      vendorAmount: vendorAmount.toFixed(2),
+      vendorRate: "2.00",
     });
     
     console.log(`[stripe] Booking ${booking.id} confirmed with payment ${payment_intent}`);

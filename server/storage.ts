@@ -9,6 +9,7 @@ import {
   bookings,
   payments,
   deposits,
+  paymentSplits,
   notifications,
   financialLedger,
   globalSettings,
@@ -39,6 +40,8 @@ import {
   type InsertPayment,
   type Deposit,
   type InsertDeposit,
+  type PaymentSplit,
+  type InsertPaymentSplit,
   type PortfolioCategory,
   type InsertPortfolioCategory,
   type PortfolioPhoto,
@@ -118,6 +121,12 @@ export interface IStorage {
   createPayment(data: InsertPayment): Promise<Payment>;
   getPaymentByIntentId(paymentIntentId: string): Promise<Payment | undefined>;
   updatePaymentStatus(id: string, status: string, errorMessage?: string): Promise<Payment | undefined>;
+  
+  // Payment split operations
+  createPaymentSplit(data: InsertPaymentSplit): Promise<PaymentSplit>;
+  getPaymentSplitsByArtist(artistId: string): Promise<PaymentSplit[]>;
+  getPaymentSplitsByVendor(vendorId: string): Promise<PaymentSplit[]>;
+  getPaymentSplitsByStudio(studioId: string): Promise<PaymentSplit[]>;
   
   // Portfolio operations
   getPortfolioCategories(artistId: string): Promise<PortfolioCategory[]>;
@@ -559,6 +568,36 @@ export class DatabaseStorage implements IStorage {
       .where(eq(payments.id, id))
       .returning();
     return payment;
+  }
+
+  // Payment split operations
+  async createPaymentSplit(data: InsertPaymentSplit): Promise<PaymentSplit> {
+    const [split] = await db.insert(paymentSplits).values(data).returning();
+    return split;
+  }
+
+  async getPaymentSplitsByArtist(artistId: string): Promise<PaymentSplit[]> {
+    return db
+      .select()
+      .from(paymentSplits)
+      .where(eq(paymentSplits.artistId, artistId))
+      .orderBy(desc(paymentSplits.createdAt));
+  }
+
+  async getPaymentSplitsByVendor(vendorId: string): Promise<PaymentSplit[]> {
+    return db
+      .select()
+      .from(paymentSplits)
+      .where(eq(paymentSplits.vendorId, vendorId))
+      .orderBy(desc(paymentSplits.createdAt));
+  }
+
+  async getPaymentSplitsByStudio(studioId: string): Promise<PaymentSplit[]> {
+    return db
+      .select()
+      .from(paymentSplits)
+      .where(eq(paymentSplits.studioId, studioId))
+      .orderBy(desc(paymentSplits.createdAt));
   }
 
   // Portfolio operations

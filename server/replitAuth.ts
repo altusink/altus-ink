@@ -227,3 +227,96 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
   }
   res.status(401).json({ message: "Unauthorized" });
 };
+
+// Role-based authorization middlewares
+export const USER_ROLES = {
+  CEO: "ceo",
+  ARTIST: "artist",
+  COORDINATOR: "coordinator",
+  VENDOR: "vendor",
+} as const;
+
+export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
+
+// Middleware factory for role-based access control
+export const requireRole = (...allowedRoles: UserRole[]): RequestHandler => {
+  return (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const user = req.user as any;
+    if (!user || !user.role) {
+      return res.status(403).json({ message: "Access denied - no role assigned" });
+    }
+    
+    if (!allowedRoles.includes(user.role)) {
+      return res.status(403).json({ 
+        message: `Access denied - requires one of: ${allowedRoles.join(", ")}` 
+      });
+    }
+    
+    return next();
+  };
+};
+
+// Pre-configured role middlewares for common access patterns
+export const isCEO: RequestHandler = requireRole(USER_ROLES.CEO);
+
+export const isArtistOrHigher: RequestHandler = requireRole(
+  USER_ROLES.CEO, 
+  USER_ROLES.ARTIST, 
+  USER_ROLES.COORDINATOR
+);
+
+export const isVendor: RequestHandler = requireRole(USER_ROLES.VENDOR);
+
+export const canWithdraw: RequestHandler = (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  const user = req.user as any;
+  if (!user || !user.role) {
+    return res.status(403).json({ message: "Access denied - no role assigned" });
+  }
+  
+  // Coordinators cannot withdraw - they have artist permissions but no payout access
+  if (user.role === USER_ROLES.COORDINATOR) {
+    return res.status(403).json({ 
+      message: "Coordinators cannot request withdrawals" 
+    });
+  }
+  
+  // CEO, Artist, and Vendor can withdraw
+  if ([USER_ROLES.CEO, USER_ROLES.ARTIST, USER_ROLES.VENDOR].includes(user.role)) {
+    return next();
+  }
+  
+  return res.status(403).json({ message: "Access denied" });
+};
+
+// Middleware to check if user belongs to a specific studio
+export const requireStudioAccess = (studioIdParam: string = "studioId"): RequestHandler => {
+  return async (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const user = req.user as any;
+    
+    // CEO has access to all studios
+    if (user.role === USER_ROLES.CEO) {
+      return next();
+    }
+    
+    const requestedStudioId = req.params[studioIdParam] || req.body?.studioId;
+    
+    // If user has a studioId, they can only access their own studio
+    if (user.studioId && requestedStudioId && user.studioId !== requestedStudioId) {
+      return res.status(403).json({ message: "Access denied - wrong studio" });
+    }
+    
+    return next();
+  };
+};

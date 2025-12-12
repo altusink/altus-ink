@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, canWithdraw, isCEO, isArtistOrHigher, isVendor, requireRole, USER_ROLES as AUTH_ROLES } from "./replitAuth";
 import {
   createLockSchema,
   createBookingRequestSchema,
@@ -71,7 +71,7 @@ export async function registerRoutes(
   // ==================== ARTIST API ROUTES ====================
   
   // Get current artist profile
-  app.get("/api/artist/me", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/artist/me", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       let artist = await storage.getArtistByUserId(userId);
@@ -94,7 +94,7 @@ export async function registerRoutes(
   });
 
   // Update artist profile
-  app.patch("/api/artist/me", isAuthenticated, async (req: Request, res: Response) => {
+  app.patch("/api/artist/me", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
@@ -118,7 +118,7 @@ export async function registerRoutes(
   });
 
   // Get artist stats
-  app.get("/api/artist/stats", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/artist/stats", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
@@ -143,7 +143,7 @@ export async function registerRoutes(
   });
 
   // Get artist availability
-  app.get("/api/artist/availability", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/artist/availability", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
@@ -161,7 +161,7 @@ export async function registerRoutes(
   });
 
   // Update artist availability
-  app.post("/api/artist/availability", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/artist/availability", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
@@ -189,7 +189,7 @@ export async function registerRoutes(
   });
 
   // Get artist bookings
-  app.get("/api/artist/bookings", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/artist/bookings", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
@@ -218,7 +218,7 @@ export async function registerRoutes(
   });
 
   // Get artist city schedules
-  app.get("/api/artist/city-schedules", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/artist/city-schedules", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
@@ -236,7 +236,7 @@ export async function registerRoutes(
   });
 
   // Create city schedule
-  app.post("/api/artist/city-schedules", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/artist/city-schedules", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
@@ -264,7 +264,7 @@ export async function registerRoutes(
   });
 
   // Delete city schedule
-  app.delete("/api/artist/city-schedules/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.delete("/api/artist/city-schedules/:id", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       await storage.deleteCitySchedule(req.params.id);
       res.json({ success: true });
@@ -275,7 +275,8 @@ export async function registerRoutes(
   });
 
   // Get artist deposits
-  app.get("/api/artist/deposits", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/artist/deposits", isArtistOrHigher, async (req: Request, res: Response) => {
+    // Note: Coordinators can see deposit info but cannot request payouts (handled by canWithdraw middleware)
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
@@ -295,7 +296,7 @@ export async function registerRoutes(
   // ==================== PORTFOLIO ROUTES ====================
   
   // Get artist portfolio categories
-  app.get("/api/artist/portfolio/categories", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/artist/portfolio/categories", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
@@ -313,7 +314,7 @@ export async function registerRoutes(
   });
 
   // Create portfolio category
-  app.post("/api/artist/portfolio/categories", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/artist/portfolio/categories", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
@@ -1482,6 +1483,32 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== VENDOR API ROUTES ====================
+  
+  // Get vendor commissions
+  app.get("/api/vendor/commissions", isVendor, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const commissions = await storage.getVendorCommissions(userId);
+      res.json(commissions);
+    } catch (error) {
+      console.error("Error fetching vendor commissions:", error);
+      res.status(500).json({ message: "Failed to fetch commissions" });
+    }
+  });
+
+  // Get vendor goals
+  app.get("/api/vendor/goals", isVendor, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const goals = await storage.getVendorGoals(userId);
+      res.json(goals);
+    } catch (error) {
+      console.error("Error fetching vendor goals:", error);
+      res.status(500).json({ message: "Failed to fetch goals" });
+    }
+  });
+
   // ==================== PAYOUT REQUEST API ROUTES ====================
   
   // Get user's payout requests
@@ -1515,16 +1542,11 @@ export async function registerRoutes(
     }
   });
 
-  // Request payout
-  app.post("/api/payouts", isAuthenticated, async (req: Request, res: Response) => {
+  // Request payout - uses canWithdraw middleware (blocks coordinators)
+  app.post("/api/payouts", canWithdraw, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
-      
-      // Coordinators cannot request payouts
-      if (user?.role === USER_ROLES.COORDINATOR) {
-        return res.status(403).json({ message: "Coordinators cannot request payouts" });
-      }
       
       const { amount, connectedAccountId } = req.body;
       
@@ -1553,13 +1575,9 @@ export async function registerRoutes(
     }
   });
 
-  // CEO: Get all payout requests
-  app.get("/api/ceo/payouts", isAuthenticated, async (req: Request, res: Response) => {
+  // CEO: Get all payout requests - uses isCEO middleware
+  app.get("/api/ceo/payouts", isCEO, async (req: Request, res: Response) => {
     try {
-      const user = await storage.getUser((req.user as any).id);
-      if (user?.role !== USER_ROLES.CEO) {
-        return res.status(403).json({ message: "Access denied" });
-      }
       const payouts = await storage.getAllPayoutRequests();
       res.json(payouts);
     } catch (error) {
@@ -1569,12 +1587,8 @@ export async function registerRoutes(
   });
 
   // CEO: Get pending payout requests
-  app.get("/api/ceo/payouts/pending", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/ceo/payouts/pending", isCEO, async (req: Request, res: Response) => {
     try {
-      const user = await storage.getUser((req.user as any).id);
-      if (user?.role !== USER_ROLES.CEO) {
-        return res.status(403).json({ message: "Access denied" });
-      }
       const payouts = await storage.getPendingPayoutRequests();
       res.json(payouts);
     } catch (error) {
@@ -1584,13 +1598,9 @@ export async function registerRoutes(
   });
 
   // CEO: Approve payout request
-  app.post("/api/ceo/payouts/:id/approve", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/ceo/payouts/:id/approve", isCEO, async (req: Request, res: Response) => {
     try {
-      const user = await storage.getUser((req.user as any).id);
-      if (user?.role !== USER_ROLES.CEO) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
+      const userId = (req.user as any).id;
       const payout = await storage.getPayoutRequest(req.params.id);
       if (!payout) {
         return res.status(404).json({ message: "Payout request not found" });
@@ -1599,7 +1609,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Payout is not in requested status" });
       }
       
-      const approved = await storage.approvePayoutRequest(req.params.id, user.id);
+      const approved = await storage.approvePayoutRequest(req.params.id, userId);
       res.json(approved);
     } catch (error) {
       console.error("Error approving payout:", error);
@@ -1608,13 +1618,8 @@ export async function registerRoutes(
   });
 
   // CEO: Execute payout (mark as paid)
-  app.post("/api/ceo/payouts/:id/execute", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/ceo/payouts/:id/execute", isCEO, async (req: Request, res: Response) => {
     try {
-      const user = await storage.getUser((req.user as any).id);
-      if (user?.role !== USER_ROLES.CEO) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
       const payout = await storage.getPayoutRequest(req.params.id);
       if (!payout) {
         return res.status(404).json({ message: "Payout request not found" });
@@ -1634,13 +1639,8 @@ export async function registerRoutes(
   });
 
   // CEO: Reject/cancel payout
-  app.post("/api/ceo/payouts/:id/reject", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/ceo/payouts/:id/reject", isCEO, async (req: Request, res: Response) => {
     try {
-      const user = await storage.getUser((req.user as any).id);
-      if (user?.role !== USER_ROLES.CEO) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
       const { reason } = req.body;
       const rejected = await storage.updatePayoutRequestStatus(req.params.id, "cancelled", reason || "Rejected by admin");
       res.json(rejected);

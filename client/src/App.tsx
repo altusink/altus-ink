@@ -25,6 +25,12 @@ import CEOBookings from "@/pages/dashboard/ceo/bookings";
 import CEOReports from "@/pages/dashboard/ceo/reports";
 import CEOSettings from "@/pages/dashboard/ceo/settings";
 
+// Coordinator Dashboard Pages
+import CoordinatorDashboard from "@/pages/dashboard/coordinator/index";
+
+// Vendor Dashboard Pages
+import VendorDashboard from "@/pages/dashboard/vendor/index";
+
 // Public Pages
 import BookingPage from "@/pages/book/index";
 import LoginPage from "@/pages/login";
@@ -48,6 +54,29 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   
   if (!isAuthenticated) {
     return <Redirect to="/api/login" />;
+  }
+  
+  return <Component />;
+}
+
+function RoleProtectedRoute({ component: Component, allowedRoles }: { component: React.ComponentType, allowedRoles: string[] }) {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return <Redirect to="/api/login" />;
+  }
+  
+  const userRole = (user as any)?.role || "artist";
+  if (!allowedRoles.includes(userRole)) {
+    return <Redirect to="/" />;
   }
   
   return <Component />;
@@ -90,22 +119,32 @@ function Router() {
       
       {/* Protected CEO Dashboard Routes */}
       <Route path="/dashboard/ceo">
-        {() => <ProtectedRoute component={CEODashboard} />}
+        {() => <RoleProtectedRoute component={CEODashboard} allowedRoles={["ceo"]} />}
       </Route>
       <Route path="/dashboard/ceo/artists">
-        {() => <ProtectedRoute component={CEOArtists} />}
+        {() => <RoleProtectedRoute component={CEOArtists} allowedRoles={["ceo"]} />}
       </Route>
       <Route path="/dashboard/ceo/bookings">
-        {() => <ProtectedRoute component={CEOBookings} />}
+        {() => <RoleProtectedRoute component={CEOBookings} allowedRoles={["ceo"]} />}
       </Route>
       <Route path="/dashboard/ceo/financial">
-        {() => <ProtectedRoute component={CEOFinancial} />}
+        {() => <RoleProtectedRoute component={CEOFinancial} allowedRoles={["ceo"]} />}
       </Route>
       <Route path="/dashboard/ceo/reports">
-        {() => <ProtectedRoute component={CEOReports} />}
+        {() => <RoleProtectedRoute component={CEOReports} allowedRoles={["ceo"]} />}
       </Route>
       <Route path="/dashboard/ceo/settings">
-        {() => <ProtectedRoute component={CEOSettings} />}
+        {() => <RoleProtectedRoute component={CEOSettings} allowedRoles={["ceo"]} />}
+      </Route>
+      
+      {/* Protected Coordinator Dashboard Routes */}
+      <Route path="/dashboard/coordinator">
+        {() => <RoleProtectedRoute component={CoordinatorDashboard} allowedRoles={["coordinator"]} />}
+      </Route>
+      
+      {/* Protected Vendor Dashboard Routes */}
+      <Route path="/dashboard/vendor">
+        {() => <RoleProtectedRoute component={VendorDashboard} allowedRoles={["vendor"]} />}
       </Route>
       
       {/* Fallback to 404 */}

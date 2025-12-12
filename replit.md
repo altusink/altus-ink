@@ -8,8 +8,11 @@ The application is functional with core features implemented:
 - Authentication (Replit Auth with development mode fallback)
 - Artist dashboard with overview, calendar, earnings, tour mode, personalization, portfolio, and settings
 - CEO dashboard with overview, artists, bookings, financial, reports, and settings pages
+- Coordinator dashboard with read-only agenda access (no payout permissions)
+- Vendor dashboard with commission tracking, goals, and payout requests
 - Public booking pages at `/book/:subdomain`
 - Database schema with full deposit retention and booking lock support
+- Role-based authorization middleware (canWithdraw, isCEO) for security
 - All dashboard menu items connected to dedicated pages with database integration
 
 ## Tech Stack
@@ -90,7 +93,9 @@ client/src/
 ├── pages/
 │   ├── dashboard/
 │   │   ├── artist/      # Artist dashboard pages
-│   │   └── ceo/         # CEO dashboard pages
+│   │   ├── ceo/         # CEO dashboard pages
+│   │   ├── coordinator/ # Coordinator dashboard pages
+│   │   └── vendor/      # Vendor dashboard pages
 │   └── book/            # Public booking page
 ├── components/
 │   ├── ui/              # Shadcn components

@@ -27,24 +27,38 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)]
 );
 
-// Studios for multi-tenant architecture
-export const studios = pgTable("studios", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: varchar("name", { length: 200 }).notNull(),
-  slug: varchar("slug", { length: 50 }).unique().notNull(),
-  description: text("description"),
-  logoUrl: varchar("logo_url"),
-  primaryColor: varchar("primary_color", { length: 7 }).default("#C9A227"),
-  address: text("address"),
-  city: varchar("city", { length: 100 }),
-  country: varchar("country", { length: 100 }),
-  timezone: varchar("timezone", { length: 50 }).default("Europe/Berlin"),
-  currency: varchar("currency", { length: 3 }).default("EUR"),
-  isActive: boolean("is_active").default(true),
-  ownerId: varchar("owner_id"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+// Studios for multi-tenant architecture with white-label support
+export const studios = pgTable(
+  "studios",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 200 }).notNull(),
+    slug: varchar("slug", { length: 50 }).unique().notNull(),
+    description: text("description"),
+    logoUrl: varchar("logo_url"),
+    faviconUrl: varchar("favicon_url"),
+    primaryColor: varchar("primary_color", { length: 7 }).default("#C9A227"),
+    secondaryColor: varchar("secondary_color", { length: 7 }).default("#1a1a2e"),
+    accentColor: varchar("accent_color", { length: 7 }).default("#00d4ff"),
+    customDomain: varchar("custom_domain", { length: 255 }),
+    emailFromName: varchar("email_from_name", { length: 100 }),
+    emailFromAddress: varchar("email_from_address", { length: 255 }),
+    address: text("address"),
+    city: varchar("city", { length: 100 }),
+    country: varchar("country", { length: 100 }),
+    timezone: varchar("timezone", { length: 50 }).default("Europe/Berlin"),
+    currency: varchar("currency", { length: 3 }).default("EUR"),
+    whitelabelEnabled: boolean("whitelabel_enabled").default(false),
+    customCss: text("custom_css"),
+    metaTitle: varchar("meta_title", { length: 100 }),
+    metaDescription: text("meta_description"),
+    isActive: boolean("is_active").default(true),
+    ownerId: varchar("owner_id"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [index("idx_studios_slug").on(table.slug), index("idx_studios_domain").on(table.customDomain)]
+);
 
 // User profiles - extends Replit Auth users
 // Roles: ceo, artist, coordinator, vendor
@@ -165,6 +179,7 @@ export const bookings = pgTable(
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
     artistId: varchar("artist_id").references(() => artists.id, { onDelete: "cascade" }).notNull(),
+    studioId: varchar("studio_id").references(() => studios.id),
     lockId: varchar("lock_id").references(() => bookingLocks.id),
     cityScheduleId: varchar("city_schedule_id").references(() => citySchedule.id),
     customerEmail: varchar("customer_email", { length: 255 }).notNull(),
@@ -187,7 +202,10 @@ export const bookings = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (table) => [index("idx_bookings_artist_date").on(table.artistId, table.slotDatetime)]
+  (table) => [
+    index("idx_bookings_artist_date").on(table.artistId, table.slotDatetime),
+    index("idx_bookings_studio").on(table.studioId),
+  ]
 );
 
 // Payments
@@ -204,6 +222,37 @@ export const payments = pgTable("payments", {
   errorMessage: text("error_message"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Payment splits - detailed record of each payment division for audit
+// Split: 68% artist, 30% platform (Altus), 2% vendor
+export const paymentSplits = pgTable(
+  "payment_splits",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    paymentId: varchar("payment_id").references(() => payments.id, { onDelete: "cascade" }).notNull(),
+    bookingId: varchar("booking_id").references(() => bookings.id),
+    studioId: varchar("studio_id").references(() => studios.id),
+    grossAmount: decimal("gross_amount", { precision: 10, scale: 2 }).notNull(),
+    currency: varchar("currency", { length: 3 }).default("EUR"),
+    platformAmount: decimal("platform_amount", { precision: 10, scale: 2 }).notNull(), // 30%
+    platformRate: decimal("platform_rate", { precision: 5, scale: 2 }).default("30.00"),
+    artistId: varchar("artist_id").references(() => artists.id),
+    artistAmount: decimal("artist_amount", { precision: 10, scale: 2 }).notNull(), // 68%
+    artistRate: decimal("artist_rate", { precision: 5, scale: 2 }).default("68.00"),
+    vendorId: varchar("vendor_id").references(() => users.id),
+    vendorAmount: decimal("vendor_amount", { precision: 10, scale: 2 }).default("0"), // 2%
+    vendorRate: decimal("vendor_rate", { precision: 5, scale: 2 }).default("2.00"),
+    splitCalculatedAt: timestamp("split_calculated_at").defaultNow(),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_splits_payment").on(table.paymentId),
+    index("idx_splits_artist").on(table.artistId),
+    index("idx_splits_vendor").on(table.vendorId),
+    index("idx_splits_studio").on(table.studioId),
+  ]
+);
 
 // Deposits with 90-day retention
 // Split: 68% artist, 30% platform (Altus), 2% vendor
@@ -510,6 +559,12 @@ export const insertDepositSchema = createInsertSchema(deposits).omit({
   createdAt: true,
 });
 
+export const insertPaymentSplitSchema = createInsertSchema(paymentSplits).omit({
+  id: true,
+  createdAt: true,
+  splitCalculatedAt: true,
+});
+
 export const insertPortfolioCategorySchema = createInsertSchema(portfolioCategories).omit({
   id: true,
   createdAt: true,
@@ -585,6 +640,8 @@ export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
 export type InsertDeposit = z.infer<typeof insertDepositSchema>;
 export type Deposit = typeof deposits.$inferSelect;
+export type InsertPaymentSplit = z.infer<typeof insertPaymentSplitSchema>;
+export type PaymentSplit = typeof paymentSplits.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type FinancialLedger = typeof financialLedger.$inferSelect;
 export type AuditLog = typeof auditLog.$inferSelect;
