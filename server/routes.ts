@@ -14,7 +14,9 @@ import {
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import { stripeService } from "./stripeService";
-import { isStripeConfigured } from "./stripeClient";
+import { isStripeConfigured, getStripeSync } from "./stripeClient";
+import { WebhookHandlers } from "./webhookHandlers";
+import { emailService } from "./services/email";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -22,6 +24,32 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Setup authentication
   await setupAuth(app);
+
+  // ==================== STRIPE WEBHOOK (must be before json parsing) ====================
+  // Note: This route uses express.raw() for webhook signature verification
+  app.post("/api/stripe/webhook/:uuid", async (req: Request, res: Response) => {
+    try {
+      const { uuid } = req.params;
+      const signature = req.headers["stripe-signature"] as string;
+      
+      if (!signature) {
+        return res.status(400).json({ message: "Missing stripe-signature header" });
+      }
+      
+      // rawBody is set by express.json verify callback in index.ts
+      const rawBody = (req as any).rawBody;
+      if (!rawBody || !Buffer.isBuffer(rawBody)) {
+        console.error("[stripe webhook] rawBody not available or not a Buffer");
+        return res.status(400).json({ message: "Invalid request body" });
+      }
+      
+      await WebhookHandlers.processWebhook(rawBody, signature, uuid);
+      res.json({ received: true });
+    } catch (error: any) {
+      console.error("[stripe webhook] Error:", error.message);
+      res.status(400).json({ message: error.message });
+    }
+  });
 
   // Auth routes
   app.get("/api/auth/user", async (req: Request, res: Response) => {
@@ -1163,28 +1191,6 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error getting Stripe key:", error);
       res.status(500).json({ message: "Failed to get Stripe configuration" });
-    }
-  });
-
-  // Check integration status (for CEO settings)
-  app.get("/api/ceo/integration-status", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const user = await storage.getUser((req.user as any).id);
-      if (user?.role !== "ceo") {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
-      const stripeConfigured = await isStripeConfigured();
-      const smtpConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD);
-      
-      res.json({
-        stripe: stripeConfigured,
-        smtp: smtpConfigured,
-        whatsapp: false, // TODO: Check Z-API credentials
-      });
-    } catch (error) {
-      console.error("Error checking integration status:", error);
-      res.status(500).json({ message: "Failed to check integration status" });
     }
   });
 

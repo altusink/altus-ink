@@ -35,7 +35,13 @@ export class WebhookHandlers {
 async function getWebhookSecret(uuid: string): Promise<string> {
   const sync = await getStripeSync();
   const webhookEndpoint = await sync.getManagedWebhookByUuid(uuid);
-  return webhookEndpoint?.secret || '';
+  
+  if (!webhookEndpoint || !webhookEndpoint.secret) {
+    console.error(`[stripe] SECURITY: No webhook secret found for UUID ${uuid}`);
+    throw new Error('Webhook secret not configured - cannot verify signature');
+  }
+  
+  return webhookEndpoint.secret;
 }
 
 async function handleStripeEvent(event: any) {
