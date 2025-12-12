@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -412,6 +413,131 @@ export default function Landing() {
               ))}
             </motion.div>
           )}
+        </div>
+      </section>
+
+      {/* Portfolio Gallery Section */}
+      <section id="portfolio" className="py-24 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-card/50 to-transparent" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-radial from-neon-magenta/10 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-radial from-neon-cyan/10 to-transparent blur-3xl" />
+
+        <div className="max-w-7xl mx-auto relative">
+          {/* Section Header */}
+          <div className="text-center mb-12">
+            <motion.p
+              className="text-neon-cyan font-medium tracking-widest uppercase mb-4"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+            >
+              Galeria
+            </motion.p>
+            <motion.h2
+              className="text-4xl md:text-5xl font-bold text-white font-display mb-4"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              Portfolio de Estilos
+            </motion.h2>
+            <motion.p
+              className="text-xl text-zinc-400 max-w-2xl mx-auto"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+            >
+              Explore nossa galeria por categorias de tatuagem
+            </motion.p>
+          </div>
+
+          {/* Style Filters */}
+          <motion.div
+            className="flex flex-wrap justify-center gap-3 mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            {[
+              { id: "all", label: "Todos", color: "gold" },
+              { id: "fineline", label: "Fineline", color: "neon-cyan" },
+              { id: "ultrarealismo", label: "Ultrarealismo", color: "neon-purple" },
+              { id: "cobertura", label: "Cobertura", color: "neon-magenta" },
+              { id: "blackwork", label: "Blackwork", color: "white" },
+              { id: "traditional", label: "Traditional", color: "neon-green" },
+              { id: "newschool", label: "New School", color: "neon-blue" },
+            ].map((style) => (
+              <motion.button
+                key={style.id}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`px-6 py-3 rounded-full font-medium transition-all duration-300
+                  ${style.id === "all"
+                    ? "bg-gold text-black glow-gold"
+                    : "bg-card/80 text-white border border-zinc-700 hover:border-gold/50"
+                  }`}
+              >
+                {style.label}
+              </motion.button>
+            ))}
+          </motion.div>
+
+          {/* Gallery Grid */}
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            {/* Sample Portfolio Items */}
+            {[
+              { style: "Fineline", img: "https://images.unsplash.com/photo-1590246814883-57c511e76fc0?w=400&h=400&fit=crop" },
+              { style: "Ultrarealismo", img: "https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=400&h=400&fit=crop" },
+              { style: "Blackwork", img: "https://images.unsplash.com/photo-1590246814883-57c511e76fc0?w=400&h=400&fit=crop" },
+              { style: "Cobertura", img: "https://images.unsplash.com/photo-1565058379802-bbe93b2f703a?w=400&h=400&fit=crop" },
+              { style: "Traditional", img: "https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=400&h=400&fit=crop" },
+              { style: "Fineline", img: "https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=400&h=400&fit=crop" },
+              { style: "New School", img: "https://images.unsplash.com/photo-1560707303-4e980ce876ad?w=400&h=400&fit=crop" },
+              { style: "Ultrarealismo", img: "https://images.unsplash.com/photo-1542382257-80dedb725088?w=400&h=400&fit=crop" },
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                variants={fadeInUp}
+                transition={{ delay: index * 0.05 }}
+                className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"
+              >
+                <img
+                  src={item.img}
+                  alt={`${item.style} tattoo`}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                  <Badge className="bg-gold/90 text-black font-medium">
+                    {item.style}
+                  </Badge>
+                </div>
+                <div className="absolute inset-0 border-2 border-transparent group-hover:border-gold/50 rounded-xl transition-colors duration-300" />
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* View More CTA */}
+          <motion.div
+            className="text-center mt-12"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            <Button
+              size="lg"
+              variant="outline"
+              className="px-8 py-6 rounded-full border-gold/50 text-gold hover:bg-gold/10 hover:border-gold"
+            >
+              Ver Mais Trabalhos
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          </motion.div>
         </div>
       </section>
 

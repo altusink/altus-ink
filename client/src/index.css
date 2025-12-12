@@ -7,157 +7,155 @@
    Premium Tattoo Booking SaaS
    ============================================ */
 
-/* DARK MODE DEFAULT - Futuristic Theme */
+/* GAME-STYLE IMMERSIVE THEME */
 :root {
   /* Force dark mode by default */
   color-scheme: dark;
 
-  /* === BASE COLORS - VIBRANT NAVY === */
-  --button-outline: rgba(255, 255, 255, .12);
-  --badge-outline: rgba(255, 255, 255, .08);
-  --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255, 255, 255, .06);
-  --elevate-2: rgba(255, 255, 255, .12);
+  /* === GAME UI VIBRANT COLORS === */
+  --button-outline: rgba(255, 255, 255, .15);
+  --badge-outline: rgba(255, 255, 255, .10);
+  --opaque-button-border-intensity: 12;
+  --elevate-1: rgba(255, 255, 255, .08);
+  --elevate-2: rgba(255, 255, 255, .15);
 
-  /* Core Background - Deep Navy (not pure black) */
-  --background: 235 25% 7%;
-  /* #0a0a1a - Deep navy with blue undertone */
+  /* Core Background - Vibrant Gradient Base */
+  --background: 250 35% 12%;
+  /* #1a1528 - Deep purple-navy */
   --foreground: 0 0% 98%;
-  /* Brighter off-white */
+  /* Pure white text */
 
-  /* Borders - Slightly brighter */
-  --border: 235 15% 18%;
-  /* Navy-tinted border */
+  /* Borders - Glowing */
+  --border: 260 30% 25%;
+  /* Purple-tinted border */
 
-  /* Cards - Navy elevated */
-  --card: 235 20% 10%;
-  /* #121220 - Navy card */
+  /* Cards - Glass with purple undertone */
+  --card: 255 30% 15%;
+  /* #1e1a2e - Purple card */
   --card-foreground: 0 0% 98%;
-  --card-border: 0 0% 12%;
+  --card-border: 260 40% 30%;
 
-  /* Sidebar */
-  --sidebar: 0 0% 5%;
-  --sidebar-foreground: 0 0% 95%;
-  --sidebar-border: 0 0% 12%;
-  --sidebar-primary: 43 74% 49%;
-  /* Gold */
+  /* Sidebar - Deep purple */
+  --sidebar: 255 35% 10%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-border: 260 30% 20%;
+  --sidebar-primary: 45 100% 55%;
+  /* Bright Gold */
   --sidebar-primary-foreground: 0 0% 5%;
-  --sidebar-accent: 0 0% 10%;
-  --sidebar-accent-foreground: 0 0% 95%;
-  --sidebar-ring: 43 74% 49%;
+  --sidebar-accent: 260 40% 25%;
+  --sidebar-accent-foreground: 0 0% 98%;
+  --sidebar-ring: 45 100% 55%;
 
-  /* Popover */
-  --popover: 0 0% 8%;
-  --popover-foreground: 0 0% 95%;
-  --popover-border: 0 0% 14%;
+  /* Popover - Glass */
+  --popover: 255 30% 14%;
+  --popover-foreground: 0 0% 98%;
+  --popover-border: 260 40% 28%;
 
-  /* === PRIMARY - ALTUS GOLD === */
-  --primary: 43 74% 49%;
-  /* #C9A227 - Altus Gold */
+  /* === PRIMARY - ELECTRIC GOLD === */
+  --primary: 45 100% 55%;
+  /* #FFD700 - Electric Gold */
   --primary-foreground: 0 0% 5%;
 
-  /* Secondary */
-  --secondary: 0 0% 14%;
-  --secondary-foreground: 0 0% 95%;
+  /* Secondary - Purple */
+  --secondary: 260 50% 35%;
+  --secondary-foreground: 0 0% 98%;
 
   /* Muted */
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 55%;
+  --muted: 260 30% 20%;
+  --muted-foreground: 260 15% 60%;
 
-  /* Accent - Teal Neon */
-  --accent: 180 100% 40%;
-  /* Teal with punch */
+  /* Accent - Electric Cyan */
+  --accent: 185 100% 50%;
+  /* #00E5FF - Electric Cyan */
   --accent-foreground: 0 0% 5%;
 
   /* Destructive */
-  --destructive: 0 75% 50%;
+  --destructive: 0 85% 60%;
   --destructive-foreground: 0 0% 98%;
 
   /* Input */
-  --input: 0 0% 18%;
-  --ring: 43 74% 49%;
+  --input: 260 30% 25%;
+  --ring: 45 100% 55%;
 
-  /* === NEON COLOR PALETTE === */
+  /* === NEON GAME PALETTE === */
 
-  /* Gold (Brand Primary) */
-  --gold: 43 74% 49%;
-  /* #C9A227 */
-  --gold-dark: 43 80% 35%;
-  --gold-light: 43 74% 60%;
-  --gold-glow: rgba(201, 162, 39, 0.5);
-  --neon-gold: 45 100% 50%;
-  /* Brighter for neon effect */
+  /* Gold (Brand Primary) - More Electric */
+  --gold: 45 100% 55%;
+  --gold-dark: 45 100% 40%;
+  --gold-light: 45 100% 65%;
+  --gold-glow: rgba(255, 215, 0, 0.6);
+  --neon-gold: 45 100% 60%;
 
-  /* Cyan */
-  --neon-cyan: 180 100% 50%;
-  /* #00FFFF */
-  --neon-cyan-glow: rgba(0, 255, 255, 0.4);
+  /* Cyan - Electric */
+  --neon-cyan: 185 100% 55%;
+  /* #00E5FF */
+  --neon-cyan-glow: rgba(0, 229, 255, 0.5);
 
-  /* Magenta */
-  --neon-magenta: 300 100% 50%;
-  /* #FF00FF */
-  --neon-magenta-glow: rgba(255, 0, 255, 0.4);
+  /* Magenta - Hot Pink */
+  --neon-magenta: 320 100% 60%;
+  /* #FF2D95 */
+  --neon-magenta-glow: rgba(255, 45, 149, 0.5);
 
-  /* Green */
-  --neon-green: 102 100% 55%;
-  /* #39FF14 */
-  --neon-green-glow: rgba(57, 255, 20, 0.4);
+  /* Green - Matrix */
+  --neon-green: 120 100% 55%;
+  /* #00FF66 */
+  --neon-green-glow: rgba(0, 255, 102, 0.5);
 
-  /* Purple */
-  --neon-purple: 250 89% 66%;
-  /* #8B5CF6 */
-  --neon-purple-glow: rgba(139, 92, 246, 0.4);
+  /* Purple - Gaming */
+  --neon-purple: 270 100% 65%;
+  /* #9945FF */
+  --neon-purple-glow: rgba(153, 69, 255, 0.5);
 
-  /* Blue */
-  --neon-blue: 210 100% 55%;
-  /* #1E90FF */
-  --neon-blue-glow: rgba(30, 144, 255, 0.4);
+  /* Blue - Neon */
+  --neon-blue: 220 100% 60%;
+  /* #3366FF */
+  --neon-blue-glow: rgba(51, 102, 255, 0.5);
 
-  /* === GLASSMORPHISM === */
-  --glass-bg: rgba(10, 10, 10, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-hover: rgba(255, 255, 255, 0.12);
+  /* === GLASSMORPHISM - ENHANCED === */
+  --glass-bg: rgba(30, 26, 46, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-hover: rgba(255, 255, 255, 0.18);
 
   /* === CHART COLORS === */
-  --chart-1: 43 74% 55%;
+  --chart-1: 45 100% 55%;
   /* Gold */
-  --chart-2: 180 100% 50%;
+  --chart-2: 185 100% 55%;
   /* Cyan */
-  --chart-3: 300 100% 50%;
+  --chart-3: 320 100% 60%;
   /* Magenta */
-  --chart-4: 102 100% 55%;
+  --chart-4: 120 100% 55%;
   /* Green */
-  --chart-5: 250 89% 66%;
+  --chart-5: 270 100% 65%;
   /* Purple */
 
   /* === TYPOGRAPHY === */
-  --font-sans: Inter, system-ui, sans-serif;
-  --font-display: 'Space Grotesk', Inter, system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Orbitron', 'Space Grotesk', system-ui, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: 'JetBrains Mono', Menlo, monospace;
 
   /* === SPACING & SIZING === */
-  --radius: 0.5rem;
+  --radius: 0.75rem;
   --spacing: 0.25rem;
 
-  /* === SHADOWS === */
-  --shadow-2xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  /* === SHADOWS - NEON ENHANCED === */
+  --shadow-2xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 10px var(--neon-purple-glow);
   --shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 6px 10px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 6px 10px rgba(0, 0, 0, 0.5), 0 0 20px var(--neon-purple-glow);
   --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.6);
-  --shadow-xl: 0 15px 30px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 15px 30px rgba(0, 0, 0, 0.7), 0 0 30px var(--gold-glow);
   --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.8);
 
   /* Border derived colors */
-  --primary-border: hsl(43 74% 55%);
-  --secondary-border: hsl(0 0% 18%);
-  --muted-border: hsl(0 0% 16%);
-  --accent-border: hsl(180 100% 45%);
-  --destructive-border: hsl(0 75% 55%);
-  --sidebar-primary-border: hsl(43 74% 55%);
-  --sidebar-accent-border: hsl(0 0% 16%);
+  --primary-border: hsl(45 100% 55%);
+  --secondary-border: hsl(260 50% 40%);
+  --muted-border: hsl(260 30% 25%);
+  --accent-border: hsl(185 100% 50%);
+  --destructive-border: hsl(0 85% 60%);
+  --sidebar-primary-border: hsl(45 100% 55%);
+  --sidebar-accent-border: hsl(260 40% 30%);
 }
 
 /* Light mode override (for compatibility, but dark is default) */
@@ -200,8 +198,10 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
     background-image:
-      radial-gradient(ellipse at top, rgba(201, 162, 39, 0.03) 0%, transparent 50%),
-      radial-gradient(ellipse at bottom right, rgba(0, 255, 255, 0.02) 0%, transparent 50%);
+      radial-gradient(ellipse at top left, rgba(153, 69, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at top right, rgba(255, 215, 0, 0.10) 0%, transparent 40%),
+      radial-gradient(ellipse at bottom left, rgba(0, 229, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at center, rgba(255, 45, 149, 0.05) 0%, transparent 60%);
     min-height: 100vh;
   }
 
