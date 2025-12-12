@@ -1,13 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import DashboardLayout from "@/components/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   TrendingUp,
   Clock,
@@ -16,12 +18,28 @@ import {
   Calendar,
   DollarSign,
   Info,
+  Plus,
+  Wallet,
+  Building2,
+  CreditCard,
+  ArrowRight,
+  ExternalLink,
+  Trash2,
 } from "lucide-react";
+import { SiPaypal, SiRevolut, SiWise } from "react-icons/si";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import type { Deposit } from "@shared/schema";
 
 interface EarningsStats {
@@ -223,6 +241,109 @@ export default function ArtistEarnings() {
                 </li>
               </ul>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Connected Accounts for Withdrawal */}
+      <Card className="mb-8 border-neon-animated">
+        <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-primary" />
+              Payout Accounts
+            </CardTitle>
+            <CardDescription>Select where you want to receive your earnings</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" className="gap-1">
+            <Plus className="w-4 h-4" />
+            Add Account
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* IBAN Card */}
+            <div className="p-4 rounded-lg border hover:border-primary/50 transition-colors cursor-pointer group">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Bank Transfer (IBAN)</p>
+                    <p className="text-xs text-muted-foreground">SEPA EUR transfers</p>
+                  </div>
+                </div>
+                <Badge variant="secondary">Not connected</Badge>
+              </div>
+              <Button variant="ghost" size="sm" className="w-full group-hover:bg-primary/10">
+                Connect Bank Account <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+
+            {/* PayPal Card */}
+            <div className="p-4 rounded-lg border hover:border-primary/50 transition-colors cursor-pointer group">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#003087]/20 flex items-center justify-center">
+                    <SiPaypal className="w-5 h-5 text-[#003087]" />
+                  </div>
+                  <div>
+                    <p className="font-medium">PayPal</p>
+                    <p className="text-xs text-muted-foreground">Instant transfers</p>
+                  </div>
+                </div>
+                <Badge variant="secondary">Not connected</Badge>
+              </div>
+              <Button variant="ghost" size="sm" className="w-full group-hover:bg-primary/10">
+                Connect PayPal <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+
+            {/* Wise Card */}
+            <div className="p-4 rounded-lg border hover:border-primary/50 transition-colors cursor-pointer group">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#9FE870]/20 flex items-center justify-center">
+                    <SiWise className="w-5 h-5 text-[#9FE870]" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Wise</p>
+                    <p className="text-xs text-muted-foreground">Multi-currency, low fees</p>
+                  </div>
+                </div>
+                <Badge variant="secondary">Not connected</Badge>
+              </div>
+              <Button variant="ghost" size="sm" className="w-full group-hover:bg-primary/10">
+                Connect Wise <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+
+            {/* Revolut Card */}
+            <div className="p-4 rounded-lg border hover:border-primary/50 transition-colors cursor-pointer group">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#0075EB]/20 flex items-center justify-center">
+                    <SiRevolut className="w-5 h-5 text-[#0075EB]" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Revolut</p>
+                    <p className="text-xs text-muted-foreground">Fast digital banking</p>
+                  </div>
+                </div>
+                <Badge variant="secondary">Not connected</Badge>
+              </div>
+              <Button variant="ghost" size="sm" className="w-full group-hover:bg-primary/10">
+                Connect Revolut <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-4 p-3 rounded-lg bg-muted/50 flex items-center gap-3">
+            <Info className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              Connect at least one account to request payouts. We support IBAN transfers in EUR, and instant transfers via PayPal, Wise, or Revolut.
+            </p>
           </div>
         </CardContent>
       </Card>
