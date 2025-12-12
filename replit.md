@@ -104,7 +104,17 @@ server/
 ├── routes.ts            # API endpoints
 ├── storage.ts           # Database operations
 ├── replitAuth.ts        # Auth configuration
-└── index.ts             # Server entry
+├── index.ts             # Server entry
+├── webhookHandlers.ts   # Stripe webhook processing
+├── stripeClient.ts      # Stripe credentials (Replit Connectors)
+├── stripeService.ts     # Stripe checkout session creation
+├── services/
+│   ├── email.ts         # SMTP email service
+│   └── whatsapp.ts      # Z-API WhatsApp service
+├── middleware/
+│   └── subdomain.ts     # Subdomain routing middleware
+└── jobs/
+    └── depositRelease.ts # Background job for 90-day deposit release
 
 shared/
 └── schema.ts            # Drizzle schema & Zod validation
@@ -144,6 +154,15 @@ shared/
 
 ### Stripe APIs
 - `GET /api/stripe/publishable-key` - Get Stripe publishable key for frontend
+- `POST /api/stripe/webhook/:uuid` - Stripe webhook endpoint (processes payments)
+
+### Export APIs
+- `GET /api/ceo/export/bookings` - Export all bookings as CSV
+- `GET /api/ceo/export/deposits` - Export all deposits as CSV
+
+### Alternative Payment APIs
+- `POST /api/public/artist/:subdomain/payment/revolut` - Get Revolut payment instructions
+- `POST /api/public/artist/:subdomain/payment/wise` - Get Wise payment instructions
 
 ## Environment Variables
 - `DATABASE_URL` - PostgreSQL connection string
@@ -167,7 +186,16 @@ The settings page provides centralized configuration for all platform integratio
 - `ZAPI_INSTANCE_ID`, `ZAPI_TOKEN` - For WhatsApp notifications
 - `STRIPE_SECRET_KEY` - For payment processing (configured via Replit integration)
 
-## Planned Features (Not Yet Implemented)
-- Full subdomain routing (artist.altusink.io)
-- Tour mode payment-gated address display UI
-- Real-time WhatsApp notifications
+## Recently Implemented Features
+- **Email Notifications**: Booking confirmations sent via SMTP (requires credentials)
+- **WhatsApp Notifications**: Z-API integration for booking alerts (requires credentials)
+- **Subdomain Middleware**: Routes artist.altusink.io to /book/:subdomain (requires DNS config)
+- **Deposit Release Job**: Automatic release of deposits after 90-day retention
+- **CSV Export**: Export bookings and deposits for reporting
+- **Revolut/Wise Instructions**: Alternative payment method support
+
+## Configuration Required
+To enable all features, configure these environment variables:
+- `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` - Email notifications
+- `ZAPI_INSTANCE_ID`, `ZAPI_TOKEN` - WhatsApp notifications via Z-API
+- DNS wildcard record `*.altusink.io` pointing to deployment - Subdomain routing

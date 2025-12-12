@@ -4,6 +4,8 @@
 import { getStripeSync, getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
 import { PLATFORM_FEE_PERCENTAGE, DEPOSIT_RETENTION_DAYS } from '@shared/schema';
+import { emailService } from './services/email';
+import { whatsappService } from './services/whatsapp';
 
 export class WebhookHandlers {
   static async processWebhook(payload: Buffer, signature: string, uuid: string): Promise<void> {
@@ -160,7 +162,50 @@ async function handleCheckoutCompleted(session: any) {
     
     console.log(`[stripe] Booking ${booking.id} confirmed with payment ${payment_intent}`);
     
-    // TODO: Send confirmation email/WhatsApp
+    // Get artist info for notifications
+    const artist = await storage.getArtist(lock.artistId);
+    const artistName = artist?.displayName || 'Artista';
+    
+    const formattedDate = new Date(lock.slotDatetime).toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    
+    const formattedTime = new Date(lock.slotDatetime).toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    
+    // Send confirmation email to customer
+    if (emailService.isConfigured()) {
+      await emailService.sendBookingConfirmation({
+        to: lock.customerEmail,
+        customerName: lock.customerName,
+        artistName,
+        date: formattedDate,
+        time: formattedTime,
+        depositAmount: depositAmount.toFixed(2),
+        currency: currency?.toUpperCase() || 'EUR',
+      });
+    }
+    
+    // Send WhatsApp to customer if phone provided
+    if (whatsappService.isConfigured() && lock.customerPhone) {
+      await whatsappService.sendBookingConfirmation({
+        customerPhone: lock.customerPhone,
+        customerName: lock.customerName,
+        artistName,
+        date: formattedDate,
+        time: formattedTime,
+        depositAmount: depositAmount.toFixed(2),
+        currency: currency?.toUpperCase() || 'EUR',
+      });
+    }
+    
+    // Note: Artist WhatsApp notification would require adding phone field to artists table
+    // For now, artist notifications are sent via email through their user account
     
   } catch (error) {
     console.error('[stripe] Error handling checkout completion:', error);

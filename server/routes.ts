@@ -782,6 +782,120 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== EXPORT ROUTES ====================
+
+  // Export bookings as CSV
+  app.get("/api/ceo/export/bookings", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== "ceo") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const bookings = await storage.getAllBookings();
+      
+      const csv = [
+        "ID,Artist,Customer Name,Customer Email,Date,Status,Deposit,Currency",
+        ...bookings.map(b => 
+          `"${b.id}","${b.artistId}","${b.customerName}","${b.customerEmail}","${new Date(b.slotDatetime).toISOString()}","${b.status}","${b.depositAmount}","${b.currency}"`
+        )
+      ].join("\n");
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", "attachment; filename=bookings.csv");
+      res.send(csv);
+    } catch (error) {
+      console.error("Error exporting bookings:", error);
+      res.status(500).json({ message: "Failed to export bookings" });
+    }
+  });
+
+  // Export deposits as CSV
+  app.get("/api/ceo/export/deposits", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== "ceo") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const allDeposits = await storage.getAllDeposits();
+      
+      const csv = [
+        "ID,Booking ID,Artist ID,Amount,Currency,Platform Fee,Artist Amount,Status,Retention Until,Created At",
+        ...allDeposits.map(d => 
+          `"${d.id}","${d.bookingId}","${d.artistId}","${d.amount}","${d.currency}","${d.platformFee}","${d.artistAmount}","${d.status}","${d.retentionUntil?.toISOString() || ''}","${d.createdAt?.toISOString() || ''}"`
+        )
+      ].join("\n");
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", "attachment; filename=deposits.csv");
+      res.send(csv);
+    } catch (error) {
+      console.error("Error exporting deposits:", error);
+      res.status(500).json({ message: "Failed to export deposits" });
+    }
+  });
+
+  // ==================== ALTERNATIVE PAYMENT METHODS ====================
+
+  // Get Revolut payment instructions
+  app.post("/api/public/artist/:subdomain/payment/revolut", async (req: Request, res: Response) => {
+    try {
+      const artist = await storage.getArtistBySubdomain(req.params.subdomain);
+      if (!artist || !artist.isActive) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+
+      const { lockId, amount, currency } = req.body;
+      
+      // Generate Revolut payment instructions
+      // In production, this would integrate with Revolut API
+      res.json({
+        method: "revolut",
+        instructions: {
+          recipientTag: `@altusink`,
+          amount: amount,
+          currency: currency,
+          reference: `ALTUSINK-${lockId?.slice(-8).toUpperCase() || 'BOOKING'}`,
+          note: `After payment, send screenshot to confirm your booking.`,
+        },
+        expiresIn: 600, // 10 minutes to complete
+      });
+    } catch (error) {
+      console.error("Error getting Revolut instructions:", error);
+      res.status(500).json({ message: "Failed to get payment instructions" });
+    }
+  });
+
+  // Get Wise payment instructions
+  app.post("/api/public/artist/:subdomain/payment/wise", async (req: Request, res: Response) => {
+    try {
+      const artist = await storage.getArtistBySubdomain(req.params.subdomain);
+      if (!artist || !artist.isActive) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+
+      const { lockId, amount, currency } = req.body;
+      
+      // Generate Wise payment instructions
+      // In production, this would integrate with Wise API
+      res.json({
+        method: "wise",
+        instructions: {
+          email: "payments@altusink.io",
+          amount: amount,
+          currency: currency,
+          reference: `ALTUSINK-${lockId?.slice(-8).toUpperCase() || 'BOOKING'}`,
+          note: `After payment, send confirmation email to complete your booking.`,
+        },
+        expiresIn: 600, // 10 minutes to complete
+      });
+    } catch (error) {
+      console.error("Error getting Wise instructions:", error);
+      res.status(500).json({ message: "Failed to get payment instructions" });
+    }
+  });
+
   // ==================== PUBLIC API ROUTES ====================
   
   // Get public artist profile

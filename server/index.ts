@@ -3,6 +3,9 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { emailService } from "./services/email";
+import { whatsappService } from "./services/whatsapp";
+import { subdomainMiddleware } from "./middleware/subdomain";
+import { startDepositReleaseJob } from "./jobs/depositRelease";
 
 const app = express();
 const httpServer = createServer(app);
@@ -76,7 +79,24 @@ app.use((req, res, next) => {
     log("Email service not configured - SMTP credentials missing", "email");
   }
 
+  // Initialize WhatsApp service if Z-API credentials are available
+  if (process.env.ZAPI_INSTANCE_ID && process.env.ZAPI_TOKEN) {
+    whatsappService.initialize({
+      instanceId: process.env.ZAPI_INSTANCE_ID,
+      token: process.env.ZAPI_TOKEN,
+    });
+    log("WhatsApp service initialized", "whatsapp");
+  } else {
+    log("WhatsApp service not configured - Z-API credentials missing", "whatsapp");
+  }
+
+  // Apply subdomain middleware for artist booking pages
+  app.use(subdomainMiddleware);
+
   await registerRoutes(httpServer, app);
+
+  // Start background jobs
+  startDepositReleaseJob();
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

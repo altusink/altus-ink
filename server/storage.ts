@@ -99,6 +99,8 @@ export interface IStorage {
   getArtistDeposits(artistId: string): Promise<Deposit[]>;
   getAllDeposits(): Promise<Deposit[]>;
   createDeposit(data: InsertDeposit): Promise<Deposit>;
+  getDepositsForRelease(): Promise<Deposit[]>;
+  updateDepositStatus(id: string, status: string): Promise<Deposit | undefined>;
   
   // Payment operations
   createPayment(data: InsertPayment): Promise<Payment>;
@@ -471,6 +473,28 @@ export class DatabaseStorage implements IStorage {
 
   async createDeposit(data: InsertDeposit): Promise<Deposit> {
     const [deposit] = await db.insert(deposits).values(data).returning();
+    return deposit;
+  }
+
+  async getDepositsForRelease(): Promise<Deposit[]> {
+    const now = new Date();
+    return db
+      .select()
+      .from(deposits)
+      .where(
+        and(
+          eq(deposits.status, 'held'),
+          lte(deposits.retentionUntil, now)
+        )
+      );
+  }
+
+  async updateDepositStatus(id: string, status: string): Promise<Deposit | undefined> {
+    const [deposit] = await db
+      .update(deposits)
+      .set({ status })
+      .where(eq(deposits.id, id))
+      .returning();
     return deposit;
   }
 
