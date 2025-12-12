@@ -1,770 +1,233 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useLocale } from "@/hooks/useLocale";
-import {
-  Calendar,
-  Clock,
-  Shield,
-  Globe,
-  ArrowRight,
-  Star,
-  MapPin,
-  CreditCard,
-  Users,
-  Sparkles,
-  ExternalLink,
-  ChevronRight,
-} from "lucide-react";
-import { SiInstagram, SiTiktok } from "react-icons/si";
+import { LogIn, Users, Sparkles } from "lucide-react";
 
-interface PublicArtist {
-  id: string;
-  subdomain: string;
-  displayName: string;
-  bio: string | null;
-  instagram: string | null;
-  coverImageUrl: string | null;
-  themeColor: string | null;
-  city: string | null;
-  country: string | null;
-  tourModeEnabled: boolean;
-  specialty: string | null;
-}
+// Floating 3D elements - tattoo-related SVG shapes
+const FloatingElement = ({
+  children,
+  delay = 0,
+  duration = 4,
+  x = 0,
+  y = 0
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  duration?: number;
+  x?: number;
+  y?: number;
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
 
-// Animation variants
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 }
+  return (
+    <motion.div
+      className="absolute pointer-events-none select-none"
+      style={{ left: `${x}%`, top: `${y}%` }}
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{
+        opacity: [0.3, 0.6, 0.3],
+        y: [0, -20, 0],
+        rotate: [0, 5, -5, 0],
+        scale: [1, 1.05, 1]
+      }}
+      transition={{
+        duration,
+        delay,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }}
+    >
+      {children}
+    </motion.div>
+  );
 };
 
-const staggerContainer = {
-  animate: {
-    transition: { staggerChildren: 0.1 }
-  }
+// Tattoo-themed floating decorations
+const TattooDecoration = ({ type, color, size = 60 }: { type: string; color: string; size?: number }) => {
+  const shapes: Record<string, React.ReactNode> = {
+    ink: (
+      <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="40" fill={`url(#gradient-${color})`} opacity="0.6" />
+        <defs>
+          <radialGradient id={`gradient-${color}`}>
+            <stop offset="0%" stopColor={color} />
+            <stop offset="100%" stopColor="transparent" />
+          </radialGradient>
+        </defs>
+      </svg>
+    ),
+    needle: (
+      <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+        <line x1="20" y1="80" x2="80" y2="20" stroke={color} strokeWidth="3" opacity="0.5" />
+        <circle cx="80" cy="20" r="5" fill={color} opacity="0.7" />
+      </svg>
+    ),
+    star: (
+      <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+        <path
+          d="M50 10 L61 40 L95 40 L68 60 L79 90 L50 72 L21 90 L32 60 L5 40 L39 40 Z"
+          fill={color}
+          opacity="0.4"
+        />
+      </svg>
+    ),
+    diamond: (
+      <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+        <path
+          d="M50 5 L95 50 L50 95 L5 50 Z"
+          stroke={color}
+          strokeWidth="2"
+          fill="none"
+          opacity="0.5"
+        />
+      </svg>
+    ),
+    circle: (
+      <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="35" stroke={color} strokeWidth="2" fill="none" opacity="0.4" />
+        <circle cx="50" cy="50" r="20" stroke={color} strokeWidth="1" fill="none" opacity="0.3" />
+      </svg>
+    )
+  };
+
+  return shapes[type] || null;
 };
 
 export default function Landing() {
   const { t } = useLocale();
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  // Fetch public artists
-  const { data: artists = [], isLoading: artistsLoading } = useQuery<PublicArtist[]>({
-    queryKey: ["/api/public/artists"],
-  });
+  // Parallax effect
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({
+        x: (e.clientX / window.innerWidth - 0.5) * 20,
+        y: (e.clientY / window.innerHeight - 0.5) * 20
+      });
+    };
 
-  const getInitials = (name: string) => {
-    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-  };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-background scroll-momentum">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-strong">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link href="/">
-              <motion.div
-                className="flex items-center gap-3 cursor-pointer"
-                whileHover={{ scale: 1.02 }}
-              >
-                <img
-                  src="/logo-altus.png"
-                  alt="Altus International Ink"
-                  className="h-10 w-auto"
-                />
-              </motion.div>
-            </Link>
+    <div className="min-h-screen bg-background overflow-hidden relative">
+      {/* Floating 3D Elements Background */}
+      <div
+        className="absolute inset-0 overflow-hidden"
+        style={{
+          transform: `translate(${mousePosition.x}px, ${mousePosition.y}px)`,
+          transition: "transform 0.3s ease-out"
+        }}
+      >
+        <FloatingElement x={10} y={20} delay={0} duration={5}>
+          <TattooDecoration type="ink" color="#00D4FF" size={80} />
+        </FloatingElement>
+        <FloatingElement x={85} y={15} delay={1} duration={4}>
+          <TattooDecoration type="star" color="#FFD700" size={60} />
+        </FloatingElement>
+        <FloatingElement x={75} y={70} delay={2} duration={6}>
+          <TattooDecoration type="diamond" color="#7B2FFF" size={70} />
+        </FloatingElement>
+        <FloatingElement x={15} y={65} delay={1.5} duration={5}>
+          <TattooDecoration type="needle" color="#00FF88" size={90} />
+        </FloatingElement>
+        <FloatingElement x={50} y={80} delay={0.5} duration={4}>
+          <TattooDecoration type="circle" color="#FF3366" size={50} />
+        </FloatingElement>
+        <FloatingElement x={30} y={10} delay={2.5} duration={5}>
+          <TattooDecoration type="ink" color="#7B2FFF" size={40} />
+        </FloatingElement>
+        <FloatingElement x={60} y={30} delay={3} duration={6}>
+          <TattooDecoration type="star" color="#00D4FF" size={45} />
+        </FloatingElement>
+      </div>
 
-            {/* CTA */}
-            <div className="flex items-center gap-4">
-              <Link href="/login">
-                <Button variant="ghost" className="text-zinc-400 hover:text-white">
-                  {t.common.login}
-                </Button>
-              </Link>
-              <Link href="#artists">
-                <Button className="bg-gold hover:bg-gold-light text-black font-semibold">
-                  {t.common.bookNow}
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 gradient-hero hero-section perspective-2000">
-        {/* Background grid with scanlines for futuristic feel */}
-        <div className="absolute inset-0 grid-pattern opacity-50 scanlines" />
-
-        {/* Ambient glow effects - GPU accelerated */}
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-gold/10 rounded-full blur-[200px] gpu-accelerated animate-neon-breathe" />
-        <div className="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] bg-neon-cyan/5 rounded-full blur-[150px] gpu-accelerated" />
-
-        {/* Content */}
-        <div className="relative z-10 text-center px-6 max-w-5xl">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full 
-              border border-gold/30 bg-gold/5 mb-8 backdrop-blur-sm"
-          >
-            <span className="w-2 h-2 bg-neon-green rounded-full animate-pulse" />
-            <span className="text-gold text-sm font-medium">{t.hero.badge}</span>
-          </motion.div>
-
-          {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6 font-display"
-          >
-            <span className="text-white">{t.hero.headline}</span>
-            <span className="text-glow-gold block mt-2">
-              {t.hero.headlineHighlight}
-            </span>
-          </motion.h1>
-
-          {/* Subheadline */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl md:text-2xl text-zinc-400 max-w-2xl mx-auto mb-10"
-          >
-            {t.hero.subheadline}
-          </motion.p>
-
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-          >
-            {/* Primary CTA */}
-            <Link href="#artists">
-              <Button
-                size="lg"
-                className="group relative px-10 py-6 rounded-2xl font-bold text-lg
-                  bg-gradient-to-r from-gold to-gold-light text-black
-                  shadow-glow-gold hover:shadow-[0_0_60px_rgba(201,162,39,0.5)]
-                  transition-all duration-300 hover:-translate-y-1 h-auto"
-                data-testid="button-hero-cta"
-              >
-                <span className="relative z-10 flex items-center gap-3">
-                  Ver Artistas
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </span>
-              </Button>
-            </Link>
-
-            {/* Secondary CTA */}
-            <Link href="#artists">
-              <Button
-                size="lg"
-                variant="outline"
-                className="px-10 py-6 rounded-2xl font-medium text-lg
-                  border border-zinc-700 text-white
-                  hover:border-gold/50 hover:bg-gold/5
-                  transition-all duration-300 h-auto"
-                data-testid="button-hero-secondary"
-              >
-                {t.hero.secondary}
-              </Button>
-            </Link>
-          </motion.div>
-
-          {/* Trust Badges */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex flex-wrap items-center justify-center gap-6 mt-12 text-zinc-500"
-          >
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-neon-green" />
-              <span className="text-sm">{t.hero.securePayment}</span>
-            </div>
-            <div className="w-px h-4 bg-zinc-700 hidden sm:block" />
-            <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 fill-gold text-gold" />
-              <span className="text-sm">{t.hero.reviews}</span>
-            </div>
-            <div className="w-px h-4 bg-zinc-700 hidden sm:block" />
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-neon-cyan" />
-              <span className="text-sm">{t.hero.locations}</span>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Scroll Indicator */}
+      {/* Main Content - Centered */}
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6">
+        {/* Logo */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="mb-8"
         >
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-            className="w-6 h-10 rounded-full border-2 border-zinc-700 flex items-start justify-center p-2"
-          >
-            <div className="w-1 h-2 bg-gold rounded-full" />
-          </motion.div>
+          <img
+            src="/logo-altus.png"
+            alt="ALTUS INK"
+            className="h-24 md:h-32 w-auto drop-shadow-2xl"
+          />
         </motion.div>
-      </section>
 
-      {/* Artists Section */}
-      <section id="artists" className="py-24 px-6 relative">
-        <div className="absolute inset-0 grid-pattern-fine opacity-30" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-radial from-gold/5 to-transparent blur-3xl" />
+        {/* Tagline */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-4 tracking-tight">
+            E aí! 👋
+          </h1>
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-lg mx-auto">
+            Sua próxima tattoo começa aqui.
+            <br />
+            <span className="text-primary">Arte na pele, sem stress.</span>
+          </p>
+        </motion.div>
 
-        <div className="max-w-7xl mx-auto relative">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <motion.p
-              className="text-gold font-medium tracking-widest uppercase mb-4"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
+        {/* CTA Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="flex flex-col sm:flex-row gap-4 w-full max-w-md"
+        >
+          <Link href="/artists" className="flex-1">
+            <Button
+              size="lg"
+              className="w-full h-14 text-lg font-bold bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 rounded-2xl shadow-lg hover:shadow-neon-cyan"
             >
-              Nossos Artistas
-            </motion.p>
-            <motion.h2
-              className="text-4xl md:text-5xl font-bold text-white font-display mb-4"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              Talentos Internacionais
-            </motion.h2>
-            <motion.p
-              className="text-xl text-zinc-400 max-w-2xl mx-auto"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-            >
-              Artistas selecionados pela expertise e reconhecimento internacional
-            </motion.p>
-          </div>
+              <Users className="w-5 h-5 mr-2" />
+              Artistas
+            </Button>
+          </Link>
 
-          {/* Artists Grid */}
-          {artistsLoading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map(i => (
-                <Card key={i} className="bg-card/50 border-zinc-800">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4 mb-4">
-                      <Skeleton className="w-16 h-16 rounded-full" />
-                      <div className="space-y-2">
-                        <Skeleton className="w-32 h-5" />
-                        <Skeleton className="w-24 h-4" />
-                      </div>
-                    </div>
-                    <Skeleton className="w-full h-20 mb-4" />
-                    <div className="flex gap-2">
-                      <Skeleton className="w-24 h-10" />
-                      <Skeleton className="w-24 h-10" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : artists.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16"
-            >
-              <Users className="w-16 h-16 mx-auto mb-4 text-zinc-600" />
-              <h3 className="text-xl font-semibold text-white mb-2">
-                Em breve novos artistas
-              </h3>
-              <p className="text-zinc-400">
-                Estamos selecionando os melhores talentos para você
-              </p>
-            </motion.div>
-          ) : (
-            <motion.div
-              className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-              variants={staggerContainer}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-            >
-              {artists.map((artist, index) => (
-                <motion.div
-                  key={artist.id}
-                  variants={fadeInUp}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card
-                    className="artist-card card-3d group h-full bg-zinc-900/50 backdrop-blur-xl 
-                      border-zinc-800/50 hover:border-gold/40 overflow-hidden touch-feedback gpu-accelerated"
-                    style={{
-                      "--artist-color": artist.themeColor || "#C9A227"
-                    } as React.CSSProperties}
-                  >
-                    <CardContent className="p-6 relative preserve-3d">
-                      {/* Top accent line */}
-                      <div
-                        className="absolute top-0 left-0 right-0 h-1 opacity-60 group-hover:opacity-100 transition-opacity"
-                        style={{ background: `linear-gradient(90deg, transparent, ${artist.themeColor || "#C9A227"}, transparent)` }}
-                      />
-
-                      {/* Artist Info */}
-                      <div className="flex items-start gap-4 mb-4">
-                        <Avatar className="w-16 h-16 border-2 transition-all group-hover:scale-105"
-                          style={{ borderColor: artist.themeColor || "#C9A227" }}
-                        >
-                          <AvatarImage src={artist.coverImageUrl || undefined} />
-                          <AvatarFallback
-                            className="text-lg font-bold"
-                            style={{
-                              backgroundColor: `${artist.themeColor || "#C9A227"}20`,
-                              color: artist.themeColor || "#C9A227"
-                            }}
-                          >
-                            {getInitials(artist.displayName)}
-                          </AvatarFallback>
-                        </Avatar>
-
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-xl text-white truncate mb-1">
-                            {artist.displayName}
-                          </h3>
-
-                          <div className="flex items-center gap-2 text-sm text-zinc-400 mb-2">
-                            <MapPin className="w-3 h-3" />
-                            <span className="truncate">
-                              {artist.city || "International"}{artist.country && `, ${artist.country}`}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {artist.tourModeEnabled && (
-                              <Badge variant="outline" className="border-neon-cyan/50 text-neon-cyan text-xs">
-                                <Globe className="w-3 h-3 mr-1" />
-                                On Tour
-                              </Badge>
-                            )}
-                            {artist.specialty && (
-                              <Badge variant="secondary" className="text-xs">
-                                {artist.specialty}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Bio */}
-                      <p className="text-zinc-400 text-sm line-clamp-3 mb-6 min-h-[4.5rem]">
-                        {artist.bio || "Artista internacional especializado em tatuagens personalizadas."}
-                      </p>
-
-                      {/* Actions */}
-                      <div className="flex gap-3">
-                        {artist.instagram && (
-                          <a
-                            href={`https://instagram.com/${artist.instagram}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1"
-                          >
-                            <Button
-                              variant="outline"
-                              className="w-full border-zinc-700 hover:border-zinc-500"
-                            >
-                              <SiInstagram className="w-4 h-4 mr-2" />
-                              Portfolio
-                            </Button>
-                          </a>
-                        )}
-
-                        <Link href={`/book/${artist.subdomain}`} className="flex-1">
-                          <Button
-                            className="w-full font-semibold"
-                            style={{
-                              backgroundColor: artist.themeColor || "#C9A227",
-                              color: "#000"
-                            }}
-                          >
-                            Agendar
-                            <ChevronRight className="w-4 h-4 ml-1" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </div>
-      </section>
-
-      {/* Portfolio Gallery Section */}
-      <section id="portfolio" className="py-24 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-card/50 to-transparent" />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-radial from-neon-magenta/10 to-transparent blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-radial from-neon-cyan/10 to-transparent blur-3xl" />
-
-        <div className="max-w-7xl mx-auto relative">
-          {/* Section Header */}
-          <div className="text-center mb-12">
-            <motion.p
-              className="text-neon-cyan font-medium tracking-widest uppercase mb-4"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-            >
-              Galeria
-            </motion.p>
-            <motion.h2
-              className="text-4xl md:text-5xl font-bold text-white font-display mb-4"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              Portfolio de Estilos
-            </motion.h2>
-            <motion.p
-              className="text-xl text-zinc-400 max-w-2xl mx-auto"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-            >
-              Explore nossa galeria por categorias de tatuagem
-            </motion.p>
-          </div>
-
-          {/* Style Filters */}
-          <motion.div
-            className="flex flex-wrap justify-center gap-3 mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            {[
-              { id: "all", label: "Todos", color: "gold" },
-              { id: "fineline", label: "Fineline", color: "neon-cyan" },
-              { id: "ultrarealismo", label: "Ultrarealismo", color: "neon-purple" },
-              { id: "cobertura", label: "Cobertura", color: "neon-magenta" },
-              { id: "blackwork", label: "Blackwork", color: "white" },
-              { id: "traditional", label: "Traditional", color: "neon-green" },
-              { id: "newschool", label: "New School", color: "neon-blue" },
-            ].map((style) => (
-              <motion.button
-                key={style.id}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`px-6 py-3 rounded-full font-medium transition-all duration-300
-                  ${style.id === "all"
-                    ? "bg-gold text-black glow-gold"
-                    : "bg-card/80 text-white border border-zinc-700 hover:border-gold/50"
-                  }`}
-              >
-                {style.label}
-              </motion.button>
-            ))}
-          </motion.div>
-
-          {/* Gallery Grid */}
-          <motion.div
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-          >
-            {/* Sample Portfolio Items */}
-            {[
-              { style: "Fineline", img: "https://images.unsplash.com/photo-1590246814883-57c511e76fc0?w=400&h=400&fit=crop" },
-              { style: "Ultrarealismo", img: "https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=400&h=400&fit=crop" },
-              { style: "Blackwork", img: "https://images.unsplash.com/photo-1590246814883-57c511e76fc0?w=400&h=400&fit=crop" },
-              { style: "Cobertura", img: "https://images.unsplash.com/photo-1565058379802-bbe93b2f703a?w=400&h=400&fit=crop" },
-              { style: "Traditional", img: "https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=400&h=400&fit=crop" },
-              { style: "Fineline", img: "https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=400&h=400&fit=crop" },
-              { style: "New School", img: "https://images.unsplash.com/photo-1560707303-4e980ce876ad?w=400&h=400&fit=crop" },
-              { style: "Ultrarealismo", img: "https://images.unsplash.com/photo-1542382257-80dedb725088?w=400&h=400&fit=crop" },
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                variants={fadeInUp}
-                transition={{ delay: index * 0.05 }}
-                className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"
-              >
-                <img
-                  src={item.img}
-                  alt={`${item.style} tattoo`}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                  <Badge className="bg-gold/90 text-black font-medium">
-                    {item.style}
-                  </Badge>
-                </div>
-                <div className="absolute inset-0 border-2 border-transparent group-hover:border-gold/50 rounded-xl transition-colors duration-300" />
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* View More CTA */}
-          <motion.div
-            className="text-center mt-12"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-          >
+          <Link href="/artists" className="flex-1">
             <Button
               size="lg"
               variant="outline"
-              className="px-8 py-6 rounded-full border-gold/50 text-gold hover:bg-gold/10 hover:border-gold"
+              className="w-full h-14 text-lg font-bold border-2 border-gold text-gold hover:bg-gold hover:text-foreground transition-all duration-300 rounded-2xl"
             >
-              Ver Mais Trabalhos
-              <ArrowRight className="w-5 h-5 ml-2" />
+              <Sparkles className="w-5 h-5 mr-2" />
+              Ver Portfólio
             </Button>
-          </motion.div>
-        </div>
-      </section>
+          </Link>
+        </motion.div>
 
-      {/* Features Section */}
-      <section className="py-24 px-6 bg-card/30 relative">
-        <div className="absolute inset-0 grid-pattern opacity-30" />
-
-        <div className="max-w-7xl mx-auto relative">
-          <div className="text-center mb-16">
-            <motion.p
-              className="text-gold font-medium tracking-widest uppercase mb-4"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
+        {/* Login Button */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="mt-8"
+        >
+          <Link href="/login">
+            <Button
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              Features
-            </motion.p>
-            <motion.h2
-              className="text-4xl md:text-5xl font-bold text-white font-display"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              Por que escolher a ALTUS INK
-            </motion.h2>
-          </div>
+              <LogIn className="w-4 h-4 mr-2" />
+              Entrar
+            </Button>
+          </Link>
+        </motion.div>
+      </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Calendar,
-                title: "Agendamento Inteligente",
-                description: "Veja disponibilidade em tempo real e reserve seu horário preferido instantaneamente.",
-                color: "var(--gold)"
-              },
-              {
-                icon: Shield,
-                title: "Pagamento Seguro",
-                description: "Depósitos protegidos com múltiplas formas de pagamento europeias.",
-                color: "hsl(var(--neon-green))"
-              },
-              {
-                icon: Globe,
-                title: "Tour Mode",
-                description: "Siga seus artistas favoritos em tour. Agende sessões em diferentes cidades.",
-                color: "hsl(var(--neon-cyan))"
-              },
-              {
-                icon: CreditCard,
-                title: "Múltiplos Pagamentos",
-                description: "Stripe, SEPA, iDEAL, Bancontact, Revolut, Wise, PayPal e muito mais.",
-                color: "hsl(var(--neon-magenta))"
-              },
-              {
-                icon: Users,
-                title: "Artistas Elite",
-                description: "Tatuadores selecionados e reconhecidos internacionalmente.",
-                color: "hsl(var(--neon-purple))"
-              },
-              {
-                icon: Sparkles,
-                title: "Experiência Premium",
-                description: "Design futurístico e interface intuitiva para uma experiência única.",
-                color: "hsl(var(--neon-blue))"
-              },
-            ].map((feature, i) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <Card className="h-full glass-card hover:border-gold/30 transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div
-                      className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
-                      style={{ backgroundColor: `${feature.color}15` }}
-                    >
-                      <feature.icon
-                        className="w-6 h-6"
-                        style={{ color: feature.color }}
-                      />
-                    </div>
-                    <h3 className="font-semibold text-xl text-white mb-2">{feature.title}</h3>
-                    <p className="text-zinc-400">{feature.description}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 gradient-hero" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold/10 rounded-full blur-[200px]" />
-
-        <div className="max-w-4xl mx-auto text-center relative">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-white font-display mb-6">
-              Pronto para sua próxima tattoo?
-            </h2>
-            <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto">
-              Junte-se a milhares de clientes satisfeitos que transformaram suas visões em arte permanente.
-            </p>
-            <Link href="#artists">
-              <Button
-                size="lg"
-                className="px-12 py-6 rounded-2xl font-bold text-lg
-                  bg-gradient-to-r from-gold to-gold-light text-black
-                  shadow-glow-gold hover:shadow-[0_0_60px_rgba(201,162,39,0.5)]
-                  transition-all duration-300 hover:-translate-y-1 h-auto"
-                data-testid="button-cta-bottom"
-              >
-                Escolher Artista
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-black border-t border-zinc-900">
-        <div className="max-w-7xl mx-auto px-6 py-16">
-          <div className="grid md:grid-cols-4 gap-12">
-            {/* Brand */}
-            <div className="md:col-span-2">
-              <img
-                src="/logo-altus.png"
-                alt="Altus International Ink"
-                className="h-12 w-auto mb-6"
-              />
-              <p className="text-zinc-400 max-w-md mb-6 leading-relaxed">
-                Conectando você com os melhores tatuadores da Europa.
-                Arte corporal premium com agendamento simplificado e pagamentos seguros.
-              </p>
-
-              {/* Social Links */}
-              <div className="flex gap-4">
-                <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center
-                  hover:bg-gold/20 hover:text-gold transition-colors text-zinc-400">
-                  <SiInstagram className="w-5 h-5" />
-                </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center
-                  hover:bg-gold/20 hover:text-gold transition-colors text-zinc-400">
-                  <SiTiktok className="w-5 h-5" />
-                </a>
-              </div>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-white font-semibold mb-6">{t.footer.navigation}</h4>
-              <ul className="space-y-3">
-                <li><Link href="/" className="text-zinc-400 hover:text-gold transition-colors">{t.common.home}</Link></li>
-                <li><Link href="#artists" className="text-zinc-400 hover:text-gold transition-colors">Artistas</Link></li>
-                <li><Link href="/login" className="text-zinc-400 hover:text-gold transition-colors">{t.common.login}</Link></li>
-              </ul>
-            </div>
-
-            {/* Legal */}
-            <div>
-              <h4 className="text-white font-semibold mb-6">{t.footer.legal}</h4>
-              <ul className="space-y-3">
-                <li><Link href="/privacy" className="text-zinc-400 hover:text-gold transition-colors">{t.footer.privacy}</Link></li>
-                <li><Link href="/terms" className="text-zinc-400 hover:text-gold transition-colors">{t.footer.terms}</Link></li>
-                <li><Link href="/cancellation" className="text-zinc-400 hover:text-gold transition-colors">{t.footer.cancellation}</Link></li>
-                <li><Link href="/cookies" className="text-zinc-400 hover:text-gold transition-colors">{t.footer.cookies}</Link></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Trust & Integrations Bar */}
-        <div className="border-t border-zinc-900">
-          <div className="max-w-7xl mx-auto px-6 py-8">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-              {/* Payment Methods */}
-              <div className="flex items-center gap-6">
-                <span className="text-zinc-500 text-sm">{t.footer.securePayment}</span>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800">
-                    <CreditCard className="w-4 h-4 text-zinc-400" />
-                    <span className="text-xs text-zinc-400">Stripe</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800">
-                    <span className="text-xs text-zinc-400">SEPA</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800">
-                    <span className="text-xs text-zinc-400">iDEAL</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Certifications */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800">
-                  <Shield className="w-4 h-4 text-neon-green" />
-                  <span className="text-xs text-zinc-400">SSL Secured</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800">
-                  <span className="text-xs text-zinc-400">GDPR Compliant</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Copyright */}
-        <div className="border-t border-zinc-900">
-          <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-zinc-500 text-sm">
-              {t.footer.copyright}
-            </p>
-            <p className="text-zinc-500 text-sm">
-              {t.footer.madeWith}
-            </p>
-          </div>
-        </div>
-      </footer>
+      {/* Subtle Bottom Gradient */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
     </div>
   );
 }

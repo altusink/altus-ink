@@ -7,155 +7,159 @@
    Premium Tattoo Booking SaaS
    ============================================ */
 
-/* GAME-STYLE IMMERSIVE THEME */
+/* ALTUS INK - CLEAN + NEON REDESIGN */
 :root {
-  /* Force dark mode by default */
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* === GAME UI VIBRANT COLORS === */
-  --button-outline: rgba(255, 255, 255, .15);
-  --badge-outline: rgba(255, 255, 255, .10);
-  --opaque-button-border-intensity: 12;
-  --elevate-1: rgba(255, 255, 255, .08);
-  --elevate-2: rgba(255, 255, 255, .15);
+  /* === CLEAN + NEON PALETTE === */
+  --button-outline: rgba(0, 0, 0, .08);
+  --badge-outline: rgba(0, 0, 0, .05);
+  --opaque-button-border-intensity: 10;
+  --elevate-1: rgba(0, 0, 0, .03);
+  --elevate-2: rgba(0, 0, 0, .06);
 
-  /* Core Background - Vibrant Gradient Base */
-  --background: 250 35% 12%;
-  /* #1a1528 - Deep purple-navy */
-  --foreground: 0 0% 98%;
-  /* Pure white text */
+  /* Background - Clean Off-White */
+  --background: 0 0% 98%;
+  /* #FAFAFA */
+  --foreground: 240 10% 10%;
+  /* #1A1A2E - Almost black */
 
-  /* Borders - Glowing */
-  --border: 260 30% 25%;
-  /* Purple-tinted border */
+  /* Borders */
+  --border: 0 0% 90%;
 
-  /* Cards - Glass with purple undertone */
-  --card: 255 30% 15%;
-  /* #1e1a2e - Purple card */
-  --card-foreground: 0 0% 98%;
-  --card-border: 260 40% 30%;
+  /* Cards - White with subtle shadow */
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 10%;
+  --card-border: 0 0% 92%;
 
-  /* Sidebar - Deep purple */
-  --sidebar: 255 35% 10%;
+  /* Sidebar - Dark for contrast */
+  --sidebar: 240 20% 8%;
   --sidebar-foreground: 0 0% 98%;
-  --sidebar-border: 260 30% 20%;
-  --sidebar-primary: 45 100% 55%;
-  /* Bright Gold */
-  --sidebar-primary-foreground: 0 0% 5%;
-  --sidebar-accent: 260 40% 25%;
+  --sidebar-border: 240 20% 15%;
+  --sidebar-primary: 45 100% 50%;
+  --sidebar-primary-foreground: 240 10% 10%;
+  --sidebar-accent: 240 20% 15%;
   --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-ring: 45 100% 55%;
+  --sidebar-ring: 45 100% 50%;
 
-  /* Popover - Glass */
-  --popover: 255 30% 14%;
-  --popover-foreground: 0 0% 98%;
-  --popover-border: 260 40% 28%;
+  /* Popover */
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 10%;
+  --popover-border: 0 0% 90%;
 
-  /* === PRIMARY - ELECTRIC GOLD === */
-  --primary: 45 100% 55%;
-  /* #FFD700 - Electric Gold */
-  --primary-foreground: 0 0% 5%;
+  /* === PRIMARY - NEON CYAN === */
+  --primary: 185 100% 50%;
+  /* #00D4FF */
+  --primary-foreground: 240 10% 10%;
 
   /* Secondary - Purple */
-  --secondary: 260 50% 35%;
-  --secondary-foreground: 0 0% 98%;
+  --secondary: 260 80% 60%;
+  /* #7B2FFF */
+  --secondary-foreground: 0 0% 100%;
 
   /* Muted */
-  --muted: 260 30% 20%;
-  --muted-foreground: 260 15% 60%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 45%;
 
-  /* Accent - Electric Cyan */
-  --accent: 185 100% 50%;
-  /* #00E5FF - Electric Cyan */
-  --accent-foreground: 0 0% 5%;
+  /* Accent - Neon Green */
+  --accent: 150 100% 50%;
+  /* #00FF88 */
+  --accent-foreground: 240 10% 10%;
 
   /* Destructive */
-  --destructive: 0 85% 60%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive: 345 100% 60%;
+  /* #FF3366 */
+  --destructive-foreground: 0 0% 100%;
 
   /* Input */
-  --input: 260 30% 25%;
-  --ring: 45 100% 55%;
+  --input: 0 0% 92%;
+  --ring: 185 100% 50%;
 
-  /* === NEON GAME PALETTE === */
+  /* === NEON COLOR PALETTE === */
 
-  /* Gold (Brand Primary) - More Electric */
-  --gold: 45 100% 55%;
+  /* Gold (CTA) */
+  --gold: 45 100% 50%;
+  /* #FFD700 */
   --gold-dark: 45 100% 40%;
-  --gold-light: 45 100% 65%;
-  --gold-glow: rgba(255, 215, 0, 0.6);
-  --neon-gold: 45 100% 60%;
+  --gold-light: 45 100% 60%;
+  --gold-glow: rgba(255, 215, 0, 0.5);
+  --neon-gold: 45 100% 55%;
 
-  /* Cyan - Electric */
-  --neon-cyan: 185 100% 55%;
-  /* #00E5FF */
-  --neon-cyan-glow: rgba(0, 229, 255, 0.5);
+  /* Cyan */
+  --neon-cyan: 185 100% 50%;
+  /* #00D4FF */
+  --neon-cyan-glow: rgba(0, 212, 255, 0.4);
 
-  /* Magenta - Hot Pink */
-  --neon-magenta: 320 100% 60%;
-  /* #FF2D95 */
-  --neon-magenta-glow: rgba(255, 45, 149, 0.5);
+  /* Purple */
+  --neon-purple: 260 80% 60%;
+  /* #7B2FFF */
+  --neon-purple-glow: rgba(123, 47, 255, 0.4);
 
-  /* Green - Matrix */
-  --neon-green: 120 100% 55%;
-  /* #00FF66 */
-  --neon-green-glow: rgba(0, 255, 102, 0.5);
+  /* Green */
+  --neon-green: 150 100% 50%;
+  /* #00FF88 */
+  --neon-green-glow: rgba(0, 255, 136, 0.4);
 
-  /* Purple - Gaming */
-  --neon-purple: 270 100% 65%;
-  /* #9945FF */
-  --neon-purple-glow: rgba(153, 69, 255, 0.5);
+  /* Red */
+  --neon-red: 345 100% 60%;
+  /* #FF3366 */
+  --neon-red-glow: rgba(255, 51, 102, 0.4);
 
-  /* Blue - Neon */
-  --neon-blue: 220 100% 60%;
-  /* #3366FF */
-  --neon-blue-glow: rgba(51, 102, 255, 0.5);
+  /* Blue */
+  --neon-blue: 220 100% 55%;
+  /* #2962FF */
+  --neon-blue-glow: rgba(41, 98, 255, 0.4);
 
-  /* === GLASSMORPHISM - ENHANCED === */
-  --glass-bg: rgba(30, 26, 46, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --glass-hover: rgba(255, 255, 255, 0.18);
+  /* Magenta */
+  --neon-magenta: 300 100% 55%;
+  /* #FF00FF */
+  --neon-magenta-glow: rgba(255, 0, 255, 0.3);
+
+  /* === GLASSMORPHISM === */
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-hover: rgba(0, 0, 0, 0.12);
 
   /* === CHART COLORS === */
-  --chart-1: 45 100% 55%;
-  /* Gold */
-  --chart-2: 185 100% 55%;
-  /* Cyan */
-  --chart-3: 320 100% 60%;
-  /* Magenta */
-  --chart-4: 120 100% 55%;
-  /* Green */
-  --chart-5: 270 100% 65%;
-  /* Purple */
+  --chart-1: 185 100% 50%;
+  --chart-2: 260 80% 60%;
+  --chart-3: 150 100% 50%;
+  --chart-4: 45 100% 50%;
+  --chart-5: 345 100% 60%;
 
   /* === TYPOGRAPHY === */
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-display: 'Orbitron', 'Space Grotesk', system-ui, sans-serif;
+  --font-sans: 'Inter', 'Poppins', system-ui, sans-serif;
+  --font-display: 'Bebas Neue', 'Montserrat', system-ui, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: 'JetBrains Mono', Menlo, monospace;
 
   /* === SPACING & SIZING === */
-  --radius: 0.75rem;
+  --radius: 1rem;
   --spacing: 0.25rem;
 
   /* === SHADOWS - NEON ENHANCED === */
-  --shadow-2xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 10px var(--neon-purple-glow);
-  --shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 6px 10px rgba(0, 0, 0, 0.5), 0 0 20px var(--neon-purple-glow);
-  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.6);
-  --shadow-xl: 0 15px 30px rgba(0, 0, 0, 0.7), 0 0 30px var(--gold-glow);
-  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.8);
+  --shadow-2xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.15);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.2);
+
+  /* Neon shadows for hover */
+  --shadow-neon-cyan: 0 0 20px var(--neon-cyan-glow), 0 0 40px var(--neon-cyan-glow);
+  --shadow-neon-purple: 0 0 20px var(--neon-purple-glow), 0 0 40px var(--neon-purple-glow);
+  --shadow-neon-gold: 0 0 20px var(--gold-glow), 0 0 40px var(--gold-glow);
 
   /* Border derived colors */
-  --primary-border: hsl(45 100% 55%);
-  --secondary-border: hsl(260 50% 40%);
-  --muted-border: hsl(260 30% 25%);
-  --accent-border: hsl(185 100% 50%);
-  --destructive-border: hsl(0 85% 60%);
-  --sidebar-primary-border: hsl(45 100% 55%);
-  --sidebar-accent-border: hsl(260 40% 30%);
+  --primary-border: hsl(185 100% 50%);
+  --secondary-border: hsl(260 80% 60%);
+  --muted-border: hsl(0 0% 90%);
+  --accent-border: hsl(150 100% 50%);
+  --destructive-border: hsl(345 100% 60%);
+  --sidebar-primary-border: hsl(45 100% 50%);
+  --sidebar-accent-border: hsl(240 20% 20%);
 }
 
 /* Light mode override (for compatibility, but dark is default) */
@@ -198,10 +202,9 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
     background-image:
-      radial-gradient(ellipse at top left, rgba(153, 69, 255, 0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at top right, rgba(255, 215, 0, 0.10) 0%, transparent 40%),
-      radial-gradient(ellipse at bottom left, rgba(0, 229, 255, 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at center, rgba(255, 45, 149, 0.05) 0%, transparent 60%);
+      radial-gradient(ellipse at top right, rgba(0, 212, 255, 0.08) 0%, transparent 40%),
+      radial-gradient(ellipse at bottom left, rgba(123, 47, 255, 0.06) 0%, transparent 40%),
+      radial-gradient(ellipse at center, rgba(0, 255, 136, 0.03) 0%, transparent 50%);
     min-height: 100vh;
   }
 

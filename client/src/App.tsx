@@ -34,6 +34,7 @@ import VendorDashboard from "@/pages/dashboard/vendor/index";
 // Public Pages
 import BookingPage from "@/pages/book/index";
 import LoginPage from "@/pages/login";
+import ArtistsPage from "@/pages/artists";
 import { PrivacyPage, TermsPage, CancellationPage, CookiesPage } from "@/pages/legal";
 
 // Layout Components
@@ -97,6 +98,12 @@ function Router() {
 
       {/* Login Page */}
       <Route path="/login" component={LoginPage} />
+
+      {/* Artists Grid Page */}
+      <Route path="/artists" component={ArtistsPage} />
+
+      {/* Artist Feed/Portfolio Page (Instagram style) */}
+      <Route path="/artist/:subdomain" component={BookingPage} />
 
       {/* Public Booking Pages - Always accessible */}
       <Route path="/book/:subdomain" component={BookingPage} />
