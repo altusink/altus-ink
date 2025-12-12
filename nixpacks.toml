@@ -1,0 +1,14 @@
+# Nixpacks configuration for Railway
+# https://nixpacks.com/docs/configuration/file
+
+[phases.install]
+# Install ALL dependencies (including devDependencies) so drizzle-kit is available
+cmds = ["npm ci --include=dev"]
+
+[phases.build]
+# Build the application
+cmds = ["npm run build"]
+
+[start]
+# Run database migrations and start server
+cmd = "npx drizzle-kit push && npm run start"
