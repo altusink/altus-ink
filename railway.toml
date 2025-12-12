@@ -2,17 +2,11 @@
 # https://docs.railway.app/reference/config-as-code
 
 [build]
-builder = "nixpacks"
+# Use Dockerfile for more reliable builds
+builder = "dockerfile"
 
 [deploy]
 healthcheckPath = "/health"
-healthcheckTimeout = 60
+healthcheckTimeout = 120
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
-
-# Environment variables needed (set in Railway dashboard):
-# DATABASE_URL - Link from PostgreSQL service using ${{Postgres.DATABASE_URL}}
-# SESSION_SECRET - Secure random string for session encryption
-# STRIPE_SECRET_KEY - Stripe API key (optional)
-# SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD - Email service (optional)
-

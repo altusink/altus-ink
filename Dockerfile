@@ -6,7 +6,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install all dependencies (including dev for build)
+# Install all dependencies (including dev for build and drizzle-kit)
 RUN npm ci
 
 # Copy source code
@@ -23,15 +23,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production
+# Install ALL dependencies (need drizzle-kit for migrations at runtime)
+RUN npm ci
 
 # Copy built assets from builder stage
 COPY --from=builder /app/dist ./dist
 
 # Copy necessary files
 COPY shared ./shared
-COPY server ./server
 COPY drizzle.config.ts ./
 
 # Set environment
@@ -41,9 +40,9 @@ ENV PORT=5000
 # Expose port
 EXPOSE 5000
 
-# Health check using the new endpoint
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:5000/health || exit 1
 
-# Start the application
-CMD ["npm", "run", "start"]
+# Run migrations and start server
+CMD ["sh", "-c", "npx drizzle-kit push && npm run start"]
