@@ -255,9 +255,13 @@
   /* ============================================
      ELEVATION SYSTEM
      ============================================ */
-  .no-default-hover-elevate {}
+  .no-default-hover-elevate {
+    /* Utility class - no styles needed */
+  }
 
-  .no-default-active-elevate {}
+  .no-default-active-elevate {
+    /* Utility class - no styles needed */
+  }
 
   .toggle-elevate::before,
   .toggle-elevate-2::before {
