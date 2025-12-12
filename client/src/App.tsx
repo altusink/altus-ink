@@ -35,6 +35,7 @@ import VendorDashboard from "@/pages/dashboard/vendor/index";
 import BookingPage from "@/pages/book/index";
 import LoginPage from "@/pages/login";
 import ArtistsPage from "@/pages/artists";
+import ArtistFeedPage from "@/pages/artist-feed";
 import { PrivacyPage, TermsPage, CancellationPage, CookiesPage } from "@/pages/legal";
 
 // Layout Components
@@ -103,7 +104,7 @@ function Router() {
       <Route path="/artists" component={ArtistsPage} />
 
       {/* Artist Feed/Portfolio Page (Instagram style) */}
-      <Route path="/artist/:subdomain" component={BookingPage} />
+      <Route path="/artist/:subdomain" component={ArtistFeedPage} />
 
       {/* Public Booking Pages - Always accessible */}
       <Route path="/book/:subdomain" component={BookingPage} />
