@@ -193,8 +193,8 @@ export default function BookingPage() {
 
   const createBookingMutation = useMutation({
     mutationFn: async (data: BookingFormData) => {
-      const response = await apiRequest("POST", `/api/public/artist/${subdomain}/book`, {
-        ...data,
+      // Use checkout endpoint for Stripe payment flow
+      const response = await apiRequest("POST", `/api/public/artist/${subdomain}/checkout`, {
         lockId,
         depositValueId: selectedDepositValue?.id,
         paymentMethod: selectedPaymentMethod,
@@ -205,7 +205,15 @@ export default function BookingPage() {
     },
     onSuccess: (data) => {
       if (data.checkoutUrl) {
+        // Redirect to Stripe checkout
         window.location.href = data.checkoutUrl;
+      } else if (data.mode === "development") {
+        // Development mode - no Stripe, booking created directly
+        setStep("success");
+        toast({
+          title: "Reserva confirmada!",
+          description: "Modo desenvolvimento - sem pagamento Stripe.",
+        });
       } else {
         setStep("success");
       }

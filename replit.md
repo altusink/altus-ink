@@ -17,8 +17,22 @@ The application is functional with core features implemented:
 - **Backend**: Express.js, PostgreSQL with Drizzle ORM
 - **UI**: Shadcn/ui components, Tailwind CSS, Lucide icons
 - **Auth**: Dual auth system - Replit OpenID Connect (production) + Username/Password (development)
-- **Payments**: Stripe integration (configured)
+- **Payments**: Stripe Checkout with stripe-replit-sync integration
 - **Security**: bcrypt for password hashing
+
+## Stripe Payment Flow
+1. Customer selects date/time and creates 10-minute booking lock
+2. Frontend calls `/api/public/artist/:subdomain/checkout` with lockId
+3. Backend creates Stripe Checkout session with deposit amount
+4. Customer completes payment on Stripe hosted checkout page
+5. Webhook processes `checkout.session.completed` event
+6. Booking is confirmed and deposit record created with 70/30 split
+
+### Key Files
+- `server/stripeClient.ts` - Stripe credentials via Replit Connectors
+- `server/stripeService.ts` - Checkout session creation
+- `server/webhookHandlers.ts` - Payment event processing
+- Fallback: If Stripe not configured, bookings are created directly (dev mode)
 
 ## Key Features
 
@@ -125,7 +139,11 @@ shared/
 - `GET /api/public/artist/:subdomain` - Get public artist profile
 - `GET /api/public/artist/:subdomain/availability` - Get availability
 - `POST /api/public/artist/:subdomain/lock` - Create 10-min booking lock
-- `POST /api/public/artist/:subdomain/book` - Create booking
+- `POST /api/public/artist/:subdomain/checkout` - Create Stripe checkout session
+- `POST /api/public/artist/:subdomain/book` - Legacy booking endpoint (for backward compatibility)
+
+### Stripe APIs
+- `GET /api/stripe/publishable-key` - Get Stripe publishable key for frontend
 
 ## Environment Variables
 - `DATABASE_URL` - PostgreSQL connection string

@@ -385,7 +385,7 @@ export default function ArtistSettings() {
                   >
                     <div>
                       <p className="font-medium text-sm">{dv.name}</p>
-                      <p className="text-xs text-muted-foreground">{dv.durationHours} hour{dv.durationHours > 1 ? "s" : ""}</p>
+                      <p className="text-xs text-muted-foreground">{dv.durationHours} hour{Number(dv.durationHours) > 1 ? "s" : ""}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <p className="font-semibold">{selectedCurrency?.symbol}{dv.depositAmount}</p>

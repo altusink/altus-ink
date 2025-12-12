@@ -80,6 +80,11 @@ export interface IStorage {
   createBookingLock(data: InsertBookingLock): Promise<BookingLock>;
   getBookingLock(id: string): Promise<BookingLock | undefined>;
   expireOldLocks(): Promise<void>;
+  confirmBookingLock(id: string): Promise<BookingLock | undefined>;
+  expireBookingLock(id: string): Promise<BookingLock | undefined>;
+  updateBookingLock(id: string, data: Partial<InsertBookingLock>): Promise<BookingLock | undefined>;
+  getBookingByLockId(lockId: string): Promise<Booking | undefined>;
+  isSlotAvailable(artistId: string, slotDatetime: Date): Promise<boolean>;
   
   // Booking operations
   getArtistBookings(artistId: string): Promise<Booking[]>;
@@ -94,6 +99,11 @@ export interface IStorage {
   getArtistDeposits(artistId: string): Promise<Deposit[]>;
   getAllDeposits(): Promise<Deposit[]>;
   createDeposit(data: InsertDeposit): Promise<Deposit>;
+  
+  // Payment operations
+  createPayment(data: InsertPayment): Promise<Payment>;
+  getPaymentByIntentId(paymentIntentId: string): Promise<Payment | undefined>;
+  updatePaymentStatus(id: string, status: string, errorMessage?: string): Promise<Payment | undefined>;
   
   // Portfolio operations
   getPortfolioCategories(artistId: string): Promise<PortfolioCategory[]>;
@@ -313,6 +323,32 @@ export class DatabaseStorage implements IStorage {
     return lock;
   }
 
+  async expireBookingLock(id: string): Promise<BookingLock | undefined> {
+    const [lock] = await db
+      .update(bookingLocks)
+      .set({ status: "expired" })
+      .where(eq(bookingLocks.id, id))
+      .returning();
+    return lock;
+  }
+
+  async updateBookingLock(id: string, data: Partial<InsertBookingLock>): Promise<BookingLock | undefined> {
+    const [lock] = await db
+      .update(bookingLocks)
+      .set(data)
+      .where(eq(bookingLocks.id, id))
+      .returning();
+    return lock;
+  }
+
+  async getBookingByLockId(lockId: string): Promise<Booking | undefined> {
+    const result = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.lockId, lockId));
+    return result[0];
+  }
+
   async isSlotAvailable(artistId: string, slotDatetime: Date): Promise<boolean> {
     // Check for existing confirmed bookings
     const existingBookings = await db
@@ -436,6 +472,29 @@ export class DatabaseStorage implements IStorage {
   async createDeposit(data: InsertDeposit): Promise<Deposit> {
     const [deposit] = await db.insert(deposits).values(data).returning();
     return deposit;
+  }
+
+  // Payment operations
+  async createPayment(data: InsertPayment): Promise<Payment> {
+    const [payment] = await db.insert(payments).values(data).returning();
+    return payment;
+  }
+
+  async getPaymentByIntentId(paymentIntentId: string): Promise<Payment | undefined> {
+    const result = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.paymentIntentId, paymentIntentId));
+    return result[0];
+  }
+
+  async updatePaymentStatus(id: string, status: string, errorMessage?: string): Promise<Payment | undefined> {
+    const [payment] = await db
+      .update(payments)
+      .set({ status, errorMessage })
+      .where(eq(payments.id, id))
+      .returning();
+    return payment;
   }
 
   // Portfolio operations

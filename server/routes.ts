@@ -13,6 +13,8 @@ import {
   BOOKING_LOCK_DURATION_MS,
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
+import { stripeService } from "./stripeService";
+import { isStripeConfigured } from "./stripeClient";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -445,8 +447,8 @@ export async function registerRoutes(
       const value = await storage.createDepositValue({
         artistId: artist.id,
         name,
-        durationHours: parseInt(durationHours),
-        depositAmount,
+        durationHours: String(durationHours),
+        depositAmount: String(depositAmount),
       });
       
       res.json(value);
@@ -931,7 +933,143 @@ export async function registerRoutes(
     }
   });
 
-  // Create booking (process payment)
+  // Create Stripe checkout session for booking
+  app.post("/api/public/artist/:subdomain/checkout", async (req: Request, res: Response) => {
+    try {
+      const artist = await storage.getArtistBySubdomain(req.params.subdomain);
+      
+      if (!artist || !artist.isActive || !artist.isApproved) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+      
+      const { lockId, customerInstagram, tattooDescription, referenceImages, depositValueId } = req.body;
+      
+      if (!lockId) {
+        return res.status(400).json({ message: "Lock ID is required" });
+      }
+      
+      // Get and verify lock
+      const lock = await storage.getBookingLock(lockId);
+      if (!lock) {
+        return res.status(404).json({ message: "Booking lock not found" });
+      }
+      
+      // SECURITY: Verify lock belongs to this artist (prevent cross-tenant misuse)
+      if (lock.artistId !== artist.id) {
+        return res.status(403).json({ message: "Lock does not belong to this artist" });
+      }
+      
+      if (lock.status !== "pending") {
+        return res.status(409).json({ message: "Booking lock is no longer valid" });
+      }
+      if (new Date(lock.expiresAt) < new Date()) {
+        return res.status(409).json({ message: "Booking lock has expired" });
+      }
+      
+      // Update lock with additional form data before checkout
+      if (customerInstagram || tattooDescription || referenceImages || depositValueId) {
+        await storage.updateBookingLock(lockId, {
+          customerInstagram,
+          tattooDescription,
+          referenceImageUrl: referenceImages?.[0] || null,
+          depositValueId,
+        });
+      }
+      
+      // Refresh lock with updated data
+      const updatedLock = await storage.getBookingLock(lockId);
+      if (!updatedLock) {
+        return res.status(404).json({ message: "Lock not found after update" });
+      }
+      
+      // Check if Stripe is configured
+      const stripeReady = await isStripeConfigured();
+      
+      if (!stripeReady) {
+        // Fallback: Create booking without Stripe (for development)
+        console.log("[booking] Stripe not configured, creating booking directly");
+        
+        const booking = await storage.createBooking({
+          artistId: artist.id,
+          lockId: updatedLock.id,
+          customerName: updatedLock.customerName,
+          customerEmail: updatedLock.customerEmail,
+          customerPhone: updatedLock.customerPhone || undefined,
+          customerInstagram: updatedLock.customerInstagram || undefined,
+          slotDatetime: updatedLock.slotDatetime,
+          durationMinutes: updatedLock.durationMinutes || 60,
+          depositAmount: artist.depositAmount || "100",
+          currency: artist.currency || "EUR",
+          referenceImageUrl: updatedLock.referenceImageUrl || undefined,
+          tattooDescription: updatedLock.tattooDescription || undefined,
+          authorizePortfolio: updatedLock.authorizePortfolio || false,
+          status: "confirmed",
+        });
+        
+        await storage.confirmBookingLock(lockId);
+        
+        // Create deposit record
+        const depositAmount = Number(artist.depositAmount || 100);
+        const platformFee = depositAmount * PLATFORM_FEE_PERCENTAGE;
+        const artistAmount = depositAmount * (1 - PLATFORM_FEE_PERCENTAGE);
+        const retentionUntil = new Date();
+        retentionUntil.setDate(retentionUntil.getDate() + DEPOSIT_RETENTION_DAYS);
+        
+        await storage.createDeposit({
+          artistId: artist.id,
+          bookingId: booking.id,
+          amount: depositAmount.toFixed(2),
+          currency: artist.currency || "EUR",
+          platformFee: platformFee.toFixed(2),
+          artistAmount: artistAmount.toFixed(2),
+          isRefundable: false,
+          status: "held",
+          retentionUntil,
+        });
+        
+        // Create payment record for consistency across environments
+        await storage.createPayment({
+          artistId: artist.id,
+          bookingId: booking.id,
+          lockId: updatedLock.id,
+          amount: depositAmount.toFixed(2),
+          currency: artist.currency || "EUR",
+          paymentMethod: "development",
+          paymentIntentId: `dev_${booking.id}`,
+          status: "completed",
+        });
+        
+        return res.json({
+          success: true,
+          bookingId: booking.id,
+          mode: "development",
+        });
+      }
+      
+      // Create Stripe checkout session
+      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0] || req.get('host')}`;
+      const successUrl = `${baseUrl}/book/${artist.subdomain}/success?session_id={CHECKOUT_SESSION_ID}`;
+      const cancelUrl = `${baseUrl}/book/${artist.subdomain}?cancelled=true`;
+      
+      const { url, sessionId } = await stripeService.createBookingCheckoutSession(
+        artist,
+        updatedLock,
+        successUrl,
+        cancelUrl
+      );
+      
+      res.json({
+        success: true,
+        checkoutUrl: url,
+        sessionId,
+      });
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ message: "Failed to create checkout session" });
+    }
+  });
+
+  // Legacy booking endpoint (for backward compatibility)
   app.post("/api/public/artist/:subdomain/book", async (req: Request, res: Response) => {
     try {
       const artist = await storage.getArtistBySubdomain(req.params.subdomain);
@@ -961,20 +1099,14 @@ export async function registerRoutes(
           return res.status(409).json({ message: "Booking lock has expired" });
         }
         
-        // Mark lock as confirmed
         await storage.confirmBookingLock(lockId);
       } else {
-        // Check slot availability if no lock
-        const isAvailable = await storage.isSlotAvailable(
-          artist.id,
-          new Date(slotDatetime)
-        );
+        const isAvailable = await storage.isSlotAvailable(artist.id, new Date(slotDatetime));
         if (!isAvailable) {
           return res.status(409).json({ message: "This time slot is no longer available" });
         }
       }
       
-      // Create booking
       const booking = await storage.createBooking({
         artistId: artist.id,
         lockId,
@@ -989,12 +1121,9 @@ export async function registerRoutes(
         status: "confirmed",
       });
       
-      // Create deposit record with proper 70/30 split
       const depositAmount = Number(artist.depositAmount || 100);
-      const platformFee = depositAmount * PLATFORM_FEE_PERCENTAGE; // 30% platform fee
-      const artistAmount = depositAmount * (1 - PLATFORM_FEE_PERCENTAGE); // 70% to artist
-      
-      // Calculate retention date (90 days from now)
+      const platformFee = depositAmount * PLATFORM_FEE_PERCENTAGE;
+      const artistAmount = depositAmount * (1 - PLATFORM_FEE_PERCENTAGE);
       const retentionUntil = new Date();
       retentionUntil.setDate(retentionUntil.getDate() + DEPOSIT_RETENTION_DAYS);
       
@@ -1010,17 +1139,52 @@ export async function registerRoutes(
         retentionUntil,
       });
       
-      // Return success (in production, this would return a Stripe checkout URL)
       res.json({
         success: true,
         bookingId: booking.id,
         depositAmount: depositAmount.toFixed(2),
         currency: artist.currency || "EUR",
-        // In production: checkoutUrl: stripeSession.url
       });
     } catch (error) {
       console.error("Error creating booking:", error);
       res.status(500).json({ message: "Failed to create booking" });
+    }
+  });
+
+  // Get Stripe publishable key for frontend
+  app.get("/api/stripe/publishable-key", async (req: Request, res: Response) => {
+    try {
+      const configured = await isStripeConfigured();
+      if (!configured) {
+        return res.json({ configured: false });
+      }
+      const key = await stripeService.getPublishableKey();
+      res.json({ configured: true, publishableKey: key });
+    } catch (error) {
+      console.error("Error getting Stripe key:", error);
+      res.status(500).json({ message: "Failed to get Stripe configuration" });
+    }
+  });
+
+  // Check integration status (for CEO settings)
+  app.get("/api/ceo/integration-status", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== "ceo") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const stripeConfigured = await isStripeConfigured();
+      const smtpConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD);
+      
+      res.json({
+        stripe: stripeConfigured,
+        smtp: smtpConfigured,
+        whatsapp: false, // TODO: Check Z-API credentials
+      });
+    } catch (error) {
+      console.error("Error checking integration status:", error);
+      res.status(500).json({ message: "Failed to check integration status" });
     }
   });
 
