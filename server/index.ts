@@ -6,6 +6,7 @@ import { emailService } from "./services/email";
 import { whatsappService } from "./services/whatsapp";
 import { subdomainMiddleware } from "./middleware/subdomain";
 import { startDepositReleaseJob } from "./jobs/depositRelease";
+import { seedInitialData } from "./seed";
 
 const app = express();
 const httpServer = createServer(app);
@@ -173,6 +174,9 @@ app.use((req, res, next) => {
   app.use(subdomainMiddleware);
 
   await registerRoutes(httpServer, app);
+
+  // Seed initial data (creates admin user if not exists)
+  await seedInitialData();
 
   // Start background jobs
   startDepositReleaseJob();
