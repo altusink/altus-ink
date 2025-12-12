@@ -58,11 +58,12 @@ The application is functional with core features implemented:
 - Real-time countdown timer during booking process
 - 4-step booking flow: Calendar → Time → Details → Payment
 
-### Financial Model
+### Financial Model (68/30/2 Split)
 - Non-refundable deposits (configurable per artist)
 - 90-day deposit retention period
-- 70/30 revenue split (70% artist, 30% platform)
+- **68/30/2 revenue split**: 68% artist, 30% platform (Altus), 2% vendor commission
 - Held → Available → Released deposit lifecycle
+- Multi-currency support: EUR and BRL
 
 ### Tour Mode
 - Artists can enable tour mode for traveling
@@ -77,8 +78,10 @@ The application is functional with core features implemented:
 - All user creation and password reset flows must use bcrypt for hashing
 
 ### Role-Based Access
-- **CEO**: Full platform access, artist approval, financial overview
-- **Artist**: Own profile, bookings, calendar, earnings management
+- **CEO**: Full platform access, artist approval, financial overview, payout approval
+- **Artist**: Own profile, bookings, calendar, earnings management, payout requests
+- **Coordinator**: Artist permissions but cannot withdraw/request payouts
+- **Vendor**: Has agenda access, earns 2% commission, can request payouts
 - **Client**: Public booking pages only
 
 ## File Structure
@@ -164,6 +167,29 @@ shared/
 - `POST /api/public/artist/:subdomain/payment/revolut` - Get Revolut payment instructions
 - `POST /api/public/artist/:subdomain/payment/wise` - Get Wise payment instructions
 
+### Studio APIs (CEO only)
+- `GET /api/ceo/studios` - List all studios
+- `POST /api/ceo/studios` - Create new studio
+- `PATCH /api/ceo/studios/:id` - Update studio
+- `DELETE /api/ceo/studios/:id` - Delete studio
+
+### Connected Accounts APIs
+- `GET /api/accounts` - Get user's connected payment accounts
+- `POST /api/accounts` - Add new payment account (Wise, Revolut, PayPal, IBAN)
+- `PATCH /api/accounts/:id` - Update account details
+- `DELETE /api/accounts/:id` - Remove account
+- `POST /api/accounts/:id/default` - Set as default payout account
+
+### Payout APIs
+- `GET /api/payouts` - Get user's payout requests
+- `GET /api/balance` - Get user's available balance
+- `POST /api/payouts` - Request new payout
+- `GET /api/ceo/payouts` - Get all payout requests (CEO only)
+- `GET /api/ceo/payouts/pending` - Get pending requests (CEO only)
+- `POST /api/ceo/payouts/:id/approve` - Approve payout (CEO only)
+- `POST /api/ceo/payouts/:id/execute` - Execute payout (CEO only)
+- `POST /api/ceo/payouts/:id/reject` - Reject payout (CEO only)
+
 ## Environment Variables
 - `DATABASE_URL` - PostgreSQL connection string
 - `SESSION_SECRET` - Express session secret
@@ -187,12 +213,30 @@ The settings page provides centralized configuration for all platform integratio
 - `STRIPE_SECRET_KEY` - For payment processing (configured via Replit integration)
 
 ## Recently Implemented Features
+- **68/30/2 Revenue Split**: Updated financial model with artist (68%), platform (30%), vendor (2%) split
+- **Multi-Studio Architecture**: Studios table for multi-tenant white-label preparation
+- **Connected Payment Accounts**: Support for Wise, Revolut, PayPal, and IBAN for payouts
+- **Payout Request System**: Full workflow with request → approve → execute flow
+- **New Roles**: Added coordinator (no withdrawal) and vendor (2% commission) roles
+- **Futuristic UI Theme**: Dark mode with neon teal/blue accents and glassmorphism effects
 - **Email Notifications**: Booking confirmations sent via SMTP (requires credentials)
 - **WhatsApp Notifications**: Z-API integration for booking alerts (requires credentials)
 - **Subdomain Middleware**: Routes artist.altusink.io to /book/:subdomain (requires DNS config)
 - **Deposit Release Job**: Automatic release of deposits after 90-day retention
 - **CSV Export**: Export bookings and deposits for reporting
 - **Revolut/Wise Instructions**: Alternative payment method support
+
+## New Components
+- `FinancialBreakdownCard`: Displays 68/30/2 split breakdown for deposits
+- `PayoutRequestModal`: Modal for artists/vendors to request payouts
+- `ConnectedAccountsManager`: Manage connected payment accounts (Wise, Revolut, PayPal, IBAN)
+
+## Database Schema Updates
+- `studios`: Multi-tenant studio support with branding
+- `connected_accounts`: Payment accounts for payouts
+- `payout_requests`: Payout request tracking with approval workflow
+- Added `vendorId`, `vendorAmount` to deposits for commission tracking
+- Added `studioId` to artists, bookings, deposits for multi-tenant isolation
 
 ## Configuration Required
 To enable all features, configure these environment variables:

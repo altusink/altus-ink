@@ -27,7 +27,27 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)]
 );
 
+// Studios for multi-tenant architecture
+export const studios = pgTable("studios", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 200 }).notNull(),
+  slug: varchar("slug", { length: 50 }).unique().notNull(),
+  description: text("description"),
+  logoUrl: varchar("logo_url"),
+  primaryColor: varchar("primary_color", { length: 7 }).default("#C9A227"),
+  address: text("address"),
+  city: varchar("city", { length: 100 }),
+  country: varchar("country", { length: 100 }),
+  timezone: varchar("timezone", { length: 50 }).default("Europe/Berlin"),
+  currency: varchar("currency", { length: 3 }).default("EUR"),
+  isActive: boolean("is_active").default(true),
+  ownerId: varchar("owner_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // User profiles - extends Replit Auth users
+// Roles: ceo, artist, coordinator, vendor
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
@@ -37,8 +57,28 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   phone: varchar("phone"),
-  role: varchar("role", { length: 20 }).notNull().default("artist"),
+  role: varchar("role", { length: 20 }).notNull().default("artist"), // ceo, artist, coordinator, vendor
+  studioId: varchar("studio_id").references(() => studios.id),
+  preferredCurrency: varchar("preferred_currency", { length: 3 }).default("EUR"), // EUR or BRL
   isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Connected accounts for payouts (Wise, Revolut, PayPal, IBAN)
+export const connectedAccounts = pgTable("connected_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  provider: varchar("provider", { length: 20 }).notNull(), // wise, revolut, paypal, iban
+  accountName: varchar("account_name", { length: 200 }),
+  accountEmail: varchar("account_email", { length: 255 }),
+  accountId: varchar("account_id", { length: 255 }), // external account identifier
+  iban: varchar("iban", { length: 50 }),
+  bic: varchar("bic", { length: 20 }),
+  currency: varchar("currency", { length: 3 }).default("EUR"),
+  isDefault: boolean("is_default").default(false),
+  isVerified: boolean("is_verified").default(false),
+  metadata: jsonb("metadata").default({}),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -47,6 +87,7 @@ export const users = pgTable("users", {
 export const artists = pgTable("artists", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  studioId: varchar("studio_id").references(() => studios.id),
   subdomain: varchar("subdomain", { length: 50 }).unique().notNull(),
   displayName: varchar("display_name", { length: 100 }).notNull(),
   bio: text("bio"),
@@ -58,7 +99,7 @@ export const artists = pgTable("artists", {
   isActive: boolean("is_active").default(true),
   isApproved: boolean("is_approved").default(false),
   stripeAccountId: varchar("stripe_account_id"),
-  themeColor: varchar("theme_color", { length: 7 }).default("#F59E0B"),
+  themeColor: varchar("theme_color", { length: 7 }).default("#C9A227"), // Gold branding
   fontPreset: varchar("font_preset", { length: 50 }).default("Inter"),
   coverImageUrl: varchar("cover_image_url"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -165,6 +206,7 @@ export const payments = pgTable("payments", {
 });
 
 // Deposits with 90-day retention
+// Split: 68% artist, 30% platform (Altus), 2% vendor
 export const deposits = pgTable(
   "deposits",
   {
@@ -172,10 +214,13 @@ export const deposits = pgTable(
     paymentId: varchar("payment_id").references(() => payments.id),
     artistId: varchar("artist_id").references(() => artists.id),
     bookingId: varchar("booking_id").references(() => bookings.id),
+    vendorId: varchar("vendor_id").references(() => users.id), // Vendor who made the sale
+    studioId: varchar("studio_id").references(() => studios.id),
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
     currency: varchar("currency", { length: 3 }).default("EUR"),
-    platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(), // 30%
-    artistAmount: decimal("artist_amount", { precision: 10, scale: 2 }).notNull(), // 70%
+    platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(), // 30% Altus
+    artistAmount: decimal("artist_amount", { precision: 10, scale: 2 }).notNull(), // 68% Artist
+    vendorAmount: decimal("vendor_amount", { precision: 10, scale: 2 }).default("0"), // 2% Vendor
     isRefundable: boolean("is_refundable").default(false),
     status: varchar("status", { length: 20 }).default("held"),
     retentionUntil: timestamp("retention_until"),
@@ -184,6 +229,43 @@ export const deposits = pgTable(
   },
   (table) => [index("idx_deposits_retention").on(table.retentionUntil)]
 );
+
+// Payout requests - flow: requested -> approved -> paid/failed
+export const payoutRequests = pgTable(
+  "payout_requests",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+    connectedAccountId: varchar("connected_account_id").references(() => connectedAccounts.id),
+    amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+    currency: varchar("currency", { length: 3 }).default("EUR"),
+    status: varchar("status", { length: 20 }).default("requested"), // requested, approved, processing, paid, failed, cancelled
+    requestedAt: timestamp("requested_at").defaultNow(),
+    approvedBy: varchar("approved_by").references(() => users.id),
+    approvedAt: timestamp("approved_at"),
+    processedAt: timestamp("processed_at"),
+    paidAt: timestamp("paid_at"),
+    transactionReference: varchar("transaction_reference", { length: 255 }),
+    notes: text("notes"),
+    errorMessage: text("error_message"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("idx_payout_requests_user").on(table.userId, table.status)]
+);
+
+// Balance snapshots for tracking available balance
+export const balanceSnapshots = pgTable("balance_snapshots", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  totalEarned: decimal("total_earned", { precision: 10, scale: 2 }).default("0"),
+  totalPaidOut: decimal("total_paid_out", { precision: 10, scale: 2 }).default("0"),
+  heldBalance: decimal("held_balance", { precision: 10, scale: 2 }).default("0"),
+  availableBalance: decimal("available_balance", { precision: 10, scale: 2 }).default("0"),
+  pendingPayouts: decimal("pending_payouts", { precision: 10, scale: 2 }).default("0"),
+  currency: varchar("currency", { length: 3 }).default("EUR"),
+  snapshotDate: date("snapshot_date").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 // Notifications
 export const notifications = pgTable("notifications", {
@@ -463,6 +545,29 @@ export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit
   updatedAt: true,
 });
 
+export const insertStudioSchema = createInsertSchema(studios).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertConnectedAccountSchema = createInsertSchema(connectedAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPayoutRequestSchema = createInsertSchema(payoutRequests).omit({
+  id: true,
+  createdAt: true,
+  requestedAt: true,
+});
+
+export const insertBalanceSnapshotSchema = createInsertSchema(balanceSnapshots).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -499,6 +604,14 @@ export type WaitingListEntry = typeof waitingList.$inferSelect;
 export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
 export type EmailTemplate = typeof emailTemplates.$inferSelect;
 export type TermsAcceptance = typeof termsAcceptance.$inferSelect;
+export type InsertStudio = z.infer<typeof insertStudioSchema>;
+export type Studio = typeof studios.$inferSelect;
+export type InsertConnectedAccount = z.infer<typeof insertConnectedAccountSchema>;
+export type ConnectedAccount = typeof connectedAccounts.$inferSelect;
+export type InsertPayoutRequest = z.infer<typeof insertPayoutRequestSchema>;
+export type PayoutRequest = typeof payoutRequests.$inferSelect;
+export type InsertBalanceSnapshot = z.infer<typeof insertBalanceSnapshotSchema>;
+export type BalanceSnapshot = typeof balanceSnapshots.$inferSelect;
 
 // Booking form schema for frontend validation
 export const bookingFormSchema = z.object({
@@ -584,11 +697,40 @@ export const BOOKING_STATUS = {
   NO_SHOW: "no_show",
 } as const;
 
-// Platform fee percentage (30%)
-export const PLATFORM_FEE_PERCENTAGE = 0.3;
+// Financial split percentages (official)
+// Altus: 30%, Artist: 68%, Vendor: 2%
+export const PLATFORM_FEE_PERCENTAGE = 0.30; // 30% Altus
+export const ARTIST_PERCENTAGE = 0.68; // 68% Artist
+export const VENDOR_PERCENTAGE = 0.02; // 2% Vendor
 
 // Deposit retention period (90 days)
 export const DEPOSIT_RETENTION_DAYS = 90;
+
+// User roles
+export const USER_ROLES = {
+  CEO: "ceo",
+  ARTIST: "artist",
+  COORDINATOR: "coordinator", // Like artist but cannot request payouts
+  VENDOR: "vendor", // Has agenda, receives 2% commission, can request payouts
+} as const;
+
+// Payout request status
+export const PAYOUT_STATUS = {
+  REQUESTED: "requested",
+  APPROVED: "approved",
+  PROCESSING: "processing",
+  PAID: "paid",
+  FAILED: "failed",
+  CANCELLED: "cancelled",
+} as const;
+
+// Connected account providers
+export const PAYOUT_PROVIDERS = {
+  WISE: "wise",
+  REVOLUT: "revolut",
+  PAYPAL: "paypal",
+  IBAN: "iban",
+} as const;
 
 // Booking lock duration (10 minutes)
 export const BOOKING_LOCK_DURATION_MS = 10 * 60 * 1000;

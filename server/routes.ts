@@ -9,8 +9,11 @@ import {
   createCityScheduleRequestSchema,
   upsertAvailabilitySchema,
   PLATFORM_FEE_PERCENTAGE,
+  ARTIST_PERCENTAGE,
+  VENDOR_PERCENTAGE,
   DEPOSIT_RETENTION_DAYS,
   BOOKING_LOCK_DURATION_MS,
+  USER_ROLES,
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import { stripeService } from "./stripeService";
@@ -1249,8 +1252,10 @@ export async function registerRoutes(
         }
       }
       
+      // Create booking with studioId for multi-tenant isolation
       const booking = await storage.createBooking({
         artistId: artist.id,
+        studioId: artist.studioId || undefined,
         lockId,
         customerName,
         customerEmail,
@@ -1263,19 +1268,23 @@ export async function registerRoutes(
         status: "confirmed",
       });
       
+      // Create deposit with 68/30/2 split and studioId
       const depositAmount = Number(artist.depositAmount || 100);
-      const platformFee = depositAmount * PLATFORM_FEE_PERCENTAGE;
-      const artistAmount = depositAmount * (1 - PLATFORM_FEE_PERCENTAGE);
+      const platformFee = depositAmount * PLATFORM_FEE_PERCENTAGE; // 30%
+      const artistAmountCalc = depositAmount * ARTIST_PERCENTAGE; // 68%
+      const vendorAmountCalc = depositAmount * VENDOR_PERCENTAGE; // 2%
       const retentionUntil = new Date();
       retentionUntil.setDate(retentionUntil.getDate() + DEPOSIT_RETENTION_DAYS);
       
       await storage.createDeposit({
         artistId: artist.id,
+        studioId: artist.studioId || undefined,
         bookingId: booking.id,
         amount: depositAmount.toFixed(2),
         currency: artist.currency || "EUR",
         platformFee: platformFee.toFixed(2),
-        artistAmount: artistAmount.toFixed(2),
+        artistAmount: artistAmountCalc.toFixed(2),
+        vendorAmount: vendorAmountCalc.toFixed(2),
         isRefundable: false,
         status: "held",
         retentionUntil,
@@ -1305,6 +1314,339 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error getting Stripe key:", error);
       res.status(500).json({ message: "Failed to get Stripe configuration" });
+    }
+  });
+
+  // ==================== STUDIO API ROUTES (CEO only) ====================
+  
+  // Get all studios
+  app.get("/api/ceo/studios", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== USER_ROLES.CEO) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      const allStudios = await storage.getAllStudios();
+      res.json(allStudios);
+    } catch (error) {
+      console.error("Error fetching studios:", error);
+      res.status(500).json({ message: "Failed to fetch studios" });
+    }
+  });
+
+  // Create studio
+  app.post("/api/ceo/studios", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== USER_ROLES.CEO) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      const { name, slug, description, address, city, country, primaryColor } = req.body;
+      if (!name || !slug) {
+        return res.status(400).json({ message: "Name and slug are required" });
+      }
+      const studio = await storage.createStudio({
+        name,
+        slug: slug.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+        description,
+        address,
+        city,
+        country,
+        primaryColor: primaryColor || "#C9A227",
+        ownerId: user.id,
+      });
+      res.json(studio);
+    } catch (error) {
+      console.error("Error creating studio:", error);
+      res.status(500).json({ message: "Failed to create studio" });
+    }
+  });
+
+  // Update studio
+  app.patch("/api/ceo/studios/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== USER_ROLES.CEO) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      const studio = await storage.updateStudio(req.params.id, req.body);
+      if (!studio) {
+        return res.status(404).json({ message: "Studio not found" });
+      }
+      res.json(studio);
+    } catch (error) {
+      console.error("Error updating studio:", error);
+      res.status(500).json({ message: "Failed to update studio" });
+    }
+  });
+
+  // Delete studio
+  app.delete("/api/ceo/studios/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== USER_ROLES.CEO) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      await storage.deleteStudio(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting studio:", error);
+      res.status(500).json({ message: "Failed to delete studio" });
+    }
+  });
+
+  // ==================== CONNECTED ACCOUNTS API ROUTES ====================
+  
+  // Get user's connected accounts
+  app.get("/api/accounts", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const accounts = await storage.getConnectedAccounts(userId);
+      res.json(accounts);
+    } catch (error) {
+      console.error("Error fetching connected accounts:", error);
+      res.status(500).json({ message: "Failed to fetch connected accounts" });
+    }
+  });
+
+  // Create connected account
+  app.post("/api/accounts", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { provider, accountName, accountEmail, accountId, iban, bic, currency } = req.body;
+      
+      if (!provider) {
+        return res.status(400).json({ message: "Provider is required" });
+      }
+      
+      const account = await storage.createConnectedAccount({
+        userId,
+        provider,
+        accountName,
+        accountEmail,
+        accountId,
+        iban,
+        bic,
+        currency: currency || "EUR",
+      });
+      res.json(account);
+    } catch (error) {
+      console.error("Error creating connected account:", error);
+      res.status(500).json({ message: "Failed to create connected account" });
+    }
+  });
+
+  // Update connected account
+  app.patch("/api/accounts/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const account = await storage.getConnectedAccount(req.params.id);
+      if (!account || account.userId !== (req.user as any).id) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+      const updated = await storage.updateConnectedAccount(req.params.id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating connected account:", error);
+      res.status(500).json({ message: "Failed to update connected account" });
+    }
+  });
+
+  // Delete connected account
+  app.delete("/api/accounts/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const account = await storage.getConnectedAccount(req.params.id);
+      if (!account || account.userId !== (req.user as any).id) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+      await storage.deleteConnectedAccount(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting connected account:", error);
+      res.status(500).json({ message: "Failed to delete connected account" });
+    }
+  });
+
+  // Set default connected account
+  app.post("/api/accounts/:id/default", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const account = await storage.getConnectedAccount(req.params.id);
+      if (!account || account.userId !== userId) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+      await storage.setDefaultConnectedAccount(userId, req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error setting default account:", error);
+      res.status(500).json({ message: "Failed to set default account" });
+    }
+  });
+
+  // ==================== PAYOUT REQUEST API ROUTES ====================
+  
+  // Get user's payout requests
+  app.get("/api/payouts", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const payouts = await storage.getPayoutRequests(userId);
+      res.json(payouts);
+    } catch (error) {
+      console.error("Error fetching payout requests:", error);
+      res.status(500).json({ message: "Failed to fetch payout requests" });
+    }
+  });
+
+  // Get available balance
+  app.get("/api/balance", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      
+      // Coordinators cannot request payouts
+      if (user?.role === USER_ROLES.COORDINATOR) {
+        return res.json({ availableBalance: 0, canRequestPayout: false, reason: "Coordinators cannot request payouts" });
+      }
+      
+      const availableBalance = await storage.getUserAvailableBalance(userId);
+      res.json({ availableBalance, canRequestPayout: availableBalance > 0 });
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      res.status(500).json({ message: "Failed to fetch balance" });
+    }
+  });
+
+  // Request payout
+  app.post("/api/payouts", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      
+      // Coordinators cannot request payouts
+      if (user?.role === USER_ROLES.COORDINATOR) {
+        return res.status(403).json({ message: "Coordinators cannot request payouts" });
+      }
+      
+      const { amount, connectedAccountId } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Valid amount is required" });
+      }
+      
+      // Check available balance
+      const availableBalance = await storage.getUserAvailableBalance(userId);
+      if (amount > availableBalance) {
+        return res.status(400).json({ message: "Insufficient available balance" });
+      }
+      
+      const payout = await storage.createPayoutRequest({
+        userId,
+        connectedAccountId,
+        amount: amount.toFixed(2),
+        currency: user?.preferredCurrency || "EUR",
+        status: "requested",
+      });
+      
+      res.json(payout);
+    } catch (error) {
+      console.error("Error creating payout request:", error);
+      res.status(500).json({ message: "Failed to create payout request" });
+    }
+  });
+
+  // CEO: Get all payout requests
+  app.get("/api/ceo/payouts", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== USER_ROLES.CEO) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      const payouts = await storage.getAllPayoutRequests();
+      res.json(payouts);
+    } catch (error) {
+      console.error("Error fetching all payout requests:", error);
+      res.status(500).json({ message: "Failed to fetch payout requests" });
+    }
+  });
+
+  // CEO: Get pending payout requests
+  app.get("/api/ceo/payouts/pending", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== USER_ROLES.CEO) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      const payouts = await storage.getPendingPayoutRequests();
+      res.json(payouts);
+    } catch (error) {
+      console.error("Error fetching pending payout requests:", error);
+      res.status(500).json({ message: "Failed to fetch pending payout requests" });
+    }
+  });
+
+  // CEO: Approve payout request
+  app.post("/api/ceo/payouts/:id/approve", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== USER_ROLES.CEO) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const payout = await storage.getPayoutRequest(req.params.id);
+      if (!payout) {
+        return res.status(404).json({ message: "Payout request not found" });
+      }
+      if (payout.status !== "requested") {
+        return res.status(400).json({ message: "Payout is not in requested status" });
+      }
+      
+      const approved = await storage.approvePayoutRequest(req.params.id, user.id);
+      res.json(approved);
+    } catch (error) {
+      console.error("Error approving payout:", error);
+      res.status(500).json({ message: "Failed to approve payout" });
+    }
+  });
+
+  // CEO: Execute payout (mark as paid)
+  app.post("/api/ceo/payouts/:id/execute", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== USER_ROLES.CEO) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const payout = await storage.getPayoutRequest(req.params.id);
+      if (!payout) {
+        return res.status(404).json({ message: "Payout request not found" });
+      }
+      if (payout.status !== "approved") {
+        return res.status(400).json({ message: "Payout must be approved first" });
+      }
+      
+      // Mark as processing, then paid
+      await storage.updatePayoutRequestStatus(req.params.id, "processing");
+      const executed = await storage.updatePayoutRequestStatus(req.params.id, "paid");
+      res.json(executed);
+    } catch (error) {
+      console.error("Error executing payout:", error);
+      res.status(500).json({ message: "Failed to execute payout" });
+    }
+  });
+
+  // CEO: Reject/cancel payout
+  app.post("/api/ceo/payouts/:id/reject", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (user?.role !== USER_ROLES.CEO) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { reason } = req.body;
+      const rejected = await storage.updatePayoutRequestStatus(req.params.id, "cancelled", reason || "Rejected by admin");
+      res.json(rejected);
+    } catch (error) {
+      console.error("Error rejecting payout:", error);
+      res.status(500).json({ message: "Failed to reject payout" });
     }
   });
 

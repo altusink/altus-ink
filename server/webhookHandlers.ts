@@ -3,7 +3,7 @@
 
 import { getStripeSync, getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
-import { PLATFORM_FEE_PERCENTAGE, DEPOSIT_RETENTION_DAYS } from '@shared/schema';
+import { PLATFORM_FEE_PERCENTAGE, ARTIST_PERCENTAGE, VENDOR_PERCENTAGE, DEPOSIT_RETENTION_DAYS } from '@shared/schema';
 import { emailService } from './services/email';
 import { whatsappService } from './services/whatsapp';
 
@@ -107,12 +107,17 @@ async function handleCheckoutCompleted(session: any) {
       return;
     }
     
+    // Get artist to retrieve studioId for multi-tenant isolation
+    const artist = await storage.getArtist(lock.artistId);
+    const studioId = artist?.studioId || null;
+    
     // Confirm the lock
     await storage.confirmBookingLock(lockId);
     
-    // Create the confirmed booking
+    // Create the confirmed booking with studioId for multi-tenant isolation
     const booking = await storage.createBooking({
       artistId: lock.artistId,
+      studioId: studioId,
       lockId: lock.id,
       customerName: lock.customerName,
       customerEmail: lock.customerEmail,
@@ -128,21 +133,29 @@ async function handleCheckoutCompleted(session: any) {
       status: 'confirmed',
     });
     
-    // Create deposit record with 70/30 split
+    // Create deposit record with 68/30/2 split
+    // Altus: 30%, Artist: 68%, Vendor: 2%
     const depositAmount = (amount_total || 0) / 100;
-    const platformFee = depositAmount * PLATFORM_FEE_PERCENTAGE;
-    const artistAmount = depositAmount * (1 - PLATFORM_FEE_PERCENTAGE);
+    const platformFee = depositAmount * PLATFORM_FEE_PERCENTAGE; // 30%
+    const artistAmount = depositAmount * ARTIST_PERCENTAGE; // 68%
+    const vendorAmount = depositAmount * VENDOR_PERCENTAGE; // 2%
     
     const retentionUntil = new Date();
     retentionUntil.setDate(retentionUntil.getDate() + DEPOSIT_RETENTION_DAYS);
     
+    // Get vendor ID from metadata if provided
+    const vendorId = metadata?.vendorId || null;
+    
     await storage.createDeposit({
       artistId: lock.artistId,
+      studioId: studioId,
       bookingId: booking.id,
+      vendorId: vendorId,
       amount: depositAmount.toFixed(2),
       currency: currency?.toUpperCase() || 'EUR',
       platformFee: platformFee.toFixed(2),
       artistAmount: artistAmount.toFixed(2),
+      vendorAmount: vendorAmount.toFixed(2),
       isRefundable: false,
       status: 'held',
       retentionUntil,
@@ -162,8 +175,7 @@ async function handleCheckoutCompleted(session: any) {
     
     console.log(`[stripe] Booking ${booking.id} confirmed with payment ${payment_intent}`);
     
-    // Get artist info for notifications
-    const artist = await storage.getArtist(lock.artistId);
+    // Artist already fetched above for studioId
     const artistName = artist?.displayName || 'Artista';
     
     const formattedDate = new Date(lock.slotDatetime).toLocaleDateString('pt-BR', {

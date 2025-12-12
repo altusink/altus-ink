@@ -19,6 +19,10 @@ import {
   vendorCommissions,
   waitingList,
   emailTemplates,
+  studios,
+  connectedAccounts,
+  payoutRequests,
+  balanceSnapshots,
   type User,
   type UpsertUser,
   type Artist,
@@ -47,6 +51,14 @@ import {
   type InsertVendorCommission,
   type WaitingListEntry,
   type InsertWaitingList,
+  type Studio,
+  type InsertStudio,
+  type ConnectedAccount,
+  type InsertConnectedAccount,
+  type PayoutRequest,
+  type InsertPayoutRequest,
+  type BalanceSnapshot,
+  type InsertBalanceSnapshot,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -155,6 +167,34 @@ export interface IStorage {
     heldDeposits: number;
     availableDeposits: number;
   }>;
+  
+  // Studio operations
+  getStudio(id: string): Promise<Studio | undefined>;
+  getStudioBySlug(slug: string): Promise<Studio | undefined>;
+  getAllStudios(): Promise<Studio[]>;
+  createStudio(data: InsertStudio): Promise<Studio>;
+  updateStudio(id: string, data: Partial<InsertStudio>): Promise<Studio | undefined>;
+  deleteStudio(id: string): Promise<void>;
+  
+  // Connected account operations
+  getConnectedAccounts(userId: string): Promise<ConnectedAccount[]>;
+  getConnectedAccount(id: string): Promise<ConnectedAccount | undefined>;
+  createConnectedAccount(data: InsertConnectedAccount): Promise<ConnectedAccount>;
+  updateConnectedAccount(id: string, data: Partial<InsertConnectedAccount>): Promise<ConnectedAccount | undefined>;
+  deleteConnectedAccount(id: string): Promise<void>;
+  setDefaultConnectedAccount(userId: string, accountId: string): Promise<void>;
+  
+  // Payout request operations
+  getPayoutRequests(userId: string): Promise<PayoutRequest[]>;
+  getAllPayoutRequests(): Promise<PayoutRequest[]>;
+  getPendingPayoutRequests(): Promise<PayoutRequest[]>;
+  getPayoutRequest(id: string): Promise<PayoutRequest | undefined>;
+  createPayoutRequest(data: InsertPayoutRequest): Promise<PayoutRequest>;
+  approvePayoutRequest(id: string, approvedBy: string): Promise<PayoutRequest | undefined>;
+  updatePayoutRequestStatus(id: string, status: string, errorMessage?: string): Promise<PayoutRequest | undefined>;
+  
+  // User balance
+  getUserAvailableBalance(userId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -747,6 +787,143 @@ export class DatabaseStorage implements IStorage {
       heldDeposits,
       availableDeposits,
     };
+  }
+
+  // Studio operations
+  async getStudio(id: string): Promise<Studio | undefined> {
+    const result = await db.select().from(studios).where(eq(studios.id, id));
+    return result[0];
+  }
+
+  async getStudioBySlug(slug: string): Promise<Studio | undefined> {
+    const result = await db.select().from(studios).where(eq(studios.slug, slug));
+    return result[0];
+  }
+
+  async getAllStudios(): Promise<Studio[]> {
+    return db.select().from(studios).orderBy(desc(studios.createdAt));
+  }
+
+  async createStudio(data: InsertStudio): Promise<Studio> {
+    const [studio] = await db.insert(studios).values(data).returning();
+    return studio;
+  }
+
+  async updateStudio(id: string, data: Partial<InsertStudio>): Promise<Studio | undefined> {
+    const [studio] = await db
+      .update(studios)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(studios.id, id))
+      .returning();
+    return studio;
+  }
+
+  async deleteStudio(id: string): Promise<void> {
+    await db.delete(studios).where(eq(studios.id, id));
+  }
+
+  // Connected account operations
+  async getConnectedAccounts(userId: string): Promise<ConnectedAccount[]> {
+    return db.select().from(connectedAccounts).where(eq(connectedAccounts.userId, userId));
+  }
+
+  async getConnectedAccount(id: string): Promise<ConnectedAccount | undefined> {
+    const result = await db.select().from(connectedAccounts).where(eq(connectedAccounts.id, id));
+    return result[0];
+  }
+
+  async createConnectedAccount(data: InsertConnectedAccount): Promise<ConnectedAccount> {
+    const [account] = await db.insert(connectedAccounts).values(data).returning();
+    return account;
+  }
+
+  async updateConnectedAccount(id: string, data: Partial<InsertConnectedAccount>): Promise<ConnectedAccount | undefined> {
+    const [account] = await db
+      .update(connectedAccounts)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(connectedAccounts.id, id))
+      .returning();
+    return account;
+  }
+
+  async deleteConnectedAccount(id: string): Promise<void> {
+    await db.delete(connectedAccounts).where(eq(connectedAccounts.id, id));
+  }
+
+  async setDefaultConnectedAccount(userId: string, accountId: string): Promise<void> {
+    // First, unset all defaults for this user
+    await db
+      .update(connectedAccounts)
+      .set({ isDefault: false })
+      .where(eq(connectedAccounts.userId, userId));
+    // Then set the new default
+    await db
+      .update(connectedAccounts)
+      .set({ isDefault: true })
+      .where(eq(connectedAccounts.id, accountId));
+  }
+
+  // Payout request operations
+  async getPayoutRequests(userId: string): Promise<PayoutRequest[]> {
+    return db.select().from(payoutRequests).where(eq(payoutRequests.userId, userId)).orderBy(desc(payoutRequests.createdAt));
+  }
+
+  async getAllPayoutRequests(): Promise<PayoutRequest[]> {
+    return db.select().from(payoutRequests).orderBy(desc(payoutRequests.createdAt));
+  }
+
+  async getPendingPayoutRequests(): Promise<PayoutRequest[]> {
+    return db.select().from(payoutRequests).where(eq(payoutRequests.status, "requested")).orderBy(desc(payoutRequests.createdAt));
+  }
+
+  async getPayoutRequest(id: string): Promise<PayoutRequest | undefined> {
+    const result = await db.select().from(payoutRequests).where(eq(payoutRequests.id, id));
+    return result[0];
+  }
+
+  async createPayoutRequest(data: InsertPayoutRequest): Promise<PayoutRequest> {
+    const [request] = await db.insert(payoutRequests).values(data).returning();
+    return request;
+  }
+
+  async approvePayoutRequest(id: string, approvedBy: string): Promise<PayoutRequest | undefined> {
+    const [request] = await db
+      .update(payoutRequests)
+      .set({ status: "approved", approvedBy, approvedAt: new Date() })
+      .where(eq(payoutRequests.id, id))
+      .returning();
+    return request;
+  }
+
+  async updatePayoutRequestStatus(id: string, status: string, errorMessage?: string): Promise<PayoutRequest | undefined> {
+    const updateData: any = { status };
+    if (status === "paid") {
+      updateData.paidAt = new Date();
+    } else if (status === "processing") {
+      updateData.processedAt = new Date();
+    }
+    if (errorMessage) {
+      updateData.errorMessage = errorMessage;
+    }
+    const [request] = await db
+      .update(payoutRequests)
+      .set(updateData)
+      .where(eq(payoutRequests.id, id))
+      .returning();
+    return request;
+  }
+
+  // User balance - calculates available balance from deposits
+  async getUserAvailableBalance(userId: string): Promise<number> {
+    // Get the artist associated with this user
+    const artist = await this.getArtistByUserId(userId);
+    if (!artist) return 0;
+    
+    // Get all available deposits for this artist
+    const artistDeposits = await this.getArtistDeposits(artist.id);
+    return artistDeposits
+      .filter((d) => d.status === "available")
+      .reduce((sum, d) => sum + Number(d.artistAmount), 0);
   }
 }
 
