@@ -33,32 +33,54 @@ const getOidcConfig = memoize(
 );
 
 // Create session table if it doesn't exist (with proper IF NOT EXISTS)
+// Includes retry logic for production deployments where DB may not be immediately available
 async function ensureSessionTable(): Promise<void> {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS "session" (
-        "sid" varchar NOT NULL COLLATE "default",
-        "sess" json NOT NULL,
-        "expire" timestamp(6) NOT NULL,
-        CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
-      ) WITH (OIDS=FALSE);
-    `);
-    // Create index only if it doesn't exist (using DO block to avoid error)
-    await pool.query(`
-      DO $$
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_indexes WHERE indexname = 'IDX_session_expire'
-        ) THEN
-          CREATE INDEX "IDX_session_expire" ON "session" ("expire");
-        END IF;
-      END
-      $$;
-    `);
-  } catch (error: any) {
-    // Ignore if already exists
-    if (error?.code !== '42P07' && !error?.message?.includes('already exists')) {
-      throw error;
+  const maxRetries = 5;
+  const retryDelayMs = 3000;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Test connection first
+      await pool.query('SELECT 1');
+
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS "session" (
+          "sid" varchar NOT NULL COLLATE "default",
+          "sess" json NOT NULL,
+          "expire" timestamp(6) NOT NULL,
+          CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+        ) WITH (OIDS=FALSE);
+      `);
+      // Create index only if it doesn't exist (using DO block to avoid error)
+      await pool.query(`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM pg_indexes WHERE indexname = 'IDX_session_expire'
+          ) THEN
+            CREATE INDEX "IDX_session_expire" ON "session" ("expire");
+          END IF;
+        END
+        $$;
+      `);
+      console.log(`[db] Session table ensured successfully (attempt ${attempt})`);
+      return;
+    } catch (error: any) {
+      // Ignore if already exists
+      if (error?.code === '42P07' || error?.message?.includes('already exists')) {
+        console.log('[db] Session table already exists');
+        return;
+      }
+
+      console.error(`[db] Failed to ensure session table (attempt ${attempt}/${maxRetries}):`, error.message);
+
+      if (attempt < maxRetries) {
+        console.log(`[db] Retrying in ${retryDelayMs / 1000}s...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+      } else {
+        console.error('[db] Max retries reached. Session table creation failed.');
+        throw error;
+      }
     }
   }
 }
