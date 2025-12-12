@@ -1,6 +1,41 @@
+# Dependencies
 node_modules
+
+# Build output
 dist
+
+# Environment files (keep .env.example)
+.env
+.env.local
+.env.*.local
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Server
 server/public
+
+# Vite
 vite.config.ts.*
+
+# Deployment artifacts
 *.tar.gz
+
+# Replit (legacy)
+.replit
+.config/
+.local/
+
+# Docker volumes (if running locally)
+pgdata/

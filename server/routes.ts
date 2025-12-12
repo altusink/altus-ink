@@ -34,18 +34,18 @@ export async function registerRoutes(
     try {
       const { uuid } = req.params;
       const signature = req.headers["stripe-signature"] as string;
-      
+
       if (!signature) {
         return res.status(400).json({ message: "Missing stripe-signature header" });
       }
-      
+
       // rawBody is set by express.json verify callback in index.ts
       const rawBody = (req as any).rawBody;
       if (!rawBody || !Buffer.isBuffer(rawBody)) {
         console.error("[stripe webhook] rawBody not available or not a Buffer");
         return res.status(400).json({ message: "Invalid request body" });
       }
-      
+
       await WebhookHandlers.processWebhook(rawBody, signature, uuid);
       res.json({ received: true });
     } catch (error: any) {
@@ -59,23 +59,23 @@ export async function registerRoutes(
     if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    
+
     const user = await storage.getUser((req.user as any).id);
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
-    
+
     res.json(user);
   });
 
   // ==================== ARTIST API ROUTES ====================
-  
+
   // Get current artist profile
   app.get("/api/artist/me", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       let artist = await storage.getArtistByUserId(userId);
-      
+
       // Auto-create artist profile if doesn't exist
       if (!artist) {
         const user = await storage.getUser(userId);
@@ -85,7 +85,7 @@ export async function registerRoutes(
           displayName: `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "New Artist",
         });
       }
-      
+
       res.json(artist);
     } catch (error) {
       console.error("Error fetching artist:", error);
@@ -98,17 +98,17 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       // Validate request body
       const parseResult = updateArtistSchema.safeParse(req.body);
       if (!parseResult.success) {
         return res.status(400).json({ message: fromError(parseResult.error).message });
       }
-      
+
       const updated = await storage.updateArtist(artist.id, parseResult.data);
       res.json(updated);
     } catch (error) {
@@ -122,7 +122,7 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.json({
           upcomingBookings: 0,
@@ -133,7 +133,7 @@ export async function registerRoutes(
           availableDeposits: 0,
         });
       }
-      
+
       const stats = await storage.getArtistStats(artist.id);
       res.json(stats);
     } catch (error) {
@@ -147,11 +147,11 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.json([]);
       }
-      
+
       const availability = await storage.getArtistAvailability(artist.id);
       res.json(availability);
     } catch (error) {
@@ -165,22 +165,22 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       // Validate request body
       const parseResult = upsertAvailabilitySchema.safeParse(req.body);
       if (!parseResult.success) {
         return res.status(400).json({ message: fromError(parseResult.error).message });
       }
-      
+
       const availability = await storage.upsertAvailability({
         ...parseResult.data,
         artistId: artist.id,
       });
-      
+
       res.json(availability);
     } catch (error) {
       console.error("Error updating availability:", error);
@@ -193,13 +193,13 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.json([]);
       }
-      
+
       const { month, year } = req.query;
-      
+
       if (month !== undefined && year !== undefined) {
         const bookings = await storage.getArtistBookingsByMonth(
           artist.id,
@@ -208,7 +208,7 @@ export async function registerRoutes(
         );
         return res.json(bookings);
       }
-      
+
       const bookings = await storage.getArtistBookings(artist.id);
       res.json(bookings);
     } catch (error) {
@@ -222,11 +222,11 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.json([]);
       }
-      
+
       const schedules = await storage.getCitySchedules(artist.id);
       res.json(schedules);
     } catch (error) {
@@ -240,22 +240,22 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       // Validate request body
       const parseResult = createCityScheduleRequestSchema.safeParse(req.body);
       if (!parseResult.success) {
         return res.status(400).json({ message: fromError(parseResult.error).message });
       }
-      
+
       const schedule = await storage.createCitySchedule({
         ...parseResult.data,
         artistId: artist.id,
       });
-      
+
       res.json(schedule);
     } catch (error) {
       console.error("Error creating city schedule:", error);
@@ -280,11 +280,11 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.json([]);
       }
-      
+
       const deposits = await storage.getArtistDeposits(artist.id);
       res.json(deposits);
     } catch (error) {
@@ -294,17 +294,17 @@ export async function registerRoutes(
   });
 
   // ==================== PORTFOLIO ROUTES ====================
-  
+
   // Get artist portfolio categories
   app.get("/api/artist/portfolio/categories", isArtistOrHigher, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.json([]);
       }
-      
+
       const categories = await storage.getPortfolioCategories(artist.id);
       res.json(categories);
     } catch (error) {
@@ -318,22 +318,22 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       const { name, description } = req.body;
       if (!name || name.length < 2) {
         return res.status(400).json({ message: "Category name must be at least 2 characters" });
       }
-      
+
       const category = await storage.createPortfolioCategory({
         artistId: artist.id,
         name,
         description,
       });
-      
+
       res.json(category);
     } catch (error) {
       console.error("Error creating portfolio category:", error);
@@ -385,11 +385,11 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.json([]);
       }
-      
+
       const photos = await storage.getAllArtistPhotos(artist.id);
       res.json(photos);
     } catch (error) {
@@ -403,29 +403,29 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       // Check photo limit (max 20 per category)
       const count = await storage.getPhotosCountByCategory(req.params.categoryId);
       if (count >= 20) {
         return res.status(400).json({ message: "Maximum 20 photos per category" });
       }
-      
+
       const { photoUrl, description } = req.body;
       if (!photoUrl) {
         return res.status(400).json({ message: "Photo URL is required" });
       }
-      
+
       const photo = await storage.createPortfolioPhoto({
         categoryId: req.params.categoryId,
         artistId: artist.id,
         photoUrl,
         description,
       });
-      
+
       res.json(photo);
     } catch (error) {
       console.error("Error adding portfolio photo:", error);
@@ -445,17 +445,17 @@ export async function registerRoutes(
   });
 
   // ==================== DEPOSIT VALUES ROUTES ====================
-  
+
   // Get deposit values
   app.get("/api/artist/deposit-values", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.json([]);
       }
-      
+
       const values = await storage.getDepositValues(artist.id);
       res.json(values);
     } catch (error) {
@@ -469,20 +469,20 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       const { name, durationHours, depositAmount } = req.body;
-      
+
       const value = await storage.createDepositValue({
         artistId: artist.id,
         name,
         durationHours: String(durationHours),
         depositAmount: String(depositAmount),
       });
-      
+
       res.json(value);
     } catch (error) {
       console.error("Error creating deposit value:", error);
@@ -506,7 +506,7 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const artist = await storage.getArtistByUserId(userId);
-      
+
       if (!artist) {
         return res.json({
           totalEarnings: 0,
@@ -517,10 +517,10 @@ export async function registerRoutes(
           currency: "EUR",
         });
       }
-      
+
       const stats = await storage.getArtistStats(artist.id);
       const bookings = await storage.getArtistBookings(artist.id);
-      
+
       res.json({
         totalEarnings: stats.totalEarnings,
         availableEarnings: stats.availableDeposits,
@@ -536,7 +536,7 @@ export async function registerRoutes(
   });
 
   // ==================== CEO API ROUTES ====================
-  
+
   // CEO stats
   app.get("/api/ceo/stats", isAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -544,7 +544,7 @@ export async function registerRoutes(
       if (user?.role !== "ceo") {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const stats = await storage.getCEOStats();
       res.json(stats);
     } catch (error) {
@@ -560,19 +560,122 @@ export async function registerRoutes(
       if (user?.role !== "ceo") {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const { status } = req.query;
-      
+
       if (status === "pending") {
         const artists = await storage.getPendingArtists();
         return res.json(artists);
       }
-      
+
       const artists = await storage.getAllArtists();
       res.json(artists);
     } catch (error) {
       console.error("Error fetching artists:", error);
       res.status(500).json({ message: "Failed to fetch artists" });
+    }
+  });
+
+  // Create new user/artist (CEO only)
+  app.post("/api/ceo/users", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const currentUser = await storage.getUser((req.user as any).id);
+      if (currentUser?.role !== "ceo") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const {
+        username,
+        password,
+        email,
+        firstName,
+        lastName,
+        role = "artist",
+        // Artist-specific fields
+        displayName,
+        subdomain,
+        bio,
+        instagram,
+        city,
+        country,
+        currency = "EUR",
+        timezone = "Europe/Lisbon",
+      } = req.body;
+
+      // Validate required fields
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+
+      if (role === "artist" && (!displayName || !subdomain)) {
+        return res.status(400).json({ message: "Display name and subdomain are required for artists" });
+      }
+
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      // Check if email already exists
+      if (email) {
+        const existingEmail = await storage.getUserByEmail(email);
+        if (existingEmail) {
+          return res.status(400).json({ message: "Email already exists" });
+        }
+      }
+
+      // Hash password
+      const bcrypt = await import("bcrypt");
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user
+      const newUser = await storage.upsertUser({
+        id: crypto.randomUUID(),
+        username,
+        password: hashedPassword,
+        email,
+        firstName,
+        lastName,
+        role,
+        isActive: true,
+      });
+
+      // If role is artist, create artist profile
+      if (role === "artist") {
+        // Check if subdomain already exists
+        const existingArtist = await storage.getArtistBySubdomain(subdomain);
+        if (existingArtist) {
+          return res.status(400).json({ message: "Subdomain already exists" });
+        }
+
+        await storage.createArtist({
+          id: crypto.randomUUID(),
+          userId: newUser.id,
+          subdomain,
+          displayName,
+          bio,
+          instagram,
+          city,
+          country,
+          currency,
+          timezone,
+          isApproved: true, // CEO-created artists are auto-approved
+          isActive: true,
+        });
+      }
+
+      res.json({
+        success: true,
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          role: newUser.role
+        }
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
     }
   });
 
@@ -583,7 +686,7 @@ export async function registerRoutes(
       if (user?.role !== "ceo") {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const artist = await storage.approveArtist(req.params.id);
       res.json(artist);
     } catch (error) {
@@ -599,7 +702,7 @@ export async function registerRoutes(
       if (user?.role !== "ceo") {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const artist = await storage.deactivateArtist(req.params.id);
       res.json(artist);
     } catch (error) {
@@ -615,14 +718,14 @@ export async function registerRoutes(
       if (user?.role !== "ceo") {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const { status } = req.query;
-      
+
       if (status === "recent") {
         const bookings = await storage.getRecentBookings(10);
         return res.json(bookings);
       }
-      
+
       const bookings = await storage.getAllBookings();
       res.json(bookings);
     } catch (error) {
@@ -638,7 +741,7 @@ export async function registerRoutes(
       if (user?.role !== "ceo") {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const deposits = await storage.getAllDeposits();
       res.json(deposits);
     } catch (error) {
@@ -654,7 +757,7 @@ export async function registerRoutes(
       if (user?.role !== "ceo") {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const stats = await storage.getCEOStats();
       res.json({
         totalRevenue: stats.totalRevenue,
@@ -678,12 +781,12 @@ export async function registerRoutes(
       if (user?.role !== "ceo") {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const { status } = req.body;
       if (!status || !["pending", "confirmed", "completed", "cancelled", "no_show"].includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
-      
+
       const booking = await storage.updateBookingStatus(req.params.id, status);
       res.json(booking);
     } catch (error) {
@@ -699,13 +802,13 @@ export async function registerRoutes(
       if (user?.role !== "ceo") {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const { period = "30" } = req.query;
       const days = parseInt(period as string, 10);
-      
+
       const stats = await storage.getCEOStats();
       const topArtists = await storage.getTopArtists(5);
-      
+
       res.json({
         totalRevenue: stats.totalRevenue,
         revenueChange: 12,
@@ -736,7 +839,7 @@ export async function registerRoutes(
       if (user?.role !== "ceo") {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       res.json({
         smtp: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD),
         stripe: !!process.env.STRIPE_SECRET_KEY,
@@ -757,7 +860,7 @@ export async function registerRoutes(
       if (user?.role !== "ceo") {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       // In production, SMTP settings should be configured via environment variables
       // This endpoint confirms receipt but doesn't store credentials in DB
       res.json({ success: true, message: "SMTP settings received. Configure via environment variables for security." });
@@ -774,11 +877,11 @@ export async function registerRoutes(
       if (user?.role !== "ceo") {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
         return res.status(400).json({ message: "SMTP not configured. Please set SMTP environment variables." });
       }
-      
+
       res.json({ success: true, message: "Test email would be sent if SMTP is configured" });
     } catch (error) {
       console.error("Error sending test email:", error);
@@ -797,10 +900,10 @@ export async function registerRoutes(
       }
 
       const bookings = await storage.getAllBookings();
-      
+
       const csv = [
         "ID,Artist,Customer Name,Customer Email,Date,Status,Deposit,Currency",
-        ...bookings.map(b => 
+        ...bookings.map(b =>
           `"${b.id}","${b.artistId}","${b.customerName}","${b.customerEmail}","${new Date(b.slotDatetime).toISOString()}","${b.status}","${b.depositAmount}","${b.currency}"`
         )
       ].join("\n");
@@ -823,10 +926,10 @@ export async function registerRoutes(
       }
 
       const allDeposits = await storage.getAllDeposits();
-      
+
       const csv = [
         "ID,Booking ID,Artist ID,Amount,Currency,Platform Fee,Artist Amount,Status,Retention Until,Created At",
-        ...allDeposits.map(d => 
+        ...allDeposits.map(d =>
           `"${d.id}","${d.bookingId}","${d.artistId}","${d.amount}","${d.currency}","${d.platformFee}","${d.artistAmount}","${d.status}","${d.retentionUntil?.toISOString() || ''}","${d.createdAt?.toISOString() || ''}"`
         )
       ].join("\n");
@@ -851,7 +954,7 @@ export async function registerRoutes(
       }
 
       const { lockId, amount, currency } = req.body;
-      
+
       // Generate Revolut payment instructions
       // In production, this would integrate with Revolut API
       res.json({
@@ -880,7 +983,7 @@ export async function registerRoutes(
       }
 
       const { lockId, amount, currency } = req.body;
-      
+
       // Generate Wise payment instructions
       // In production, this would integrate with Wise API
       res.json({
@@ -901,16 +1004,45 @@ export async function registerRoutes(
   });
 
   // ==================== PUBLIC API ROUTES ====================
-  
+
+  // Get all public artists (for landing page gallery)
+  app.get("/api/public/artists", async (req: Request, res: Response) => {
+    try {
+      const allArtists = await storage.getAllArtists();
+
+      // Filter only active and approved artists
+      const publicArtists = allArtists
+        .filter(artist => artist.isActive && artist.isApproved)
+        .map(artist => ({
+          id: artist.id,
+          subdomain: artist.subdomain,
+          displayName: artist.displayName,
+          bio: artist.bio,
+          instagram: artist.instagram,
+          coverImageUrl: artist.coverImageUrl,
+          themeColor: artist.themeColor,
+          city: artist.city,
+          country: artist.country,
+          tourModeEnabled: artist.tourModeEnabled,
+          specialty: artist.specialty,
+        }));
+
+      res.json(publicArtists);
+    } catch (error) {
+      console.error("Error fetching public artists:", error);
+      res.status(500).json({ message: "Failed to fetch artists" });
+    }
+  });
+
   // Get public artist profile
   app.get("/api/public/artist/:subdomain", async (req: Request, res: Response) => {
     try {
       const artist = await storage.getArtistBySubdomain(req.params.subdomain);
-      
+
       if (!artist || !artist.isActive || !artist.isApproved) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       // Return public-safe fields only
       res.json({
         id: artist.id,
@@ -935,11 +1067,11 @@ export async function registerRoutes(
   app.get("/api/public/artist/:subdomain/availability", async (req: Request, res: Response) => {
     try {
       const artist = await storage.getArtistBySubdomain(req.params.subdomain);
-      
+
       if (!artist || !artist.isActive || !artist.isApproved) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       const availability = await storage.getArtistAvailability(artist.id);
       res.json(availability);
     } catch (error) {
@@ -952,13 +1084,13 @@ export async function registerRoutes(
   app.get("/api/public/artist/:subdomain/city-schedules", async (req: Request, res: Response) => {
     try {
       const artist = await storage.getArtistBySubdomain(req.params.subdomain);
-      
+
       if (!artist || !artist.isActive || !artist.isApproved) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       const schedules = await storage.getCitySchedules(artist.id);
-      
+
       // Return schedules without full address (until after payment)
       res.json(
         schedules.map((s) => ({
@@ -983,13 +1115,13 @@ export async function registerRoutes(
   app.get("/api/public/artist/:subdomain/portfolio", async (req: Request, res: Response) => {
     try {
       const artist = await storage.getArtistBySubdomain(req.params.subdomain);
-      
+
       if (!artist || !artist.isActive || !artist.isApproved) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       const categories = await storage.getPortfolioCategories(artist.id);
-      
+
       // Get photos for each category
       const categoriesWithPhotos = await Promise.all(
         categories.filter(c => c.isActive).map(async (category) => {
@@ -1000,7 +1132,7 @@ export async function registerRoutes(
           };
         })
       );
-      
+
       res.json(categoriesWithPhotos);
     } catch (error) {
       console.error("Error fetching public portfolio:", error);
@@ -1012,11 +1144,11 @@ export async function registerRoutes(
   app.get("/api/public/artist/:subdomain/deposit-values", async (req: Request, res: Response) => {
     try {
       const artist = await storage.getArtistBySubdomain(req.params.subdomain);
-      
+
       if (!artist || !artist.isActive || !artist.isApproved) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       const values = await storage.getDepositValues(artist.id);
       res.json(values.filter(v => v.isActive));
     } catch (error) {
@@ -1029,35 +1161,35 @@ export async function registerRoutes(
   app.post("/api/public/artist/:subdomain/lock", async (req: Request, res: Response) => {
     try {
       const artist = await storage.getArtistBySubdomain(req.params.subdomain);
-      
+
       if (!artist || !artist.isActive || !artist.isApproved) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       // Validate request body
       const parseResult = createLockSchema.safeParse(req.body);
       if (!parseResult.success) {
         return res.status(400).json({ message: fromError(parseResult.error).message });
       }
-      
+
       const { slotDatetime, customerEmail, customerName, customerPhone } = parseResult.data;
-      
+
       // Expire old locks first
       await storage.expireOldLocks();
-      
+
       // Check if slot is already locked or booked
       const isAvailable = await storage.isSlotAvailable(
         artist.id,
         new Date(slotDatetime)
       );
-      
+
       if (!isAvailable) {
         return res.status(409).json({ message: "This time slot is no longer available" });
       }
-      
+
       // Create 10-minute lock
       const expiresAt = new Date(Date.now() + BOOKING_LOCK_DURATION_MS);
-      
+
       const lock = await storage.createBookingLock({
         artistId: artist.id,
         slotDatetime: new Date(slotDatetime),
@@ -1067,7 +1199,7 @@ export async function registerRoutes(
         expiresAt,
         status: "pending",
       });
-      
+
       res.json({
         lockId: lock.id,
         expiresAt: expiresAt.toISOString(),
@@ -1083,35 +1215,35 @@ export async function registerRoutes(
   app.post("/api/public/artist/:subdomain/checkout", async (req: Request, res: Response) => {
     try {
       const artist = await storage.getArtistBySubdomain(req.params.subdomain);
-      
+
       if (!artist || !artist.isActive || !artist.isApproved) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       const { lockId, customerInstagram, tattooDescription, referenceImages, depositValueId } = req.body;
-      
+
       if (!lockId) {
         return res.status(400).json({ message: "Lock ID is required" });
       }
-      
+
       // Get and verify lock
       const lock = await storage.getBookingLock(lockId);
       if (!lock) {
         return res.status(404).json({ message: "Booking lock not found" });
       }
-      
+
       // SECURITY: Verify lock belongs to this artist (prevent cross-tenant misuse)
       if (lock.artistId !== artist.id) {
         return res.status(403).json({ message: "Lock does not belong to this artist" });
       }
-      
+
       if (lock.status !== "pending") {
         return res.status(409).json({ message: "Booking lock is no longer valid" });
       }
       if (new Date(lock.expiresAt) < new Date()) {
         return res.status(409).json({ message: "Booking lock has expired" });
       }
-      
+
       // Update lock with additional form data before checkout
       if (customerInstagram || tattooDescription || referenceImages || depositValueId) {
         await storage.updateBookingLock(lockId, {
@@ -1121,20 +1253,20 @@ export async function registerRoutes(
           depositValueId,
         });
       }
-      
+
       // Refresh lock with updated data
       const updatedLock = await storage.getBookingLock(lockId);
       if (!updatedLock) {
         return res.status(404).json({ message: "Lock not found after update" });
       }
-      
+
       // Check if Stripe is configured
       const stripeReady = await isStripeConfigured();
-      
+
       if (!stripeReady) {
         // Fallback: Create booking without Stripe (for development)
         console.log("[booking] Stripe not configured, creating booking directly");
-        
+
         const booking = await storage.createBooking({
           artistId: artist.id,
           lockId: updatedLock.id,
@@ -1151,16 +1283,16 @@ export async function registerRoutes(
           authorizePortfolio: updatedLock.authorizePortfolio || false,
           status: "confirmed",
         });
-        
+
         await storage.confirmBookingLock(lockId);
-        
+
         // Create deposit record
         const depositAmount = Number(artist.depositAmount || 100);
         const platformFee = depositAmount * PLATFORM_FEE_PERCENTAGE;
         const artistAmount = depositAmount * (1 - PLATFORM_FEE_PERCENTAGE);
         const retentionUntil = new Date();
         retentionUntil.setDate(retentionUntil.getDate() + DEPOSIT_RETENTION_DAYS);
-        
+
         await storage.createDeposit({
           artistId: artist.id,
           bookingId: booking.id,
@@ -1172,7 +1304,7 @@ export async function registerRoutes(
           status: "held",
           retentionUntil,
         });
-        
+
         // Create payment record for consistency across environments
         await storage.createPayment({
           artistId: artist.id,
@@ -1184,26 +1316,26 @@ export async function registerRoutes(
           paymentIntentId: `dev_${booking.id}`,
           status: "completed",
         });
-        
+
         return res.json({
           success: true,
           bookingId: booking.id,
           mode: "development",
         });
       }
-      
+
       // Create Stripe checkout session
       const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0] || req.get('host')}`;
       const successUrl = `${baseUrl}/book/${artist.subdomain}/success?session_id={CHECKOUT_SESSION_ID}`;
       const cancelUrl = `${baseUrl}/book/${artist.subdomain}?cancelled=true`;
-      
+
       const { url, sessionId } = await stripeService.createBookingCheckoutSession(
         artist,
         updatedLock,
         successUrl,
         cancelUrl
       );
-      
+
       res.json({
         success: true,
         checkoutUrl: url,
@@ -1219,19 +1351,19 @@ export async function registerRoutes(
   app.post("/api/public/artist/:subdomain/book", async (req: Request, res: Response) => {
     try {
       const artist = await storage.getArtistBySubdomain(req.params.subdomain);
-      
+
       if (!artist || !artist.isActive || !artist.isApproved) {
         return res.status(404).json({ message: "Artist not found" });
       }
-      
+
       // Validate request body
       const parseResult = createBookingRequestSchema.safeParse(req.body);
       if (!parseResult.success) {
         return res.status(400).json({ message: fromError(parseResult.error).message });
       }
-      
+
       const { lockId, customerName, customerEmail, customerPhone, customerInstagram, slotDatetime, notes } = parseResult.data;
-      
+
       // Verify lock if provided
       if (lockId) {
         const lock = await storage.getBookingLock(lockId);
@@ -1244,7 +1376,7 @@ export async function registerRoutes(
         if (new Date(lock.expiresAt) < new Date()) {
           return res.status(409).json({ message: "Booking lock has expired" });
         }
-        
+
         await storage.confirmBookingLock(lockId);
       } else {
         const isAvailable = await storage.isSlotAvailable(artist.id, new Date(slotDatetime));
@@ -1252,7 +1384,7 @@ export async function registerRoutes(
           return res.status(409).json({ message: "This time slot is no longer available" });
         }
       }
-      
+
       // Create booking with studioId for multi-tenant isolation
       const booking = await storage.createBooking({
         artistId: artist.id,
@@ -1268,7 +1400,7 @@ export async function registerRoutes(
         notes,
         status: "confirmed",
       });
-      
+
       // Create deposit with 68/30/2 split and studioId
       const depositAmount = Number(artist.depositAmount || 100);
       const platformFee = depositAmount * PLATFORM_FEE_PERCENTAGE; // 30%
@@ -1276,7 +1408,7 @@ export async function registerRoutes(
       const vendorAmountCalc = depositAmount * VENDOR_PERCENTAGE; // 2%
       const retentionUntil = new Date();
       retentionUntil.setDate(retentionUntil.getDate() + DEPOSIT_RETENTION_DAYS);
-      
+
       await storage.createDeposit({
         artistId: artist.id,
         studioId: artist.studioId || undefined,
@@ -1290,7 +1422,7 @@ export async function registerRoutes(
         status: "held",
         retentionUntil,
       });
-      
+
       res.json({
         success: true,
         bookingId: booking.id,
@@ -1319,7 +1451,7 @@ export async function registerRoutes(
   });
 
   // ==================== STUDIO API ROUTES (CEO only) ====================
-  
+
   // Get all studios
   app.get("/api/ceo/studios", isAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -1397,7 +1529,7 @@ export async function registerRoutes(
   });
 
   // ==================== CONNECTED ACCOUNTS API ROUTES ====================
-  
+
   // Get user's connected accounts
   app.get("/api/accounts", isAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -1415,11 +1547,11 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const { provider, accountName, accountEmail, accountId, iban, bic, currency } = req.body;
-      
+
       if (!provider) {
         return res.status(400).json({ message: "Provider is required" });
       }
-      
+
       const account = await storage.createConnectedAccount({
         userId,
         provider,
@@ -1484,7 +1616,7 @@ export async function registerRoutes(
   });
 
   // ==================== VENDOR API ROUTES ====================
-  
+
   // Get vendor commissions
   app.get("/api/vendor/commissions", isVendor, async (req: Request, res: Response) => {
     try {
@@ -1510,7 +1642,7 @@ export async function registerRoutes(
   });
 
   // ==================== PAYOUT REQUEST API ROUTES ====================
-  
+
   // Get user's payout requests
   app.get("/api/payouts", isAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -1528,12 +1660,12 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
-      
+
       // Coordinators cannot request payouts
       if (user?.role === USER_ROLES.COORDINATOR) {
         return res.json({ availableBalance: 0, canRequestPayout: false, reason: "Coordinators cannot request payouts" });
       }
-      
+
       const availableBalance = await storage.getUserAvailableBalance(userId);
       res.json({ availableBalance, canRequestPayout: availableBalance > 0 });
     } catch (error) {
@@ -1547,19 +1679,19 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
-      
+
       const { amount, connectedAccountId } = req.body;
-      
+
       if (!amount || amount <= 0) {
         return res.status(400).json({ message: "Valid amount is required" });
       }
-      
+
       // Check available balance
       const availableBalance = await storage.getUserAvailableBalance(userId);
       if (amount > availableBalance) {
         return res.status(400).json({ message: "Insufficient available balance" });
       }
-      
+
       const payout = await storage.createPayoutRequest({
         userId,
         connectedAccountId,
@@ -1567,7 +1699,7 @@ export async function registerRoutes(
         currency: user?.preferredCurrency || "EUR",
         status: "requested",
       });
-      
+
       res.json(payout);
     } catch (error) {
       console.error("Error creating payout request:", error);
@@ -1608,7 +1740,7 @@ export async function registerRoutes(
       if (payout.status !== "requested") {
         return res.status(400).json({ message: "Payout is not in requested status" });
       }
-      
+
       const approved = await storage.approvePayoutRequest(req.params.id, userId);
       res.json(approved);
     } catch (error) {
@@ -1627,7 +1759,7 @@ export async function registerRoutes(
       if (payout.status !== "approved") {
         return res.status(400).json({ message: "Payout must be approved first" });
       }
-      
+
       // Mark as processing, then paid
       await storage.updatePayoutRequestStatus(req.params.id, "processing");
       const executed = await storage.updatePayoutRequestStatus(req.params.id, "paid");

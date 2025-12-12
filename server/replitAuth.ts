@@ -11,9 +11,15 @@ import { storage } from "./storage";
 
 const PgStore = connectPg(session);
 
-// Check if we're in a Replit deployment environment
-function isReplitDeployment(): boolean {
-  return !!process.env.REPLIT_DEPLOYMENT_ID && !!process.env.REPLIT_DOMAINS;
+// Check if we're in a production deployment environment
+// Works with Replit, Railway, Render, or any platform with proper env vars
+function isProductionDeployment(): boolean {
+  // Check for Replit deployment
+  if (process.env.REPLIT_DEPLOYMENT_ID && process.env.REPLIT_DOMAINS) {
+    return true;
+  }
+  // Check for generic production deployment
+  return process.env.NODE_ENV === "production" && !!process.env.APP_URL;
 }
 
 const getOidcConfig = memoize(
@@ -60,28 +66,28 @@ async function ensureSessionTable(): Promise<void> {
 export async function setupAuth(app: Express) {
   // Ensure session table exists before creating store
   await ensureSessionTable();
-  
+
   // Create PgStore WITHOUT createTableIfMissing since we handle it above
   const pgStore = new PgStore({
     pool: pool,
     createTableIfMissing: false, // We handle this ourselves
     errorLog: (error: any) => {
       // Only log non-duplicate errors
-      if (error?.code !== '42P07' && error?.code !== '42P06' && 
-          !error?.message?.includes('already exists')) {
+      if (error?.code !== '42P07' && error?.code !== '42P06' &&
+        !error?.message?.includes('already exists')) {
         console.error('Session store error:', error);
       }
     },
   });
-  
+
   // Handle store errors
   pgStore.on('error', (error: any) => {
-    if (error?.code !== '42P07' && error?.code !== '42P06' && 
-        !error?.message?.includes('already exists')) {
+    if (error?.code !== '42P07' && error?.code !== '42P06' &&
+      !error?.message?.includes('already exists')) {
       console.error('PgStore error:', error);
     }
   });
-  
+
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "altusink-dev-secret",
     resave: false,
@@ -100,8 +106,8 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Only set up OIDC in deployment environment
-  if (isReplitDeployment()) {
+  // Only set up OIDC in Replit deployment environment (requires Replit-specific env vars)
+  if (process.env.REPLIT_DEPLOYMENT_ID && process.env.REPLIT_DOMAINS) {
     try {
       const config = await getOidcConfig();
 
@@ -127,7 +133,7 @@ export async function setupAuth(app: Express) {
         config,
         {
           scope: "openid email profile",
-          callbackURL: `https://${process.env.REPLIT_DOMAINS?.split(",")[0]}/api/callback`,
+          callbackURL: `https://${process.env.APP_URL || process.env.REPLIT_DOMAINS?.split(",")[0]}/api/callback`,
         },
         verify
       );
@@ -153,27 +159,27 @@ export async function setupAuth(app: Express) {
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password } = req.body;
-      
+
       if (!username || !password) {
         return res.status(400).json({ message: "Username and password are required" });
       }
-      
+
       const user = await storage.getUserByUsername(username);
-      
+
       if (!user || !user.password) {
         return res.status(401).json({ message: "Invalid username or password" });
       }
-      
+
       const isValidPassword = await bcrypt.compare(password, user.password);
-      
+
       if (!isValidPassword) {
         return res.status(401).json({ message: "Invalid username or password" });
       }
-      
+
       if (!user.isActive) {
         return res.status(403).json({ message: "Account is disabled" });
       }
-      
+
       req.login(user, (err) => {
         if (err) {
           console.error("Login error:", err);
@@ -188,9 +194,9 @@ export async function setupAuth(app: Express) {
   });
 
   // Dev mode login routes (when OIDC is not available)
-  if (!isReplitDeployment()) {
+  if (!process.env.REPLIT_DEPLOYMENT_ID) {
     console.log("Running in development mode - using simplified auth");
-    
+
     // Redirect to login page instead of auto-login
     app.get("/api/login", (req, res) => {
       res.redirect("/login");
@@ -244,18 +250,18 @@ export const requireRole = (...allowedRoles: UserRole[]): RequestHandler => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    
+
     const user = req.user as any;
     if (!user || !user.role) {
       return res.status(403).json({ message: "Access denied - no role assigned" });
     }
-    
+
     if (!allowedRoles.includes(user.role)) {
-      return res.status(403).json({ 
-        message: `Access denied - requires one of: ${allowedRoles.join(", ")}` 
+      return res.status(403).json({
+        message: `Access denied - requires one of: ${allowedRoles.join(", ")}`
       });
     }
-    
+
     return next();
   };
 };
@@ -264,8 +270,8 @@ export const requireRole = (...allowedRoles: UserRole[]): RequestHandler => {
 export const isCEO: RequestHandler = requireRole(USER_ROLES.CEO);
 
 export const isArtistOrHigher: RequestHandler = requireRole(
-  USER_ROLES.CEO, 
-  USER_ROLES.ARTIST, 
+  USER_ROLES.CEO,
+  USER_ROLES.ARTIST,
   USER_ROLES.COORDINATOR
 );
 
@@ -275,24 +281,24 @@ export const canWithdraw: RequestHandler = (req, res, next) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  
+
   const user = req.user as any;
   if (!user || !user.role) {
     return res.status(403).json({ message: "Access denied - no role assigned" });
   }
-  
+
   // Coordinators cannot withdraw - they have artist permissions but no payout access
   if (user.role === USER_ROLES.COORDINATOR) {
-    return res.status(403).json({ 
-      message: "Coordinators cannot request withdrawals" 
+    return res.status(403).json({
+      message: "Coordinators cannot request withdrawals"
     });
   }
-  
+
   // CEO, Artist, and Vendor can withdraw
   if ([USER_ROLES.CEO, USER_ROLES.ARTIST, USER_ROLES.VENDOR].includes(user.role)) {
     return next();
   }
-  
+
   return res.status(403).json({ message: "Access denied" });
 };
 
@@ -302,21 +308,21 @@ export const requireStudioAccess = (studioIdParam: string = "studioId"): Request
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    
+
     const user = req.user as any;
-    
+
     // CEO has access to all studios
     if (user.role === USER_ROLES.CEO) {
       return next();
     }
-    
+
     const requestedStudioId = req.params[studioIdParam] || req.body?.studioId;
-    
+
     // If user has a studioId, they can only access their own studio
     if (user.studioId && requestedStudioId && user.studioId !== requestedStudioId) {
       return res.status(403).json({ message: "Access denied - wrong studio" });
     }
-    
+
     return next();
   };
 };

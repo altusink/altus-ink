@@ -1,0 +1,21 @@
+# Railway Configuration
+# https://docs.railway.app/reference/config-as-code
+
+[build]
+builder = "nixpacks"
+buildCommand = "npm run build"
+
+[deploy]
+startCommand = "npm run start"
+healthcheckPath = "/health"
+healthcheckTimeout = 10
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+# Environment variables needed (set in Railway dashboard):
+# DATABASE_URL - PostgreSQL connection string (Railway provides this automatically)
+# SESSION_SECRET - Secure random string for session encryption
+# STRIPE_SECRET_KEY - Stripe API key
+# STRIPE_WEBHOOK_SECRET - Stripe webhook signing secret (optional)
+# SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD - Email service (optional)
+# ZAPI_INSTANCE_ID, ZAPI_TOKEN - WhatsApp Z-API (optional)

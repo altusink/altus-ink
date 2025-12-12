@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://altusink:${DB_PASSWORD}@db:5432/altusink
+      - SESSION_SECRET=${SESSION_SECRET}
+      - APP_URL=${APP_URL}
+      # Stripe
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      # Email (SMTP)
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_FROM=${SMTP_FROM}
+      # WhatsApp (optional)
+      - ZAPI_INSTANCE_ID=${ZAPI_INSTANCE_ID}
+      - ZAPI_TOKEN=${ZAPI_TOKEN}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - altusink-network
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=altusink
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=altusink
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U altusink"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - altusink-network
+
+networks:
+  altusink-network:
+    driver: bridge
+
+volumes:
+  pgdata:

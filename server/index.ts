@@ -10,11 +10,90 @@ import { startDepositReleaseJob } from "./jobs/depositRelease";
 const app = express();
 const httpServer = createServer(app);
 
+// Track server start time for health checks
+const startTime = Date.now();
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
   }
 }
+
+// ==================== SECURITY MIDDLEWARE ====================
+
+// Trust proxy for Railway (needed for rate limiting by IP)
+app.set("trust proxy", 1);
+
+// Security headers (lightweight helmet alternative)
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  if (process.env.NODE_ENV === "production") {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
+  next();
+});
+
+// Rate limiting - simple in-memory implementation
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX = 100; // 100 requests per minute
+
+app.use((req, res, next) => {
+  // Skip rate limiting for health checks and static assets
+  if (req.path === "/health" || req.path === "/ready" || !req.path.startsWith("/api")) {
+    return next();
+  }
+
+  const clientIp = req.ip || req.socket.remoteAddress || "unknown";
+  const now = Date.now();
+  const clientData = rateLimitStore.get(clientIp);
+
+  if (!clientData || now > clientData.resetTime) {
+    rateLimitStore.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return next();
+  }
+
+  if (clientData.count >= RATE_LIMIT_MAX) {
+    res.setHeader("Retry-After", Math.ceil((clientData.resetTime - now) / 1000).toString());
+    return res.status(429).json({ message: "Too many requests, please try again later" });
+  }
+
+  clientData.count++;
+  next();
+});
+
+// Clean up rate limit store periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of rateLimitStore.entries()) {
+    if (now > value.resetTime) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, RATE_LIMIT_WINDOW);
+
+// ==================== HEALTH CHECK ENDPOINTS ====================
+
+// Health check for Railway and load balancers
+app.get("/health", (_req, res) => {
+  res.json({
+    status: "healthy",
+    uptime: Math.floor((Date.now() - startTime) / 1000),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development"
+  });
+});
+
+// Readiness check (for Kubernetes/Railway)
+app.get("/ready", (_req, res) => {
+  // You could add database connectivity check here
+  res.json({ status: "ready" });
+});
+
+// ==================== BODY PARSING ====================
 
 app.use(
   express.json({
@@ -131,4 +210,23 @@ app.use((req, res, next) => {
       log(`serving on port ${port}`);
     },
   );
+
+  // ==================== GRACEFUL SHUTDOWN ====================
+  const shutdown = (signal: string) => {
+    log(`Received ${signal}. Starting graceful shutdown...`, "server");
+
+    httpServer.close(() => {
+      log("HTTP server closed", "server");
+      process.exit(0);
+    });
+
+    // Force shutdown after 10 seconds
+    setTimeout(() => {
+      log("Forcing shutdown after timeout", "server");
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 })();
