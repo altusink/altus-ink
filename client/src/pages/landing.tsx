@@ -169,17 +169,19 @@ export default function Landing() {
             </Link>
 
             {/* Secondary CTA */}
-            <Button
-              size="lg"
-              variant="outline"
-              className="px-10 py-6 rounded-2xl font-medium text-lg
-                border border-zinc-700 text-white
-                hover:border-gold/50 hover:bg-gold/5
-                transition-all duration-300 h-auto"
-              data-testid="button-hero-secondary"
-            >
-              {t.hero.secondary}
-            </Button>
+            <Link href="#artists">
+              <Button
+                size="lg"
+                variant="outline"
+                className="px-10 py-6 rounded-2xl font-medium text-lg
+                  border border-zinc-700 text-white
+                  hover:border-gold/50 hover:bg-gold/5
+                  transition-all duration-300 h-auto"
+                data-testid="button-hero-secondary"
+              >
+                {t.hero.secondary}
+              </Button>
+            </Link>
           </motion.div>
 
           {/* Trust Badges */}
