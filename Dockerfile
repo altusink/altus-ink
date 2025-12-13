@@ -23,8 +23,5 @@ COPY drizzle.config.ts ./
 ENV NODE_ENV=production
 EXPOSE 5000
 
-# Run drizzle migrations at build time (not runtime)
-RUN npx drizzle-kit generate || true
-
-# Ultra-minimal CMD - just start Node directly
-CMD ["node", "dist/index.cjs"]
+# Use npm start which includes drizzle-kit push
+CMD ["npm", "run", "start"]
