@@ -6,9 +6,15 @@
 builder = "dockerfile"
 
 [deploy]
-# Health check - Railway has internal 2 min window, can't extend easily
+# Healthcheck configuration (Railway official docs)
+# - Path must return HTTP 200
+# - Timeout in seconds (max 300)
 healthcheckPath = "/health"
 healthcheckTimeout = 300
+
+# Restart policy
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
-# Don't override Dockerfile CMD - let it handle startup
+
+# Number of replicas
+numReplicas = 1

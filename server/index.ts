@@ -1,3 +1,9 @@
+// IMMEDIATE STARTUP LOG - If this doesn't show, Node isn't starting
+console.log("=== ALTUS INK SERVER STARTING ===");
+console.log("Time:", new Date().toISOString());
+console.log("PORT:", process.env.PORT || "5000");
+console.log("NODE_ENV:", process.env.NODE_ENV);
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
