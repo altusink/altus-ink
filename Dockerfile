@@ -33,29 +33,15 @@ COPY --from=builder /app/dist ./dist
 COPY shared ./shared
 COPY drizzle.config.ts ./
 
-# Set environment
+# Set environment - let Railway set PORT dynamically
 ENV NODE_ENV=production
-ENV PORT=5000
 
-# Expose port
+# Default port (Railway will override via $PORT)
 EXPOSE 5000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:5000/health || exit 1
+# Disable internal healthcheck - Railway handles this via railway.toml
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+#   CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-5000}/health || exit 1
 
-# Create startup script to debug and run
-RUN echo '#!/bin/sh' > /app/start.sh && \
-  echo 'echo "=== ENVIRONMENT DEBUG ===" ' >> /app/start.sh && \
-  echo 'echo "DATABASE_URL starts with: ${DATABASE_URL:0:30}..."' >> /app/start.sh && \
-  echo 'echo "All env vars:" && env | grep -E "DATABASE|SESSION|RAILWAY" | head -20' >> /app/start.sh && \
-  echo 'echo "=========================" ' >> /app/start.sh && \
-  echo 'if [ -z "$DATABASE_URL" ]; then' >> /app/start.sh && \
-  echo '  echo "ERROR: DATABASE_URL not set! Sleeping to keep container alive..."' >> /app/start.sh && \
-  echo '  sleep 300' >> /app/start.sh && \
-  echo '  exit 1' >> /app/start.sh && \
-  echo 'fi' >> /app/start.sh && \
-  echo 'npx drizzle-kit push && npm run start' >> /app/start.sh && \
-  chmod +x /app/start.sh
-
-CMD ["/app/start.sh"]
+# Simple startup: run drizzle push then start server
+CMD ["sh", "-c", "echo '=== Starting Altus Ink ===' && echo 'PORT: ${PORT:-5000}' && echo 'DATABASE_URL starts with: ${DATABASE_URL:0:30}...' && npx drizzle-kit push && npm run start"]
