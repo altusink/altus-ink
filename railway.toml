@@ -6,9 +6,9 @@
 builder = "dockerfile"
 
 [deploy]
-# TEMPORARILY DISABLED healthcheck to allow new deploy to activate
-# healthcheckPath = "/health"
-# healthcheckTimeout = 300
+# Healthcheck configuration (Railway official docs)
+healthcheckPath = "/health"
+healthcheckTimeout = 300
 
 # Restart policy
 restartPolicyType = "on_failure"
