@@ -149,29 +149,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// Email and WhatsApp services auto-initialize with environment variables
+// Check if credentials are configured
 (async () => {
-  // Initialize email service if SMTP credentials are available
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
-    emailService.initialize({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || "587", 10),
-      secure: process.env.SMTP_SECURE === "true",
-      user: process.env.SMTP_USER,
-      password: process.env.SMTP_PASSWORD,
-      from: process.env.SMTP_FROM || `ALTUSINK.IO <${process.env.SMTP_USER}>`,
-    });
-    log("Email service initialized", "email");
+    log("Email service configured", "email");
   } else {
     log("Email service not configured - SMTP credentials missing", "email");
   }
 
-  // Initialize WhatsApp service if Z-API credentials are available
   if (process.env.ZAPI_INSTANCE_ID && process.env.ZAPI_TOKEN) {
-    whatsappService.initialize({
-      instanceId: process.env.ZAPI_INSTANCE_ID,
-      token: process.env.ZAPI_TOKEN,
-    });
-    log("WhatsApp service initialized", "whatsapp");
+    log("WhatsApp service configured", "whatsapp");
   } else {
     log("WhatsApp service not configured - Z-API credentials missing", "whatsapp");
   }
