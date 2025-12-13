@@ -12,10 +12,10 @@
 
 import { Router, Request, Response, NextFunction } from "express";
 import { eq, and, gte, lte, desc, asc, sql, like } from "drizzle-orm";
-import { db } from "../db";
+import { db } from "./db";
 import * as schema from "@shared/schema";
-import { stripeService, emailService, bookingService, storageService } from "../services";
-import { config } from "../config";
+import { stripeService, emailService, bookingService, storageService } from "./services";
+import { config } from "./config";
 
 // =============================================================================
 // MIDDLEWARE
