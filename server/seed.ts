@@ -618,3 +618,4 @@ if (require.main === module) {
 }
 
 export default seed;
+export { seed as seedInitialData };
