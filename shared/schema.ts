@@ -400,6 +400,69 @@ export const portfolioPhotos = pgTable(
   (table) => [index("idx_photos_category").on(table.categoryId)]
 );
 
+// Portfolio images - unified gallery for artist portfolio
+export const portfolioImages = pgTable(
+  "portfolio_images",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    artistId: varchar("artist_id").references(() => artists.id, { onDelete: "cascade" }).notNull(),
+    imageUrl: text("image_url").notNull(),
+    thumbnailUrl: text("thumbnail_url"),
+    title: varchar("title", { length: 200 }),
+    description: text("description"),
+    tattooStyle: varchar("tattoo_style", { length: 100 }),
+    bodyPlacement: varchar("body_placement", { length: 100 }),
+    colorType: varchar("color_type", { length: 50 }), // color, blackwork, blackandgrey
+    sessionDuration: integer("session_duration"),
+    fromBookingId: varchar("from_booking_id").references(() => bookings.id),
+    order: integer("order").default(0),
+    isFeatured: boolean("is_featured").default(false),
+    isActive: boolean("is_active").default(true),
+    viewCount: integer("view_count").default(0),
+    likeCount: integer("like_count").default(0),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_portfolio_images_artist").on(table.artistId),
+    index("idx_portfolio_images_featured").on(table.isFeatured),
+    index("idx_portfolio_images_order").on(table.order),
+  ]
+);
+
+// Tour locations - where artists are touring
+export const tourLocations = pgTable(
+  "tour_locations",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    artistId: varchar("artist_id").references(() => artists.id, { onDelete: "cascade" }).notNull(),
+    name: varchar("name", { length: 200 }).notNull(),
+    city: varchar("city", { length: 100 }).notNull(),
+    country: varchar("country", { length: 100 }).notNull(),
+    countryCode: varchar("country_code", { length: 3 }),
+    address: text("address"),
+    venueName: varchar("venue_name", { length: 200 }),
+    venueType: varchar("venue_type", { length: 50 }), // studio, convention, guest_spot
+    latitude: decimal("latitude", { precision: 10, scale: 7 }),
+    longitude: decimal("longitude", { precision: 10, scale: 7 }),
+    timezone: varchar("timezone", { length: 50 }),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date").notNull(),
+    spotsAvailable: integer("spots_available").default(0),
+    spotsBooked: integer("spots_booked").default(0),
+    isActive: boolean("is_active").default(true),
+    isFeatured: boolean("is_featured").default(false),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("idx_tour_locations_artist").on(table.artistId),
+    index("idx_tour_locations_dates").on(table.startDate, table.endDate),
+    index("idx_tour_locations_active").on(table.isActive),
+  ]
+);
+
 // Deposit values by duration
 export const depositValues = pgTable("deposit_values", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
