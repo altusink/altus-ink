@@ -6,11 +6,9 @@
 builder = "dockerfile"
 
 [deploy]
-# Healthcheck configuration (Railway official docs)
-# - Path must return HTTP 200
-# - Timeout in seconds (max 300)
-healthcheckPath = "/health"
-healthcheckTimeout = 300
+# TEMPORARILY DISABLED healthcheck to allow new deploy to activate
+# healthcheckPath = "/health"
+# healthcheckTimeout = 300
 
 # Restart policy
 restartPolicyType = "on_failure"
