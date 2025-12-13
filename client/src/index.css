@@ -7,148 +7,95 @@
    Premium Tattoo Booking SaaS
    ============================================ */
 
-/* ALTUS INK - ENTERPRISE DESIGN SYSTEM */
+/* ALTUS INK - ENTERPRISE DESIGN SYSTEM V2.0 */
 :root {
   color-scheme: dark;
 
-  /* === ENTERPRISE DARK PALETTE === */
-  --button-outline: rgba(255, 255, 255, .08);
-  --badge-outline: rgba(255, 255, 255, .06);
-  --opaque-button-border-intensity: 8;
-  --elevate-1: rgba(255, 255, 255, .04);
-  --elevate-2: rgba(255, 255, 255, .08);
+  /* === BASE COLORS (RICH GRAPHITE - NOT TRUE DARK) === */
+  --bg-app: #0A0A0C;
+  /* Fundo profundo com leve azulado/grafite */
+  --bg-surface: #141416;
+  /* Cards com contraste suave */
+  --bg-elevated: #1C1C1F;
+  /* Modais com elevação clara */
+  --bg-active: #27272A;
+  /* Items selecionados */
 
-  /* Background - True Dark (Klu style) */
-  --background: 0 0% 4%;
-  /* #0A0A0B */
+  /* === TEXT & CONTENT === */
+  --text-primary: #FFFFFF;
+  /* 100% opacity */
+  --text-secondary: #A1A1AA;
+  /* ~65% opacity - Inter readability */
+  --text-tertiary: #71717A;
+  /* ~45% opacity */
+
+  /* === BRAND & ACCENTS (CIRURGICO) === */
+  --brand-primary: #00FF94;
+  /* Neon Green - Ação/Growth */
+  --brand-secondary: #6366F1;
+  /* Indigo - Links/Active */
+
+  /* === SIGNALS === */
+  --signal-error: #FF453A;
+  --signal-warning: #FFD60A;
+  --signal-success: #30D158;
+
+  /* === BORDERS === */
+  --border-subtle: #27272A;
+  --border-highlight: #3F3F46;
+
+  /* === MAPPING TO TAILWIND UTILITIES === */
+  --background: 0 0% 2%;
+  /* #050505 */
   --foreground: 0 0% 100%;
-  /* Pure white */
+  /* #FFFFFF */
 
-  /* Borders - Subtle */
-  --border: 0 0% 12%;
-  /* #1F1F1F */
-
-  /* Cards - Elevated surfaces */
-  --card: 0 0% 8%;
-  /* #141416 */
+  --card: 240 3% 6%;
+  /* #0F0F10 */
   --card-foreground: 0 0% 100%;
-  --card-border: 0 0% 14%;
 
-  /* Sidebar */
-  --sidebar: 0 0% 5%;
-  /* #0D0D0D */
-  --sidebar-foreground: 0 0% 100%;
-  --sidebar-border: 0 0% 12%;
-  --sidebar-primary: 145 100% 50%;
-  --sidebar-primary-foreground: 0 0% 4%;
-  --sidebar-accent: 0 0% 10%;
-  --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-ring: 145 100% 50%;
-
-  /* Popover */
-  --popover: 0 0% 9%;
+  --popover: 240 5% 10%;
+  /* #18181B */
   --popover-foreground: 0 0% 100%;
-  --popover-border: 0 0% 15%;
 
-  /* === PRIMARY - NEON GREEN === */
-  --primary: 145 100% 50%;
-  /* #00FF85 */
-  --primary-foreground: 0 0% 4%;
+  --primary: 155 100% 50%;
+  /* #00FF94 */
+  --primary-foreground: 0 0% 0%;
 
-  /* Secondary - Indigo */
-  --secondary: 239 84% 67%;
-  /* #6366F1 */
+  --secondary: 240 5% 10%;
+  /* #18181B (Surface elevated) */
   --secondary-foreground: 0 0% 100%;
 
-  /* Muted */
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 65%;
+  --muted: 240 5% 15%;
+  /* #27272A */
+  --muted-foreground: 240 5% 65%;
+  /* #A1A1AA */
 
-  /* Accent */
   --accent: 239 84% 67%;
+  /* #6366F1 */
   --accent-foreground: 0 0% 100%;
 
-  /* Destructive */
-  --destructive: 0 72% 51%;
-  /* #DC2626 */
+  --destructive: 0 84% 60%;
+  /* #FF453A */
   --destructive-foreground: 0 0% 100%;
 
-  /* Input */
-  --input: 0 0% 15%;
-  --ring: 145 100% 50%;
+  --border: 240 5% 15%;
+  /* #27272A */
+  --input: 240 5% 15%;
+  --ring: 155 100% 50%;
 
-  /* === ACCENT PALETTE === */
-
-  /* Gold - CTAs */
-  --gold: 45 93% 47%;
-  /* #E5A700 */
-  --gold-dark: 45 93% 35%;
-  --gold-light: 45 93% 55%;
-  --gold-glow: rgba(229, 167, 0, 0.3);
-
-  /* Neon Green */
-  --neon-green: 145 100% 50%;
-  --neon-green-glow: rgba(0, 255, 133, 0.2);
-
-  /* Indigo */
-  --neon-purple: 239 84% 67%;
-  --neon-purple-glow: rgba(99, 102, 241, 0.2);
-
-  /* Cyan */
-  --neon-cyan: 185 100% 50%;
-  --neon-cyan-glow: rgba(0, 229, 255, 0.2);
-
-  /* Red */
-  --neon-red: 0 72% 51%;
-  --neon-red-glow: rgba(220, 38, 38, 0.2);
-
-  /* === GLASSMORPHISM === */
-  --glass-bg: rgba(10, 10, 11, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-hover: rgba(255, 255, 255, 0.12);
-
-  /* === CHART COLORS === */
-  --chart-1: 145 100% 50%;
-  --chart-2: 239 84% 67%;
-  --chart-3: 45 93% 47%;
-  --chart-4: 185 100% 50%;
-  --chart-5: 0 72% 51%;
-
-  /* === TYPOGRAPHY (Enterprise) === */
-  --font-sans: 'SF Pro Display', 'Inter', -apple-system, system-ui, sans-serif;
-  --font-display: 'SF Pro Display', 'Inter', -apple-system, system-ui, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace;
-
-  /* === SPACING & SIZING === */
-  --radius: 0.75rem;
-  /* 12px */
-  --spacing: 0.5rem;
+  --radius: 0.5rem;
   /* 8px base */
 
-  /* === SHADOWS (Subtle for dark) === */
-  --shadow-2xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
-  --shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
-  --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.7);
-  --shadow-2xl: 0 32px 80px rgba(0, 0, 0, 0.8);
+  /* === SHADOWS (ATMOSPHERIC) === */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(0, 255, 148, 0.15);
 
-  /* Glow effects */
-  --shadow-neon-green: 0 0 20px var(--neon-green-glow);
-  --shadow-neon-purple: 0 0 20px var(--neon-purple-glow);
-  --shadow-neon-gold: 0 0 15px var(--gold-glow);
-
-  /* Border derived */
-  --primary-border: hsl(145 100% 50%);
-  --secondary-border: hsl(239 84% 67%);
-  --muted-border: hsl(0 0% 15%);
-  --accent-border: hsl(239 84% 67%);
-  --destructive-border: hsl(0 72% 51%);
-  --sidebar-primary-border: hsl(145 100% 50%);
-  --sidebar-accent-border: hsl(0 0% 15%);
+  /* === TYPOGRAPHY === */
+  --font-sans: 'Inter', 'SF Pro Display', -apple-system, system-ui, sans-serif;
+  --font-display: 'SF Pro Display', 'Inter', system-ui, sans-serif;
 }
 
 /* Light mode override (for compatibility, but dark is default) */
