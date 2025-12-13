@@ -6,7 +6,9 @@
 builder = "dockerfile"
 
 [deploy]
+# Health check config - increased timeout for DB migrations + seed
 healthcheckPath = "/health"
-healthcheckTimeout = 120
+healthcheckTimeout = 300
+startCommand = "npx drizzle-kit push && npm run start"
 restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 3
+restartPolicyMaxRetries = 5
