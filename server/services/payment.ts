@@ -386,7 +386,7 @@ const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
 // =============================================================================
 
 export class PaymentService {
-    private stripe: Stripe;
+    private stripe: Stripe | null = null;
     private config: PaymentConfig;
     private paymentIntents: Map<string, PaymentIntent> = new Map();
     private checkoutSessions: Map<string, CheckoutSession> = new Map();
@@ -408,9 +408,28 @@ export class PaymentService {
             defaultCurrency: "EUR"
         };
 
-        this.stripe = new Stripe(this.config.secretKey, {
-            apiVersion: "2023-10-16"
-        });
+        // Only initialize Stripe if secret key is configured
+        if (this.config.secretKey) {
+            this.stripe = new Stripe(this.config.secretKey, {
+                apiVersion: "2023-10-16"
+            });
+        }
+    }
+
+    /**
+     * Get Stripe client with lazy initialization
+     * Throws if Stripe is not configured
+     */
+    private getStripe(): Stripe {
+        if (!this.stripe) {
+            if (!this.config.secretKey) {
+                throw new Error("Stripe is not configured. Please set STRIPE_SECRET_KEY.");
+            }
+            this.stripe = new Stripe(this.config.secretKey, {
+                apiVersion: "2023-10-16"
+            });
+        }
+        return this.stripe;
     }
 
     // ===========================================================================
@@ -496,7 +515,7 @@ export class PaymentService {
             };
         }
 
-        const stripeSession = await this.stripe.checkout.sessions.create(sessionParams);
+        const stripeSession = await this.getStripe().checkout.sessions.create(sessionParams);
 
         const session: CheckoutSession = {
             id: this.generateId("cs"),
@@ -564,7 +583,7 @@ export class PaymentService {
             };
         }
 
-        const stripeIntent = await this.stripe.paymentIntents.create(intentParams);
+        const stripeIntent = await this.getStripe().paymentIntents.create(intentParams);
 
         const intent: PaymentIntent = {
             id: this.generateId("pi"),
@@ -589,7 +608,7 @@ export class PaymentService {
         const intent = this.paymentIntents.get(intentId);
         if (!intent) throw new Error("Payment intent not found");
 
-        const stripeIntent = await this.stripe.paymentIntents.confirm(intent.stripeId);
+        const stripeIntent = await this.getStripe().paymentIntents.confirm(intent.stripeId);
 
         intent.status = this.mapPaymentIntentStatus(stripeIntent.status);
         if (stripeIntent.status === "succeeded") {
@@ -603,7 +622,7 @@ export class PaymentService {
         const intent = this.paymentIntents.get(intentId);
         if (!intent) throw new Error("Payment intent not found");
 
-        await this.stripe.paymentIntents.cancel(intent.stripeId);
+        await this.getStripe().paymentIntents.cancel(intent.stripeId);
         intent.status = "cancelled";
 
         return intent;
@@ -628,7 +647,7 @@ export class PaymentService {
 
         const refundAmount = params.amount || intent.amount;
 
-        const refund = await this.stripe.refunds.create({
+        const refund = await this.getStripe().refunds.create({
             payment_intent: intent.stripeId,
             amount: refundAmount,
             reason: params.reason,
@@ -685,7 +704,7 @@ export class PaymentService {
         country: string;
         type?: "express" | "standard";
     }): Promise<{ accountId: string; onboardingUrl: string }> {
-        const account = await this.stripe.accounts.create({
+        const account = await this.getStripe().accounts.create({
             type: params.type || "express",
             country: params.country,
             email: params.email,
@@ -699,7 +718,7 @@ export class PaymentService {
             }
         });
 
-        const accountLink = await this.stripe.accountLinks.create({
+        const accountLink = await this.getStripe().accountLinks.create({
             account: account.id,
             refresh_url: `${process.env.APP_URL}/dashboard/artist/settings?stripe=refresh`,
             return_url: `${process.env.APP_URL}/dashboard/artist/settings?stripe=complete`,
@@ -732,7 +751,7 @@ export class PaymentService {
         if (!account) return undefined;
 
         // Fetch latest status from Stripe
-        const stripeAccount = await this.stripe.accounts.retrieve(account.stripeAccountId);
+        const stripeAccount = await this.getStripe().accounts.retrieve(account.stripeAccountId);
 
         account.chargesEnabled = stripeAccount.charges_enabled || false;
         account.payoutsEnabled = stripeAccount.payouts_enabled || false;
@@ -766,7 +785,7 @@ export class PaymentService {
         const account = this.connectedAccounts.get(accountId);
         if (!account) throw new Error("Account not found");
 
-        const loginLink = await this.stripe.accounts.createLoginLink(account.stripeAccountId);
+        const loginLink = await this.getStripe().accounts.createLoginLink(account.stripeAccountId);
         return loginLink.url;
     }
 
@@ -776,7 +795,7 @@ export class PaymentService {
 
         // Use account link for Express accounts
         if (account.type === "express") {
-            const link = await this.stripe.accountLinks.create({
+            const link = await this.getStripe().accountLinks.create({
                 account: account.stripeAccountId,
                 refresh_url: `${process.env.APP_URL}/dashboard/artist/settings`,
                 return_url: `${process.env.APP_URL}/dashboard/artist/settings`,
@@ -839,7 +858,7 @@ export class PaymentService {
             const account = this.connectedAccounts.get(payout.accountId);
             if (!account) throw new Error("Account not found");
 
-            const transfer = await this.stripe.transfers.create({
+            const transfer = await this.getStripe().transfers.create({
                 amount: payout.amount,
                 currency: payout.currency.toLowerCase(),
                 destination: account.stripeAccountId,
@@ -1051,7 +1070,7 @@ export class PaymentService {
         const dispute = this.disputes.get(disputeId);
         if (!dispute) throw new Error("Dispute not found");
 
-        await this.stripe.disputes.update(dispute.stripeDisputeId, {
+        await this.getStripe().disputes.update(dispute.stripeDisputeId, {
             evidence: {
                 customer_name: evidence.customerName,
                 customer_email_address: evidence.customerEmailAddress,
@@ -1082,7 +1101,7 @@ export class PaymentService {
     // ===========================================================================
 
     async handleWebhook(body: string, signature: string): Promise<void> {
-        const event = this.stripe.webhooks.constructEvent(
+        const event = this.getStripe().webhooks.constructEvent(
             body,
             signature,
             this.config.webhookSecret
