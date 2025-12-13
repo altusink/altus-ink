@@ -9,10 +9,10 @@
  */
 
 // Core services
-export { default as bookingService, BookingService } from "./booking";
-export { default as emailService, EmailService } from "./email";
-export { default as stripeService, isStripeConfigured } from "./stripe";
-export { default as storageService, StorageService } from "./storage";
+export { default as bookingService } from "./booking";
+export { default as emailService } from "./email";
+export { default as stripeService } from "./stripe";
+export { default as storageService } from "./storage";
 
 // Health check for Railway
 export async function healthCheck(): Promise<{
@@ -22,12 +22,7 @@ export async function healthCheck(): Promise<{
     const services: Record<string, { status: "ok" | "error" | "not_configured" }> = {};
 
     // Check Stripe
-    try {
-        const stripeConfigured = isStripeConfigured();
-        services.stripe = { status: stripeConfigured ? "ok" : "not_configured" };
-    } catch {
-        services.stripe = { status: "error" };
-    }
+    services.stripe = { status: process.env.STRIPE_SECRET_KEY ? "ok" : "not_configured" };
 
     // Check Email
     try {
