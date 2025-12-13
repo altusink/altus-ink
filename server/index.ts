@@ -181,8 +181,7 @@ app.use((req, res, next) => {
 
   await registerRoutes(httpServer, app);
 
-  // Seed initial data (creates admin user if not exists)
-  await seedInitialData();
+  // Seed will run AFTER server starts (non-blocking)
 
   // Start background jobs
   startDepositReleaseJob();
@@ -220,6 +219,11 @@ app.use((req, res, next) => {
     () => {
       console.log(`🚀 Server running on http://0.0.0.0:${port}`);
       log(`serving on port ${port}`);
+
+      // Run seed AFTER server is listening (non-blocking)
+      seedInitialData().catch(err => {
+        console.error("Seed error (non-fatal):", err.message);
+      });
     },
   );
 
