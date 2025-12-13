@@ -356,7 +356,9 @@ export const EnterpriseStatCard: React.FC<{
             <div className="mt-4 h-1 w-full bg-neutral-800 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-brand-secondary to-brand-primary w-[70%]" />
             </div>
-            );
-}
+        </EnterpriseCard>
+    );
+};
 
-            export const EnterpriseStat = EnterpriseStatCard;
+// Alias for backwards compatibility
+export const EnterpriseStat = EnterpriseStatCard;
