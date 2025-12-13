@@ -472,7 +472,8 @@ async function seedReviews(artistMap: Map<string, any>, bookingMap: Map<string, 
     const reviews: any[] = [];
 
     const artists = Array.from(artistMap.values());
-    const completedBookings = Array.from(bookingMap.values()).filter(b => b.status === "completed");
+    // Only get bookings that have completedAt defined
+    const completedBookings = Array.from(bookingMap.values()).filter(b => b.status === "completed" && b.completedAt);
 
     for (const artist of artists) {
         const artistBookings = completedBookings.filter(b => b.artistId === artist.id);
@@ -486,6 +487,9 @@ async function seedReviews(artistMap: Map<string, any>, bookingMap: Map<string, 
         for (const booking of bookingsToReview) {
             const rating = randomElement([4, 4, 4, 5, 5, 5, 5, 5, 3]); // Skewed towards positive
 
+            // Use completedAt or slotDatetime as fallback
+            const completedDate = booking.completedAt || booking.slotDatetime || new Date();
+
             const review = {
                 id: generateId(),
                 bookingId: booking.id,
@@ -496,7 +500,7 @@ async function seedReviews(artistMap: Map<string, any>, bookingMap: Map<string, 
                 response: Math.random() > 0.6 ? "Thank you so much! It was a pleasure working with you!" : null,
                 responseAt: Math.random() > 0.6 ? randomDate(-30, 0) : null,
                 isPublic: true,
-                createdAt: new Date(booking.completedAt.getTime() + randomInt(1, 7) * 24 * 60 * 60 * 1000),
+                createdAt: new Date(completedDate.getTime() + randomInt(1, 7) * 24 * 60 * 60 * 1000),
                 updatedAt: new Date()
             };
 
