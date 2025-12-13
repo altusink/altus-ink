@@ -1,23 +1,25 @@
-// IMMEDIATE STARTUP LOG - If this doesn't show, Node isn't starting
-console.log("=== ALTUS INK SERVER STARTING ===");
+// IMMEDIATE STARTUP LOG
+console.log("=== ALTUS INK MVP SERVER STARTING ===");
 console.log("Time:", new Date().toISOString());
 console.log("PORT:", process.env.PORT || "5000");
 console.log("NODE_ENV:", process.env.NODE_ENV);
 
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import session from "express-session";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import bcrypt from "bcrypt";
+import { registerRoutes } from "./mvp-routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
-import { emailService } from "./services/email";
-import { whatsappService } from "./services/whatsapp";
-import { subdomainMiddleware } from "./middleware/subdomain";
-import { startDepositReleaseJob } from "./jobs/depositRelease";
-import { seedInitialData } from "./seed";
+import { db } from "./db";
+import * as schema from "../shared/mvp-schema";
+import { eq } from "drizzle-orm";
 
 const app = express();
 const httpServer = createServer(app);
 
-// Track server start time for health checks
+// Track server start time
 const startTime = Date.now();
 
 declare module "http" {
@@ -28,10 +30,9 @@ declare module "http" {
 
 // ==================== SECURITY MIDDLEWARE ====================
 
-// Trust proxy for Railway (needed for rate limiting by IP)
 app.set("trust proxy", 1);
 
-// Security headers (lightweight helmet alternative)
+// Security headers
 app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -43,14 +44,13 @@ app.use((_req, res, next) => {
   next();
 });
 
-// Rate limiting - simple in-memory implementation
+// Simple rate limiting
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX = 100; // 100 requests per minute
+const RATE_LIMIT_MAX = 100;
 
 app.use((req, res, next) => {
-  // Skip rate limiting for health checks and static assets
-  if (req.path === "/health" || req.path === "/ready" || !req.path.startsWith("/api")) {
+  if (req.path === "/health" || req.path === "/api/health" || !req.path.startsWith("/api")) {
     return next();
   }
 
@@ -65,14 +65,14 @@ app.use((req, res, next) => {
 
   if (clientData.count >= RATE_LIMIT_MAX) {
     res.setHeader("Retry-After", Math.ceil((clientData.resetTime - now) / 1000).toString());
-    return res.status(429).json({ message: "Too many requests, please try again later" });
+    return res.status(429).json({ message: "Too many requests" });
   }
 
   clientData.count++;
   next();
 });
 
-// Clean up rate limit store periodically
+// Cleanup rate limit store
 setInterval(() => {
   const now = Date.now();
   Array.from(rateLimitStore.entries()).forEach(([key, value]) => {
@@ -81,24 +81,6 @@ setInterval(() => {
     }
   });
 }, RATE_LIMIT_WINDOW);
-
-// ==================== HEALTH CHECK ENDPOINTS ====================
-
-// Health check for Railway and load balancers
-app.get("/health", (_req, res) => {
-  res.json({
-    status: "healthy",
-    uptime: Math.floor((Date.now() - startTime) / 1000),
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || "development"
-  });
-});
-
-// Readiness check (for Kubernetes/Railway)
-app.get("/ready", (_req, res) => {
-  // You could add database connectivity check here
-  res.json({ status: "ready" });
-});
 
 // ==================== BODY PARSING ====================
 
@@ -111,6 +93,71 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+// ==================== SESSION & AUTHENTICATION ====================
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "altus-ink-mvp-secret-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    },
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Passport configuration
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: "email",
+      passwordField: "password",
+    },
+    async (email, password, done) => {
+      try {
+        const user = await db.query.users.findFirst({
+          where: eq(schema.users.email, email),
+        });
+
+        if (!user) {
+          return done(null, false, { message: "Invalid credentials" });
+        }
+
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+          return done(null, false, { message: "Invalid credentials" });
+        }
+
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
+    }
+  )
+);
+
+passport.serializeUser((user: any, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id: string, done) => {
+  try {
+    const user = await db.query.users.findFirst({
+      where: eq(schema.users.id, id),
+    });
+    done(null, user);
+  } catch (error) {
+    done(error);
+  }
+});
+
+// ==================== LOGGING ====================
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -126,65 +173,33 @@ export function log(message: string, source = "express") {
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
 
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      log(logLine);
+      log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
     }
   });
 
   next();
 });
 
-// Email and WhatsApp services auto-initialize with environment variables
-// Check if credentials are configured
+// ==================== ROUTES ====================
+
 (async () => {
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
-    log("Email service configured", "email");
-  } else {
-    log("Email service not configured - SMTP credentials missing", "email");
-  }
-
-  if (process.env.ZAPI_INSTANCE_ID && process.env.ZAPI_TOKEN) {
-    log("WhatsApp service configured", "whatsapp");
-  } else {
-    log("WhatsApp service not configured - Z-API credentials missing", "whatsapp");
-  }
-
-  // Apply subdomain middleware for artist booking pages
-  app.use(subdomainMiddleware);
-
+  log("Registering MVP routes", "server");
   registerRoutes(app);
 
-  // Seed will run AFTER server starts (non-blocking)
-
-  // Start background jobs
-  startDepositReleaseJob();
-
+  // Error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
+    console.error("Error:", err);
     res.status(status).json({ message });
-    throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // Serve static files in production, Vite in development
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
@@ -192,12 +207,11 @@ app.use((req, res, next) => {
     await setupVite(httpServer, app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
+  // ==================== START SERVER ====================
+
   const port = parseInt(process.env.PORT || "5000", 10);
   console.log(`[STARTUP] About to listen on port ${port}...`);
+
   httpServer.listen(
     {
       port,
@@ -205,28 +219,43 @@ app.use((req, res, next) => {
       reusePort: true,
     },
     () => {
-      console.log(`🚀 Server running on http://0.0.0.0:${port}`);
-      log(`serving on port ${port}`);
+      console.log(`🚀 Altus Ink MVP running on http://0.0.0.0:${port}`);
+      log(`Server ready on port ${port}`);
 
-      // Run seed AFTER server is listening (non-blocking)
-      seedInitialData().catch(err => {
-        console.error("Seed error (non-fatal):", err.message);
-      });
-    },
+      // Log configuration status
+      if (process.env.DATABASE_URL) {
+        log("Database configured", "db");
+      } else {
+        log("⚠️  DATABASE_URL not set", "db");
+      }
+
+      if (process.env.STRIPE_SECRET_KEY) {
+        log("Stripe configured", "stripe");
+      } else {
+        log("⚠️  Stripe not configured", "stripe");
+      }
+
+      if (process.env.SMTP_HOST) {
+        log("Email configured", "email");
+      } else {
+        log("⚠️  Email not configured", "email");
+      }
+    }
   );
 
   // ==================== GRACEFUL SHUTDOWN ====================
+
   const shutdown = (signal: string) => {
-    log(`Received ${signal}. Starting graceful shutdown...`, "server");
+    log(`Received ${signal}. Shutting down...`, "server");
 
     httpServer.close(() => {
-      log("HTTP server closed", "server");
+      log("Server closed", "server");
       process.exit(0);
     });
 
     // Force shutdown after 10 seconds
     setTimeout(() => {
-      log("Forcing shutdown after timeout", "server");
+      log("Forcing shutdown", "server");
       process.exit(1);
     }, 10000);
   };
