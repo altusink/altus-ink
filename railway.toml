@@ -6,9 +6,9 @@
 builder = "dockerfile"
 
 [deploy]
-# Health check config - increased timeout for DB migrations + seed
+# Health check - Railway has internal 2 min window, can't extend easily
 healthcheckPath = "/health"
 healthcheckTimeout = 300
-startCommand = "npx drizzle-kit push && npm run start"
 restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 5
+restartPolicyMaxRetries = 10
+# Don't override Dockerfile CMD - let it handle startup

@@ -6,7 +6,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install all dependencies (including dev for build and drizzle-kit)
+# Install all dependencies (including dev for build)
 RUN npm ci
 
 # Copy source code
@@ -33,15 +33,18 @@ COPY --from=builder /app/dist ./dist
 COPY shared ./shared
 COPY drizzle.config.ts ./
 
-# Set environment - let Railway set PORT dynamically
+# Set environment
 ENV NODE_ENV=production
 
-# Default port (Railway will override via $PORT)
+# Expose default port (Railway provides PORT via env)
 EXPOSE 5000
 
-# Disable internal healthcheck - Railway handles this via railway.toml
-# HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-#   CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-5000}/health || exit 1
-
-# Simple startup: run drizzle push then start server
-CMD ["sh", "-c", "echo '=== Starting Altus Ink ===' && echo 'PORT: ${PORT:-5000}' && echo 'DATABASE_URL starts with: ${DATABASE_URL:0:30}...' && npx drizzle-kit push && npm run start"]
+# Ultra-simple startup - immediate output for debugging
+CMD echo "=== ALTUS INK STARTING ===" && \
+    echo "PORT=${PORT:-5000}" && \
+    echo "NODE_ENV=${NODE_ENV}" && \
+    echo "DATABASE_URL exists: $(if [ -n \"$DATABASE_URL\" ]; then echo 'YES'; else echo 'NO'; fi)" && \
+    echo "Running drizzle-kit push..." && \
+    npx drizzle-kit push 2>&1 || echo "Drizzle push failed but continuing..." && \
+    echo "Starting server..." && \
+    node dist/index.cjs
