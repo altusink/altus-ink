@@ -40,6 +40,7 @@ import ArtistFeedPage from "@/pages/artist-feed";
 import { PrivacyPage, TermsPage, CancellationPage, CookiesPage } from "@/pages/legal";
 
 // Layout Components
+import { EnterpriseLayout } from "@/components/enterprise/EnterpriseLayout";
 import Navigation from "@/components/navigation";
 import MobileNav from "@/components/mobile-nav";
 import WhatsAppFloat from "@/components/whatsapp-float";
@@ -175,13 +176,9 @@ function App() {
       <EnterpriseProvider>
         <LocaleProvider>
           <TooltipProvider>
-            <LanguageSelector />
-            <Navigation />
-            <main className="pt-20 pb-20 md:pb-0">
+            <EnterpriseLayout>
               <Router />
-            </main>
-            <MobileNav />
-            <WhatsAppFloat />
+            </EnterpriseLayout>
             <Toaster />
           </TooltipProvider>
         </LocaleProvider>

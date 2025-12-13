@@ -1,245 +1,168 @@
+/**
+ * ALTUS INK - ENTERPRISE LOGIN
+ * Secure, high-performance gateway with Neon Glass aesthetics.
+ */
+
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, ArrowRight, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { EnterpriseButton, EnterpriseInput, EnterpriseCard, EnterpriseLoader } from "@/components/ui/enterprise-core";
+import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Link } from "wouter";
+import { DesignSystem } from "@/lib/enterprise-design";
+
+// Simple icon wrapper
+const Icon = ({ path, className }: { path: string; className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor"><path d={path} /></svg>
+);
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
   const loginMutation = useMutation({
-    mutationFn: async (data: { username: string; password: string }) => {
+    mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/auth/login", data);
       return res.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-
+      toast({ title: "Welcome back", description: "Accessing secure environment...", duration: 2000 });
       setTimeout(() => {
-        if (data.user?.role === "ceo") {
-          setLocation("/dashboard/ceo");
-        } else {
-          setLocation("/dashboard/artist");
-        }
-      }, 300);
+        setLocation(data.user?.role === "ceo" ? "/dashboard/ceo" : "/dashboard/artist");
+      }, 500);
     },
-    onError: (error: any) => {
-      toast({
-        title: "Authentication Failed",
-        description: error.message || "Invalid credentials. Please try again.",
-        variant: "destructive",
-      });
-    },
+    onError: (err: any) => {
+      toast({ title: "Access Denied", description: err.message, variant: "destructive" });
+    }
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim() || !password.trim()) {
-      toast({
-        title: "Required Fields",
-        description: "Please enter both username and password.",
-        variant: "destructive",
-      });
-      return;
-    }
     loginMutation.mutate({ username, password });
   };
 
   return (
-    <div className="min-h-screen flex bg-[var(--bg-app)]">
+    <div className="min-h-screen bg-neutral-950 flex font-sans text-white overflow-hidden relative selection:bg-brand-primary/30">
 
-      {/* Left Column - Form (Light) */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 bg-[var(--bg-surface)]">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          {/* Logo */}
-          <Link href="/">
-            <img src="/logo-altus.png" alt="Altus Ink" className="h-10 mb-8" />
-          </Link>
-
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="heading-2 text-[var(--text-primary)] mb-2">
-              Welcome Back
-            </h1>
-            <p className="body-base text-[var(--text-secondary)]">
-              Sign in to access your dashboard and manage your bookings.
-            </p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="username" className="text-[var(--text-primary)] font-medium">
-                Username
-              </Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="h-12 input-light"
-                disabled={loginMutation.isPending}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-[var(--text-primary)] font-medium">
-                  Password
-                </Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="text-sm text-[var(--brand-primary)] p-0 h-auto hover:bg-transparent"
-                >
-                  Forgot password?
-                </Button>
-              </div>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 input-light pr-12"
-                  disabled={loginMutation.isPending}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </Button>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full h-12 btn-primary text-base font-medium"
-              disabled={loginMutation.isPending}
-            >
-              {loginMutation.isPending ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  Sign In
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </>
-              )}
-            </Button>
-          </form>
-
-          {/* Demo Credentials */}
-          <div className="mt-8 p-4 rounded-lg card-white">
-            <p className="text-sm font-medium text-[var(--text-primary)] mb-3">Demo Accounts</p>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-[var(--text-secondary)]">CEO:</span>
-                <code className="text-[var(--brand-primary)] font-mono bg-[var(--brand-primary)]/10 px-2 py-0.5 rounded">ceo / ceo123</code>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[var(--text-secondary)]">Artist:</span>
-                <code className="text-[var(--brand-primary)] font-mono bg-[var(--brand-primary)]/10 px-2 py-0.5 rounded">artist / artist123</code>
-              </div>
-            </div>
-          </div>
-
-          {/* Back to Home */}
-          <div className="mt-6 text-center">
-            <Link href="/">
-              <Button variant="ghost" className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-                ← Back to Home
-              </Button>
-            </Link>
-          </div>
-        </motion.div>
+      {/* Background Ambience */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-brand-primary/10 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-brand-secondary/10 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: "2s" }} />
       </div>
 
-      {/* Right Column - Visual (Dark) */}
-      <div className="hidden lg:flex w-1/2 bg-[var(--bg-app)] relative overflow-hidden">
-        {/* Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
-        </div>
+      {/* Left Column: Form */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 relative z-10">
+        <div className="w-full max-w-md space-y-8">
 
-        {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center px-16">
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            <div className="mb-8">
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--signal-success)]/20 text-[var(--signal-success)] text-sm font-medium">
-                <span className="w-2 h-2 rounded-full bg-[var(--signal-success)] animate-pulse" />
-                Enterprise Platform
-              </span>
+            <div className="flex items-center gap-3 mb-2">
+              <Icon path={DesignSystem.icons.logo} className="w-10 h-10 text-brand-primary" />
+              <h1 className="text-3xl font-display font-bold tracking-tight">ALTUS INK</h1>
             </div>
-
-            <h2 className="text-4xl font-bold text-[var(--text-on-dark)] mb-6 leading-tight">
-              Professional Tattoo
-              <span className="block text-[var(--brand-primary)]">Booking Management</span>
-            </h2>
-
-            <p className="text-lg text-[var(--text-on-dark-muted)] mb-10 max-w-md">
-              Streamline your studio operations with automated booking,
-              secure payments, and comprehensive analytics.
-            </p>
-
-            {/* Features */}
-            <div className="space-y-4">
-              {[
-                "Automated booking & scheduling",
-                "Secure payment processing",
-                "Real-time analytics dashboard",
-                "Multi-artist support"
-              ].map((feature, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
-                  className="flex items-center gap-3 text-[var(--text-on-dark-muted)]"
-                >
-                  <div className="w-6 h-6 rounded-full bg-[var(--signal-success)]/20 flex items-center justify-center">
-                    <CheckCircle className="w-4 h-4 text-[var(--signal-success)]" />
-                  </div>
-                  <span>{feature}</span>
-                </motion.div>
-              ))}
-            </div>
+            <p className="text-neutral-400 text-lg">Enterprise Operating System</p>
           </motion.div>
-        </div>
 
-        {/* Decorative */}
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-[var(--brand-primary)]/20 to-transparent rounded-full blur-3xl" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[var(--signal-success)]/10 to-transparent rounded-full blur-2xl" />
+          <EnterpriseCard className="p-8 backdrop-blur-xl bg-neutral-900/40 border-white/5">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">Identify</label>
+                  <EnterpriseInput
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e: any) => setUsername(e.target.value)}
+                    disabled={loginMutation.isPending}
+                    icon={<Icon path={DesignSystem.icons.user} className="w-4 h-4" />}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">Authenticate</label>
+                  <EnterpriseInput
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e: any) => setPassword(e.target.value)}
+                    disabled={loginMutation.isPending}
+                    icon={<Icon path="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm11 14H4V10h16v10z" className="w-4 h-4" />}
+                  />
+                </div>
+              </div>
+
+              <EnterpriseButton
+                variant="neon"
+                size="lg"
+                className="w-full"
+                isLoading={loginMutation.isPending}
+                onClick={handleSubmit}
+              >
+                Establish Connection
+              </EnterpriseButton>
+            </form>
+
+            {/* Demo Helpers */}
+            <div className="mt-8 pt-6 border-t border-white/5">
+              <p className="text-xs text-neutral-500 mb-3 uppercase tracking-wider">Quick Access</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => { setUsername("admin"); setPassword("admin123"); }}
+                  className="p-3 rounded bg-white/5 hover:bg-white/10 transition text-left group"
+                >
+                  <div className="text-xs text-neutral-400 group-hover:text-white">Admin</div>
+                  <div className="text-sm font-mono text-brand-primary">CEO</div>
+                </button>
+                <button
+                  onClick={() => { setUsername("danilo"); setPassword("artist123"); }}
+                  className="p-3 rounded bg-white/5 hover:bg-white/10 transition text-left group"
+                >
+                  <div className="text-xs text-neutral-400 group-hover:text-white">Artist</div>
+                  <div className="text-sm font-mono text-brand-secondary">STAR</div>
+                </button>
+              </div>
+            </div>
+          </EnterpriseCard>
+
+          <p className="text-center text-xs text-neutral-600">
+            Protected by Altus Guard™ v2.0. All connections encrypted.
+          </p>
+
+        </div>
       </div>
+
+      {/* Right Column: Visual */}
+      <div className="hidden lg:flex w-1/2 bg-neutral-900 items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?q=80&w=2560')] bg-cover bg-center opacity-20 mix-blend-overlay" />
+        <div className="absolute inset-0 bg-gradient-to-l from-neutral-950 via-neutral-950/80 to-transparent" />
+
+        <div className="relative z-10 max-w-lg p-12">
+          <div className="h-1 w-20 bg-brand-primary mb-8 rounded-full" />
+          <h2 className="text-5xl font-display font-bold leading-tight mb-6">
+            The Future of <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary">Body Art</span> Management.
+          </h2>
+          <div className="space-y-4 text-lg text-neutral-400">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-brand-success shadow-[0_0_10px_var(--color-brand-success)]" />
+              <span>Real-time Global Marketplace</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-brand-accent shadow-[0_0_10px_var(--color-brand-accent)]" />
+              <span>Predictive AI Analytics</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-brand-secondary shadow-[0_0_10px_var(--color-brand-secondary)]" />
+              <span>Immersive 3D Studio Tours</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }

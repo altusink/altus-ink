@@ -13,91 +13,67 @@ export default {
         "2xl": "1.5rem", /* 24px */
       },
       colors: {
-        // Base colors
-        background: "hsl(var(--background) / <alpha-value>)",
-        foreground: "hsl(var(--foreground) / <alpha-value>)",
-        border: "hsl(var(--border) / <alpha-value>)",
-        input: "hsl(var(--input) / <alpha-value>)",
-        card: {
-          DEFAULT: "hsl(var(--card) / <alpha-value>)",
-          foreground: "hsl(var(--card-foreground) / <alpha-value>)",
-          border: "hsl(var(--card-border) / <alpha-value>)",
+        // ENTERPRISE DESIGN SYSTEM MAPPING
+        background: "hsl(var(--color-neutral-0) / <alpha-value>)",
+        foreground: "hsl(0 0% 100% / <alpha-value>)",
+
+        brand: {
+          primary: "hsl(var(--color-brand-primary) / <alpha-value>)",
+          secondary: "hsl(var(--color-brand-secondary) / <alpha-value>)",
+          accent: "hsl(var(--color-brand-accent) / <alpha-value>)",
+          success: "hsl(var(--color-brand-success) / <alpha-value>)",
+          warning: "hsl(var(--color-brand-warning) / <alpha-value>)",
+          error: "hsl(var(--color-brand-error) / <alpha-value>)",
+          info: "hsl(var(--color-brand-info) / <alpha-value>)",
+          gold: "hsl(45 100% 50% / <alpha-value>)", // Fallback/Legacy
         },
-        popover: {
-          DEFAULT: "hsl(var(--popover) / <alpha-value>)",
-          foreground: "hsl(var(--popover-foreground) / <alpha-value>)",
-          border: "hsl(var(--popover-border) / <alpha-value>)",
+
+        neutral: {
+          0: "hsl(var(--color-neutral-0) / <alpha-value>)",
+          50: "hsl(var(--color-neutral-50) / <alpha-value>)",
+          100: "hsl(var(--color-neutral-100) / <alpha-value>)",
+          200: "hsl(var(--color-neutral-200) / <alpha-value>)",
+          300: "hsl(var(--color-neutral-300) / <alpha-value>)",
+          400: "hsl(var(--color-neutral-400) / <alpha-value>)",
+          500: "hsl(var(--color-neutral-500) / <alpha-value>)",
+          600: "hsl(var(--color-neutral-600) / <alpha-value>)",
+          700: "hsl(var(--color-neutral-700) / <alpha-value>)",
+          800: "hsl(var(--color-neutral-800) / <alpha-value>)",
+          900: "hsl(var(--color-neutral-900) / <alpha-value>)",
         },
+
+        // LOGICAL MAPPINGS FOR SHADCN COMPATIBILITY
         primary: {
-          DEFAULT: "hsl(var(--primary) / <alpha-value>)",
-          foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
-          border: "var(--primary-border)",
+          DEFAULT: "hsl(var(--color-brand-primary) / <alpha-value>)",
+          foreground: "white",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary) / <alpha-value>)",
-          foreground: "hsl(var(--secondary-foreground) / <alpha-value>)",
-          border: "var(--secondary-border)",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted) / <alpha-value>)",
-          foreground: "hsl(var(--muted-foreground) / <alpha-value>)",
-          border: "var(--muted-border)",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent) / <alpha-value>)",
-          foreground: "hsl(var(--accent-foreground) / <alpha-value>)",
-          border: "var(--accent-border)",
+          DEFAULT: "hsl(var(--color-brand-secondary) / <alpha-value>)",
+          foreground: "black",
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive) / <alpha-value>)",
-          foreground: "hsl(var(--destructive-foreground) / <alpha-value>)",
-          border: "var(--destructive-border)",
+          DEFAULT: "hsl(var(--color-brand-error) / <alpha-value>)",
+          foreground: "white",
         },
-        ring: "hsl(var(--ring) / <alpha-value>)",
-        chart: {
-          "1": "hsl(var(--chart-1) / <alpha-value>)",
-          "2": "hsl(var(--chart-2) / <alpha-value>)",
-          "3": "hsl(var(--chart-3) / <alpha-value>)",
-          "4": "hsl(var(--chart-4) / <alpha-value>)",
-          "5": "hsl(var(--chart-5) / <alpha-value>)",
+        muted: {
+          DEFAULT: "hsl(var(--color-neutral-800) / <alpha-value>)",
+          foreground: "hsl(var(--color-neutral-400) / <alpha-value>)",
         },
-        sidebar: {
-          ring: "hsl(var(--sidebar-ring) / <alpha-value>)",
-          DEFAULT: "hsl(var(--sidebar) / <alpha-value>)",
-          foreground: "hsl(var(--sidebar-foreground) / <alpha-value>)",
-          border: "hsl(var(--sidebar-border) / <alpha-value>)",
+        accent: {
+          DEFAULT: "hsl(var(--color-brand-accent) / <alpha-value>)",
+          foreground: "white",
         },
-        "sidebar-primary": {
-          DEFAULT: "hsl(var(--sidebar-primary) / <alpha-value>)",
-          foreground: "hsl(var(--sidebar-primary-foreground) / <alpha-value>)",
-          border: "var(--sidebar-primary-border)",
+        popover: {
+          DEFAULT: "hsl(var(--color-neutral-900) / <alpha-value>)",
+          foreground: "white",
         },
-        "sidebar-accent": {
-          DEFAULT: "hsl(var(--sidebar-accent) / <alpha-value>)",
-          foreground: "hsl(var(--sidebar-accent-foreground) / <alpha-value>)",
-          border: "var(--sidebar-accent-border)"
+        card: {
+          DEFAULT: "hsl(var(--color-neutral-900) / <alpha-value>)",
+          foreground: "white",
         },
-        status: {
-          online: "rgb(34 197 94)",
-          away: "rgb(234 179 8)",
-          busy: "rgb(239 68 68)",
-          offline: "rgb(156 163 175)",
-        },
-        // Altus Gold palette
-        gold: {
-          DEFAULT: "hsl(var(--gold) / <alpha-value>)",
-          dark: "hsl(var(--gold-dark) / <alpha-value>)",
-          light: "hsl(var(--gold-light) / <alpha-value>)",
-        },
-        // Neon colors for futuristic theme
-        neon: {
-          gold: "hsl(var(--neon-gold) / <alpha-value>)",
-          cyan: "hsl(var(--neon-cyan) / <alpha-value>)",
-          magenta: "hsl(var(--neon-magenta) / <alpha-value>)",
-          green: "hsl(var(--neon-green) / <alpha-value>)",
-          purple: "hsl(var(--neon-purple) / <alpha-value>)",
-          blue: "hsl(var(--neon-blue) / <alpha-value>)",
-        },
+        border: "hsl(var(--color-neutral-800) / <alpha-value>)",
+        input: "hsl(var(--color-neutral-800) / <alpha-value>)",
+        ring: "hsl(var(--color-brand-primary) / <alpha-value>)",
       },
       fontFamily: {
         sans: ["Inter", "var(--font-sans)", "system-ui", "sans-serif"],
