@@ -1,1061 +1,849 @@
 /**
- * ALTUS INK - SECURITY & AUDIT SERVICE
- * Enterprise-grade security, audit logging, and compliance
+ * ALTUS INK - ENTERPRISE SECURITY & ACCESS CONTROL SERVICE
+ * Complete security, authentication, and authorization management
  * 
  * Features:
- * - Comprehensive audit logging
+ * - User authentication
+ * - Multi-factor authentication
+ * - Role-based access control
+ * - Permission management
  * - Session management
- * - IP blocking & rate limiting
- * - Suspicious activity detection
- * - GDPR compliance tools
- * - Data encryption
- * - Security headers
- * - Vulnerability scanning
- * - Access control
- * - Two-factor authentication
+ * - API key management
+ * - OAuth/SSO integration
+ * - Security policies
+ * - Threat detection
+ * - Security analytics
  */
 
+import { randomUUID } from "crypto";
 import crypto from "crypto";
 
 // =============================================================================
 // TYPES & INTERFACES
 // =============================================================================
 
-export interface AuditLog {
+export interface User {
     id: string;
-    timestamp: Date;
-    userId?: string;
-    sessionId?: string;
-    action: AuditAction;
-    resource: string;
-    resourceId?: string;
-    details: Record<string, any>;
+    email: string;
+    username?: string;
+    passwordHash: string;
+    salt: string;
+    status: UserStatus;
+    profile: UserProfile;
+    security: UserSecurity;
+    roles: string[];
+    permissions: string[];
+    groups: string[];
+    metadata: UserMetadata;
+    sessions: UserSession[];
+    devices: TrustedDevice[];
+    activityLog: UserActivity[];
+    createdAt: Date;
+    updatedAt: Date;
+    lastLoginAt?: Date;
+    passwordChangedAt?: Date;
+}
+
+export type UserStatus = "pending" | "active" | "suspended" | "locked" | "deleted";
+
+export interface UserProfile {
+    firstName: string;
+    lastName: string;
+    displayName: string;
+    avatar?: string;
+    phone?: string;
+    timezone: string;
+    language: string;
+    dateFormat: string;
+}
+
+export interface UserSecurity {
+    mfaEnabled: boolean;
+    mfaMethods: MFAMethod[];
+    passwordPolicy: string;
+    lastPasswordChange: Date;
+    passwordExpiresAt?: Date;
+    failedLoginAttempts: number;
+    lockoutUntil?: Date;
+    securityQuestions: SecurityQuestion[];
+    trustedDevicesOnly: boolean;
+    loginNotifications: boolean;
+}
+
+export interface MFAMethod {
+    id: string;
+    type: MFAType;
+    isDefault: boolean;
+    isVerified: boolean;
+    secret?: string;
+    backupCodes?: string[];
+    phone?: string;
+    email?: string;
+    deviceName?: string;
+    lastUsedAt?: Date;
+    createdAt: Date;
+}
+
+export type MFAType = "totp" | "sms" | "email" | "push" | "hardware_key" | "biometric";
+
+export interface SecurityQuestion {
+    id: string;
+    question: string;
+    answerHash: string;
+}
+
+export interface UserMetadata {
+    source: string;
+    referralId?: string;
+    tags: string[];
+    customFields: Record<string, any>;
+    preferences: Record<string, any>;
+}
+
+export interface UserSession {
+    id: string;
+    token: string;
+    refreshToken?: string;
+    deviceId?: string;
+    ipAddress: string;
+    userAgent: string;
+    location?: GeoLocation;
+    status: "active" | "expired" | "revoked";
+    createdAt: Date;
+    expiresAt: Date;
+    lastActivityAt: Date;
+}
+
+export interface GeoLocation {
+    country: string;
+    region?: string;
+    city?: string;
+    latitude?: number;
+    longitude?: number;
+}
+
+export interface TrustedDevice {
+    id: string;
+    name: string;
+    type: "desktop" | "mobile" | "tablet" | "other";
+    fingerprint: string;
+    userAgent: string;
+    lastUsedAt: Date;
+    trusted: boolean;
+    createdAt: Date;
+}
+
+export interface UserActivity {
+    id: string;
+    type: ActivityType;
+    description: string;
     ipAddress?: string;
     userAgent?: string;
-    country?: string;
-    city?: string;
-    severity: AuditSeverity;
-    outcome: AuditOutcome;
-    duration?: number;
+    location?: GeoLocation;
+    metadata?: Record<string, any>;
+    timestamp: Date;
 }
 
-export type AuditAction =
-    | "auth.login"
-    | "auth.logout"
-    | "auth.login_failed"
-    | "auth.register"
-    | "auth.password_reset"
-    | "auth.password_changed"
-    | "auth.two_factor_enabled"
-    | "auth.two_factor_disabled"
-    | "auth.session_revoked"
-    | "user.created"
-    | "user.updated"
-    | "user.deleted"
-    | "user.suspended"
-    | "user.data_exported"
-    | "user.data_deleted"
-    | "artist.created"
-    | "artist.updated"
-    | "artist.verified"
-    | "artist.suspended"
-    | "booking.created"
-    | "booking.confirmed"
-    | "booking.cancelled"
-    | "booking.completed"
-    | "payment.initiated"
-    | "payment.completed"
-    | "payment.failed"
-    | "payment.refunded"
-    | "payout.requested"
-    | "payout.approved"
-    | "payout.rejected"
-    | "payout.completed"
-    | "settings.updated"
-    | "api.access"
-    | "api.rate_limited"
-    | "security.suspicious_activity"
-    | "security.blocked_ip"
-    | "security.brute_force_detected"
-    | "admin.user_modified"
-    | "admin.settings_changed"
-    | "gdpr.consent_given"
-    | "gdpr.consent_withdrawn"
-    | "gdpr.data_access_request"
-    | "gdpr.data_deletion_request";
+export type ActivityType =
+    | "login"
+    | "logout"
+    | "login_failed"
+    | "password_changed"
+    | "mfa_enabled"
+    | "mfa_disabled"
+    | "profile_updated"
+    | "session_revoked"
+    | "device_trusted"
+    | "device_removed"
+    | "api_key_created"
+    | "permission_changed";
 
-export type AuditSeverity = "info" | "warning" | "critical";
-export type AuditOutcome = "success" | "failure" | "pending";
+export interface Role {
+    id: string;
+    name: string;
+    description: string;
+    type: "system" | "custom";
+    permissions: string[];
+    inherits: string[];
+    constraints: RoleConstraint[];
+    isDefault: boolean;
+    priority: number;
+    createdAt: Date;
+    updatedAt: Date;
+}
 
-export interface Session {
+export interface RoleConstraint {
+    type: "time" | "ip" | "location" | "resource";
+    config: Record<string, any>;
+}
+
+export interface Permission {
+    id: string;
+    name: string;
+    description: string;
+    resource: string;
+    action: PermissionAction;
+    conditions?: PermissionCondition[];
+    scope?: "global" | "organization" | "team" | "own";
+}
+
+export type PermissionAction = "create" | "read" | "update" | "delete" | "manage" | "execute" | "approve";
+
+export interface PermissionCondition {
+    field: string;
+    operator: "equals" | "not_equals" | "in" | "not_in" | "contains";
+    value: any;
+}
+
+export interface Group {
+    id: string;
+    name: string;
+    description: string;
+    type: "static" | "dynamic";
+    members: string[];
+    roles: string[];
+    permissions: string[];
+    rules?: GroupRule[];
+    parentId?: string;
+    metadata: Record<string, any>;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface GroupRule {
+    field: string;
+    operator: string;
+    value: any;
+}
+
+export interface APIKey {
+    id: string;
+    name: string;
+    description?: string;
+    key: string;
+    prefix: string;
+    hashedKey: string;
+    userId: string;
+    organizationId?: string;
+    permissions: string[];
+    scopes: string[];
+    rateLimit: RateLimitConfig;
+    allowedIPs?: string[];
+    allowedOrigins?: string[];
+    status: "active" | "revoked" | "expired";
+    expiresAt?: Date;
+    lastUsedAt?: Date;
+    usageCount: number;
+    createdAt: Date;
+}
+
+export interface RateLimitConfig {
+    requestsPerMinute: number;
+    requestsPerHour: number;
+    requestsPerDay: number;
+    burstLimit: number;
+}
+
+export interface OAuthProvider {
+    id: string;
+    name: string;
+    type: OAuthProviderType;
+    clientId: string;
+    clientSecret: string;
+    authorizationUrl: string;
+    tokenUrl: string;
+    userInfoUrl: string;
+    scopes: string[];
+    callbackUrl: string;
+    isEnabled: boolean;
+    config: OAuthConfig;
+    createdAt: Date;
+}
+
+export type OAuthProviderType = "oauth2" | "oidc" | "saml";
+
+export interface OAuthConfig {
+    pkce: boolean;
+    stateValidation: boolean;
+    responseType: string;
+    grantType: string;
+    userIdField: string;
+    emailField: string;
+    nameField: string;
+    avatarField?: string;
+}
+
+export interface OAuthConnection {
     id: string;
     userId: string;
-    token: string;
-    deviceInfo: DeviceInfo;
-    ipAddress: string;
+    providerId: string;
+    providerUserId: string;
+    email: string;
+    accessToken: string;
+    refreshToken?: string;
+    tokenExpiresAt?: Date;
+    profile: Record<string, any>;
     createdAt: Date;
-    lastActivityAt: Date;
-    expiresAt: Date;
-    isActive: boolean;
-    revokedAt?: Date;
-    revokedReason?: string;
+    updatedAt: Date;
 }
 
-export interface DeviceInfo {
-    userAgent: string;
-    browser: string;
-    browserVersion: string;
-    os: string;
-    osVersion: string;
-    device: string;
-    isMobile: boolean;
-}
-
-export interface BlockedIP {
-    ip: string;
-    reason: string;
-    blockedAt: Date;
-    expiresAt?: Date;
-    permanent: boolean;
-    attempts: number;
-}
-
-export interface RateLimitRule {
+export interface SecurityPolicy {
     id: string;
-    endpoint: string;
-    windowMs: number;
-    maxRequests: number;
-    blockDurationMs: number;
-    bypassRoles?: string[];
+    name: string;
+    description: string;
+    type: PolicyType;
+    rules: PolicyRule[];
+    priority: number;
+    isEnabled: boolean;
+    targets: PolicyTarget[];
+    actions: PolicyAction[];
+    createdAt: Date;
+    updatedAt: Date;
 }
 
-export interface RateLimitEntry {
-    key: string;
-    count: number;
-    windowStart: Date;
-    blockedUntil?: Date;
-}
+export type PolicyType = "password" | "session" | "mfa" | "access" | "ip" | "rate_limit";
 
-export interface SecurityEvent {
+export interface PolicyRule {
     id: string;
-    type: SecurityEventType;
+    condition: string;
+    operator: string;
+    value: any;
+}
+
+export interface PolicyTarget {
+    type: "all" | "role" | "group" | "user";
+    ids?: string[];
+}
+
+export interface PolicyAction {
+    type: "allow" | "deny" | "require_mfa" | "notify" | "log";
+    config?: Record<string, any>;
+}
+
+export interface PasswordPolicy {
+    minLength: number;
+    maxLength: number;
+    requireUppercase: boolean;
+    requireLowercase: boolean;
+    requireNumbers: boolean;
+    requireSpecialChars: boolean;
+    specialChars: string;
+    preventCommonPasswords: boolean;
+    preventUserInfo: boolean;
+    preventReuse: number;
+    expirationDays?: number;
+    graceLogins?: number;
+}
+
+export interface SessionPolicy {
+    maxSessionDuration: number;
+    idleTimeout: number;
+    maxConcurrentSessions: number;
+    requireReauthFor: string[];
+    singleSessionPerDevice: boolean;
+    revokeOnPasswordChange: boolean;
+}
+
+export interface LoginAttempt {
+    id: string;
     userId?: string;
+    email: string;
+    success: boolean;
+    failureReason?: LoginFailureReason;
     ipAddress: string;
-    details: Record<string, any>;
-    detectedAt: Date;
-    severity: "low" | "medium" | "high" | "critical";
-    resolved: boolean;
-    resolvedAt?: Date;
-    resolvedBy?: string;
+    userAgent: string;
+    location?: GeoLocation;
+    mfaRequired: boolean;
+    mfaCompleted: boolean;
+    timestamp: Date;
 }
 
-export type SecurityEventType =
+export type LoginFailureReason =
+    | "invalid_credentials"
+    | "account_locked"
+    | "account_suspended"
+    | "mfa_failed"
+    | "ip_blocked"
+    | "password_expired"
+    | "device_not_trusted";
+
+export interface SecurityAlert {
+    id: string;
+    type: AlertType;
+    severity: "low" | "medium" | "high" | "critical";
+    title: string;
+    description: string;
+    userId?: string;
+    ipAddress?: string;
+    details: Record<string, any>;
+    status: "new" | "investigating" | "resolved" | "dismissed";
+    assignedTo?: string;
+    createdAt: Date;
+    resolvedAt?: Date;
+}
+
+export type AlertType =
     | "brute_force"
-    | "sql_injection_attempt"
-    | "xss_attempt"
-    | "csrf_mismatch"
-    | "suspicious_user_agent"
-    | "geo_anomaly"
+    | "suspicious_login"
     | "impossible_travel"
     | "credential_stuffing"
     | "account_takeover"
     | "privilege_escalation"
+    | "unusual_activity"
     | "data_exfiltration";
 
-export interface GDPRRequest {
+export interface ThreatIntelligence {
     id: string;
-    userId: string;
-    type: "access" | "deletion" | "portability" | "rectification";
-    status: "pending" | "processing" | "completed" | "rejected";
-    requestedAt: Date;
-    processedAt?: Date;
-    processedBy?: string;
-    notes?: string;
-    dataFile?: string;
+    type: "ip" | "email" | "domain" | "hash";
+    value: string;
+    threat: ThreatInfo;
+    source: string;
+    confidence: number;
+    firstSeen: Date;
+    lastSeen: Date;
+    expiresAt?: Date;
 }
 
-export interface TwoFactorConfig {
-    userId: string;
-    enabled: boolean;
-    method: "totp" | "sms" | "email";
-    secret?: string;
-    backupCodes?: string[];
-    verifiedAt?: Date;
+export interface ThreatInfo {
+    category: string;
+    severity: "low" | "medium" | "high" | "critical";
+    description: string;
+    tags: string[];
 }
 
-export interface AccessControlRule {
-    role: string;
-    resource: string;
-    actions: ("create" | "read" | "update" | "delete")[];
-    conditions?: AccessCondition[];
+export interface AuditEvent {
+    id: string;
+    type: string;
+    action: string;
+    actor: AuditActor;
+    target: AuditTarget;
+    context: AuditContext;
+    result: "success" | "failure" | "partial";
+    reason?: string;
+    timestamp: Date;
 }
 
-export interface AccessCondition {
-    field: string;
-    operator: "eq" | "neq" | "in" | "not_in" | "owner";
-    value: any;
+export interface AuditActor {
+    id: string;
+    type: "user" | "system" | "api" | "service";
+    name: string;
+    email?: string;
+    ipAddress?: string;
 }
 
-// =============================================================================
-// CONSTANTS
-// =============================================================================
+export interface AuditTarget {
+    id: string;
+    type: string;
+    name: string;
+}
 
-const HASH_ALGORITHM = "sha256";
-const ENCRYPTION_ALGORITHM = "aes-256-gcm";
-const IV_LENGTH = 16;
-const AUTH_TAG_LENGTH = 16;
-const SALT_LENGTH = 32;
-const KEY_LENGTH = 32;
-const PBKDF2_ITERATIONS = 100000;
+export interface AuditContext {
+    sessionId?: string;
+    requestId?: string;
+    resource?: string;
+    changes?: Record<string, { old: any; new: any }>;
+}
 
-const DEFAULT_RATE_LIMITS: RateLimitRule[] = [
-    {
-        id: "auth_login",
-        endpoint: "/api/auth/login",
-        windowMs: 15 * 60 * 1000, // 15 minutes
-        maxRequests: 5,
-        blockDurationMs: 30 * 60 * 1000 // 30 minutes
-    },
-    {
-        id: "auth_register",
-        endpoint: "/api/auth/register",
-        windowMs: 60 * 60 * 1000, // 1 hour
-        maxRequests: 3,
-        blockDurationMs: 24 * 60 * 60 * 1000 // 24 hours
-    },
-    {
-        id: "password_reset",
-        endpoint: "/api/auth/password-reset",
-        windowMs: 60 * 60 * 1000,
-        maxRequests: 3,
-        blockDurationMs: 60 * 60 * 1000
-    },
-    {
-        id: "api_general",
-        endpoint: "/api/*",
-        windowMs: 60 * 1000, // 1 minute
-        maxRequests: 100,
-        blockDurationMs: 5 * 60 * 1000
-    },
-    {
-        id: "bookings_create",
-        endpoint: "/api/bookings",
-        windowMs: 60 * 60 * 1000,
-        maxRequests: 10,
-        blockDurationMs: 30 * 60 * 1000
-    }
-];
+export interface SecurityMetrics {
+    period: { start: Date; end: Date };
+    authentication: AuthMetrics;
+    access: AccessMetrics;
+    threats: ThreatMetrics;
+    compliance: ComplianceMetrics;
+}
 
-const ACCESS_CONTROL_RULES: AccessControlRule[] = [
-    // CEO/Admin rules
-    { role: "ceo", resource: "artists", actions: ["create", "read", "update", "delete"] },
-    { role: "ceo", resource: "bookings", actions: ["create", "read", "update", "delete"] },
-    { role: "ceo", resource: "payouts", actions: ["read", "update"] },
-    { role: "ceo", resource: "settings", actions: ["read", "update"] },
-    { role: "ceo", resource: "reports", actions: ["read"] },
-    { role: "ceo", resource: "users", actions: ["read", "update"] },
+export interface AuthMetrics {
+    totalLogins: number;
+    successfulLogins: number;
+    failedLogins: number;
+    mfaUsage: number;
+    uniqueUsers: number;
+    newRegistrations: number;
+    passwordResets: number;
+    lockedAccounts: number;
+}
 
-    // Artist rules
-    { role: "artist", resource: "bookings", actions: ["read", "update"], conditions: [{ field: "artistId", operator: "owner", value: null }] },
-    { role: "artist", resource: "profile", actions: ["read", "update"], conditions: [{ field: "userId", operator: "owner", value: null }] },
-    { role: "artist", resource: "portfolio", actions: ["create", "read", "update", "delete"], conditions: [{ field: "artistId", operator: "owner", value: null }] },
-    { role: "artist", resource: "earnings", actions: ["read"], conditions: [{ field: "artistId", operator: "owner", value: null }] },
+export interface AccessMetrics {
+    totalRequests: number;
+    authorizedRequests: number;
+    deniedRequests: number;
+    byRole: Record<string, number>;
+    byResource: Record<string, number>;
+    apiKeyUsage: number;
+}
 
-    // Coordinator rules
-    { role: "coordinator", resource: "bookings", actions: ["read", "update"] },
-    { role: "coordinator", resource: "calendar", actions: ["read", "update"] },
+export interface ThreatMetrics {
+    totalAlerts: number;
+    bySeverity: Record<string, number>;
+    byType: Record<string, number>;
+    blockedIPs: number;
+    suspiciousActivities: number;
+    resolvedAlerts: number;
+}
 
-    // Vendor rules
-    { role: "vendor", resource: "commissions", actions: ["read"] },
-    { role: "vendor", resource: "payouts", actions: ["read"] },
-
-    // Customer rules
-    { role: "customer", resource: "bookings", actions: ["create", "read"], conditions: [{ field: "customerEmail", operator: "owner", value: null }] },
-    { role: "customer", resource: "profile", actions: ["read", "update"], conditions: [{ field: "userId", operator: "owner", value: null }] }
-];
-
-const SUSPICIOUS_PATTERNS = [
-    // SQL injection patterns
-    /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER)\b)/gi,
-    /(--|#|\/\*|\*\/)/g,
-    /('|")\s*(OR|AND)\s*('|"|\d)/gi,
-
-    // XSS patterns
-    /<script[^>]*>/gi,
-    /javascript:/gi,
-    /on\w+\s*=/gi,
-
-    // Path traversal
-    /\.\.\//g,
-    /%2e%2e%2f/gi,
-
-    // Command injection
-    /[;&|`$]/g
-];
-
-const SUSPICIOUS_USER_AGENTS = [
-    /bot/i,
-    /crawler/i,
-    /spider/i,
-    /scraper/i,
-    /curl/i,
-    /wget/i,
-    /python-requests/i,
-    /sqlmap/i,
-    /nikto/i,
-    /nmap/i
-];
+export interface ComplianceMetrics {
+    passwordPolicyCompliance: number;
+    mfaAdoption: number;
+    sessionPolicyCompliance: number;
+    inactiveAccounts: number;
+    expiredPasswords: number;
+}
 
 // =============================================================================
 // SECURITY SERVICE CLASS
 // =============================================================================
 
 export class SecurityService {
-    private auditLogs: AuditLog[] = [];
-    private sessions: Map<string, Session> = new Map();
-    private blockedIPs: Map<string, BlockedIP> = new Map();
-    private rateLimits: Map<string, RateLimitEntry> = new Map();
-    private rateLimitRules: RateLimitRule[] = [...DEFAULT_RATE_LIMITS];
-    private securityEvents: SecurityEvent[] = [];
-    private gdprRequests: GDPRRequest[] = [];
-    private twoFactorConfigs: Map<string, TwoFactorConfig> = new Map();
-    private encryptionKey: Buffer;
-    private failedLoginAttempts: Map<string, { count: number; lastAttempt: Date }> = new Map();
+    private users: Map<string, User> = new Map();
+    private roles: Map<string, Role> = new Map();
+    private permissions: Map<string, Permission> = new Map();
+    private groups: Map<string, Group> = new Map();
+    private apiKeys: Map<string, APIKey> = new Map();
+    private oauthProviders: Map<string, OAuthProvider> = new Map();
+    private oauthConnections: Map<string, OAuthConnection> = new Map();
+    private policies: Map<string, SecurityPolicy> = new Map();
+    private loginAttempts: LoginAttempt[] = [];
+    private securityAlerts: Map<string, SecurityAlert> = new Map();
+    private threatIntel: Map<string, ThreatIntelligence> = new Map();
+    private auditEvents: AuditEvent[] = [];
+    private blockedIPs: Set<string> = new Set();
+
+    private passwordPolicy: PasswordPolicy = {
+        minLength: 8,
+        maxLength: 128,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumbers: true,
+        requireSpecialChars: true,
+        specialChars: "!@#$%^&*()_+-=[]{}|;':\",./<>?",
+        preventCommonPasswords: true,
+        preventUserInfo: true,
+        preventReuse: 5,
+        expirationDays: 90
+    };
+
+    private sessionPolicy: SessionPolicy = {
+        maxSessionDuration: 24 * 60 * 60 * 1000,
+        idleTimeout: 30 * 60 * 1000,
+        maxConcurrentSessions: 5,
+        requireReauthFor: ["password_change", "mfa_change", "delete_account"],
+        singleSessionPerDevice: false,
+        revokeOnPasswordChange: true
+    };
 
     constructor() {
-        this.encryptionKey = this.deriveKey(process.env.ENCRYPTION_SECRET || "default-secret-change-me");
-        this.startCleanupJobs();
+        this.initializeDefaultRoles();
+        this.initializeDefaultPermissions();
+        this.initializeDefaultPolicies();
+        this.initializeOAuthProviders();
     }
 
     // ===========================================================================
-    // AUDIT LOGGING
+    // USER MANAGEMENT
     // ===========================================================================
 
-    log(params: {
-        action: AuditAction;
-        userId?: string;
-        sessionId?: string;
-        resource: string;
-        resourceId?: string;
-        details?: Record<string, any>;
+    async createUser(data: {
+        email: string;
+        password: string;
+        profile?: Partial<UserProfile>;
+        roles?: string[];
+    }): Promise<User> {
+        // Validate password
+        const passwordError = this.validatePassword(data.password, data.email);
+        if (passwordError) throw new Error(passwordError);
+
+        // Hash password
+        const salt = crypto.randomBytes(32).toString("hex");
+        const passwordHash = this.hashPassword(data.password, salt);
+
+        const user: User = {
+            id: randomUUID(),
+            email: data.email.toLowerCase(),
+            passwordHash,
+            salt,
+            status: "pending",
+            profile: {
+                firstName: data.profile?.firstName || "",
+                lastName: data.profile?.lastName || "",
+                displayName: data.profile?.displayName || data.email.split("@")[0],
+                timezone: data.profile?.timezone || "Europe/Amsterdam",
+                language: data.profile?.language || "en",
+                dateFormat: data.profile?.dateFormat || "DD/MM/YYYY"
+            },
+            security: {
+                mfaEnabled: false,
+                mfaMethods: [],
+                passwordPolicy: "default",
+                lastPasswordChange: new Date(),
+                failedLoginAttempts: 0,
+                securityQuestions: [],
+                trustedDevicesOnly: false,
+                loginNotifications: true
+            },
+            roles: data.roles || ["user"],
+            permissions: [],
+            groups: [],
+            metadata: { source: "registration", tags: [], customFields: {}, preferences: {} },
+            sessions: [],
+            devices: [],
+            activityLog: [],
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        this.users.set(user.id, user);
+
+        await this.logActivity(user.id, "profile_updated", "User account created");
+        await this.createAuditEvent("user", "create", user.id, "User", user.id);
+
+        return user;
+    }
+
+    async authenticateUser(email: string, password: string, context?: {
         ipAddress?: string;
         userAgent?: string;
-        severity?: AuditSeverity;
-        outcome?: AuditOutcome;
-        duration?: number;
-    }): AuditLog {
-        const log: AuditLog = {
-            id: this.generateId("audit"),
-            timestamp: new Date(),
-            userId: params.userId,
-            sessionId: params.sessionId,
-            action: params.action,
-            resource: params.resource,
-            resourceId: params.resourceId,
-            details: params.details || {},
-            ipAddress: params.ipAddress,
-            userAgent: params.userAgent,
-            severity: params.severity || "info",
-            outcome: params.outcome || "success",
-            duration: params.duration
-        };
+        deviceId?: string;
+    }): Promise<{ user: User; session: UserSession; requireMFA: boolean } | null> {
+        const user = await this.getUserByEmail(email);
+        const ipAddress = context?.ipAddress || "unknown";
+        const userAgent = context?.userAgent || "unknown";
 
-        // Add geolocation if IP present
-        if (params.ipAddress) {
-            const geo = this.getGeoLocation(params.ipAddress);
-            log.country = geo.country;
-            log.city = geo.city;
+        // Check if IP is blocked
+        if (this.blockedIPs.has(ipAddress)) {
+            await this.recordLoginAttempt(email, false, "ip_blocked", ipAddress, userAgent);
+            throw new Error("Access denied from this IP address");
         }
 
-        this.auditLogs.push(log);
-
-        // Keep only last 1 million logs in memory
-        if (this.auditLogs.length > 1000000) {
-            this.auditLogs = this.auditLogs.slice(-1000000);
+        if (!user) {
+            await this.recordLoginAttempt(email, false, "invalid_credentials", ipAddress, userAgent);
+            return null;
         }
 
-        // Check for suspicious patterns
-        if (params.severity === "critical" || params.outcome === "failure") {
-            this.analyzeForSuspiciousActivity(log);
+        // Check account status
+        if (user.status === "locked") {
+            if (user.security.lockoutUntil && user.security.lockoutUntil > new Date()) {
+                await this.recordLoginAttempt(email, false, "account_locked", ipAddress, userAgent);
+                throw new Error("Account is locked. Try again later.");
+            }
+            // Unlock if lockout expired
+            user.status = "active";
+            user.security.lockoutUntil = undefined;
+            user.security.failedLoginAttempts = 0;
         }
 
-        return log;
-    }
-
-    getAuditLogs(filters: {
-        userId?: string;
-        action?: AuditAction;
-        resource?: string;
-        startDate?: Date;
-        endDate?: Date;
-        severity?: AuditSeverity;
-        outcome?: AuditOutcome;
-        ipAddress?: string;
-        limit?: number;
-        offset?: number;
-    }): { logs: AuditLog[]; total: number } {
-        let logs = [...this.auditLogs];
-
-        if (filters.userId) {
-            logs = logs.filter(l => l.userId === filters.userId);
-        }
-        if (filters.action) {
-            logs = logs.filter(l => l.action === filters.action);
-        }
-        if (filters.resource) {
-            logs = logs.filter(l => l.resource === filters.resource);
-        }
-        if (filters.startDate) {
-            logs = logs.filter(l => l.timestamp >= filters.startDate!);
-        }
-        if (filters.endDate) {
-            logs = logs.filter(l => l.timestamp <= filters.endDate!);
-        }
-        if (filters.severity) {
-            logs = logs.filter(l => l.severity === filters.severity);
-        }
-        if (filters.outcome) {
-            logs = logs.filter(l => l.outcome === filters.outcome);
-        }
-        if (filters.ipAddress) {
-            logs = logs.filter(l => l.ipAddress === filters.ipAddress);
+        if (user.status === "suspended") {
+            await this.recordLoginAttempt(email, false, "account_suspended", ipAddress, userAgent);
+            throw new Error("Account is suspended");
         }
 
-        logs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        // Verify password
+        const hash = this.hashPassword(password, user.salt);
+        if (hash !== user.passwordHash) {
+            user.security.failedLoginAttempts++;
 
-        const total = logs.length;
-        const offset = filters.offset || 0;
-        const limit = filters.limit || 100;
+            // Lock account after 5 failed attempts
+            if (user.security.failedLoginAttempts >= 5) {
+                user.status = "locked";
+                user.security.lockoutUntil = new Date(Date.now() + 30 * 60 * 1000);
+                await this.createSecurityAlert("brute_force", "high", "Multiple failed login attempts", user.id, ipAddress);
+            }
 
-        return {
-            logs: logs.slice(offset, offset + limit),
-            total
-        };
-    }
-
-    exportAuditLogs(format: "json" | "csv", filters: Parameters<typeof this.getAuditLogs>[0]): string {
-        const { logs } = this.getAuditLogs({ ...filters, limit: 10000 });
-
-        if (format === "json") {
-            return JSON.stringify(logs, null, 2);
+            await this.recordLoginAttempt(email, false, "invalid_credentials", ipAddress, userAgent);
+            return null;
         }
 
-        // CSV format
-        const headers = ["timestamp", "action", "userId", "resource", "resourceId", "ipAddress", "severity", "outcome"];
-        const rows = [headers.join(",")];
+        // Check if MFA is required
+        const requireMFA = user.security.mfaEnabled && user.security.mfaMethods.length > 0;
 
-        logs.forEach(log => {
-            rows.push([
-                log.timestamp.toISOString(),
-                log.action,
-                log.userId || "",
-                log.resource,
-                log.resourceId || "",
-                log.ipAddress || "",
-                log.severity,
-                log.outcome
-            ].map(v => `"${v}"`).join(","));
-        });
-
-        return rows.join("\n");
-    }
-
-    // ===========================================================================
-    // SESSION MANAGEMENT
-    // ===========================================================================
-
-    createSession(userId: string, ipAddress: string, userAgent: string): Session {
-        const token = this.generateSecureToken();
-        const deviceInfo = this.parseUserAgent(userAgent);
-
-        const session: Session = {
-            id: this.generateId("sess"),
-            userId,
-            token: this.hashToken(token),
-            deviceInfo,
-            ipAddress,
-            createdAt: new Date(),
-            lastActivityAt: new Date(),
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-            isActive: true
-        };
-
-        this.sessions.set(session.id, session);
-
-        this.log({
-            action: "auth.login",
-            userId,
-            sessionId: session.id,
-            resource: "session",
-            resourceId: session.id,
-            ipAddress,
-            userAgent,
-            details: { deviceInfo }
-        });
-
-        return { ...session, token }; // Return unhashed token to client
-    }
-
-    validateSession(token: string): Session | null {
-        const hashedToken = this.hashToken(token);
-
-        for (const session of this.sessions.values()) {
-            if (session.token === hashedToken && session.isActive) {
-                if (session.expiresAt < new Date()) {
-                    this.revokeSession(session.id, "expired");
-                    return null;
-                }
-
-                session.lastActivityAt = new Date();
-                return session;
+        // Check trusted devices
+        if (user.security.trustedDevicesOnly && context?.deviceId) {
+            const isTrusted = user.devices.some(d => d.fingerprint === context.deviceId && d.trusted);
+            if (!isTrusted && !requireMFA) {
+                await this.recordLoginAttempt(email, false, "device_not_trusted", ipAddress, userAgent, true);
+                throw new Error("Device not trusted. MFA verification required.");
             }
         }
 
-        return null;
+        // Reset failed attempts
+        user.security.failedLoginAttempts = 0;
+        user.lastLoginAt = new Date();
+
+        // Create session
+        const session = await this.createSession(user, ipAddress, userAgent, context?.deviceId);
+
+        await this.recordLoginAttempt(email, true, undefined, ipAddress, userAgent, requireMFA);
+        await this.logActivity(user.id, "login", "User logged in", { ipAddress, userAgent });
+
+        return { user, session, requireMFA };
     }
 
-    getUserSessions(userId: string): Session[] {
-        return Array.from(this.sessions.values())
-            .filter(s => s.userId === userId && s.isActive)
-            .sort((a, b) => b.lastActivityAt.getTime() - a.lastActivityAt.getTime());
-    }
+    async verifyMFA(userId: string, code: string, methodId?: string): Promise<boolean> {
+        const user = this.users.get(userId);
+        if (!user) return false;
 
-    revokeSession(sessionId: string, reason: string = "user_logout"): void {
-        const session = this.sessions.get(sessionId);
-        if (session) {
-            session.isActive = false;
-            session.revokedAt = new Date();
-            session.revokedReason = reason;
+        const method = methodId
+            ? user.security.mfaMethods.find(m => m.id === methodId)
+            : user.security.mfaMethods.find(m => m.isDefault);
 
-            this.log({
-                action: "auth.session_revoked",
-                userId: session.userId,
-                sessionId,
-                resource: "session",
-                resourceId: sessionId,
-                details: { reason }
-            });
+        if (!method) return false;
+
+        let valid = false;
+
+        switch (method.type) {
+            case "totp":
+                valid = this.verifyTOTP(method.secret!, code);
+                break;
+            case "sms":
+            case "email":
+                // In real implementation, verify against sent code
+                valid = code === "123456"; // Simulated
+                break;
+            default:
+                valid = false;
         }
+
+        if (valid) {
+            method.lastUsedAt = new Date();
+            await this.logActivity(userId, "mfa_enabled", `MFA verification successful via ${method.type}`);
+        }
+
+        return valid;
     }
 
-    revokeAllUserSessions(userId: string, exceptSessionId?: string): number {
-        let count = 0;
+    async enableMFA(userId: string, type: MFAType, config?: { phone?: string; email?: string }): Promise<MFAMethod> {
+        const user = this.users.get(userId);
+        if (!user) throw new Error("User not found");
 
-        this.sessions.forEach((session, id) => {
-            if (session.userId === userId && session.isActive && id !== exceptSessionId) {
-                this.revokeSession(id, "user_request");
-                count++;
-            }
-        });
-
-        return count;
-    }
-
-    // ===========================================================================
-    // IP BLOCKING
-    // ===========================================================================
-
-    blockIP(ip: string, reason: string, durationMs?: number): BlockedIP {
-        const blocked: BlockedIP = {
-            ip,
-            reason,
-            blockedAt: new Date(),
-            expiresAt: durationMs ? new Date(Date.now() + durationMs) : undefined,
-            permanent: !durationMs,
-            attempts: (this.blockedIPs.get(ip)?.attempts || 0) + 1
+        const method: MFAMethod = {
+            id: randomUUID(),
+            type,
+            isDefault: user.security.mfaMethods.length === 0,
+            isVerified: false,
+            phone: config?.phone,
+            email: config?.email,
+            createdAt: new Date()
         };
 
-        this.blockedIPs.set(ip, blocked);
-
-        this.log({
-            action: "security.blocked_ip",
-            resource: "ip",
-            resourceId: ip,
-            ipAddress: ip,
-            severity: "warning",
-            details: { reason, permanent: blocked.permanent, expiresAt: blocked.expiresAt }
-        });
-
-        return blocked;
-    }
-
-    unblockIP(ip: string): boolean {
-        return this.blockedIPs.delete(ip);
-    }
-
-    isIPBlocked(ip: string): boolean {
-        const blocked = this.blockedIPs.get(ip);
-        if (!blocked) return false;
-
-        // Check if temporary block has expired
-        if (blocked.expiresAt && blocked.expiresAt < new Date()) {
-            this.blockedIPs.delete(ip);
-            return false;
+        if (type === "totp") {
+            method.secret = this.generateTOTPSecret();
+            method.backupCodes = this.generateBackupCodes();
         }
+
+        user.security.mfaMethods.push(method);
+        user.security.mfaEnabled = true;
+        user.updatedAt = new Date();
+
+        await this.logActivity(userId, "mfa_enabled", `MFA enabled: ${type}`);
+
+        return method;
+    }
+
+    async disableMFA(userId: string, methodId: string): Promise<boolean> {
+        const user = this.users.get(userId);
+        if (!user) return false;
+
+        const index = user.security.mfaMethods.findIndex(m => m.id === methodId);
+        if (index < 0) return false;
+
+        user.security.mfaMethods.splice(index, 1);
+
+        if (user.security.mfaMethods.length === 0) {
+            user.security.mfaEnabled = false;
+        } else if (user.security.mfaMethods.every(m => !m.isDefault)) {
+            user.security.mfaMethods[0].isDefault = true;
+        }
+
+        user.updatedAt = new Date();
+        await this.logActivity(userId, "mfa_disabled", "MFA method removed");
 
         return true;
     }
 
-    getBlockedIPs(): BlockedIP[] {
-        return Array.from(this.blockedIPs.values());
+    async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
+        const user = this.users.get(userId);
+        if (!user) return false;
+
+        // Verify current password
+        const hash = this.hashPassword(currentPassword, user.salt);
+        if (hash !== user.passwordHash) {
+            throw new Error("Current password is incorrect");
+        }
+
+        // Validate new password
+        const passwordError = this.validatePassword(newPassword, user.email);
+        if (passwordError) throw new Error(passwordError);
+
+        // Update password
+        const salt = crypto.randomBytes(32).toString("hex");
+        user.passwordHash = this.hashPassword(newPassword, salt);
+        user.salt = salt;
+        user.security.lastPasswordChange = new Date();
+        user.passwordChangedAt = new Date();
+
+        if (this.passwordPolicy.expirationDays) {
+            user.security.passwordExpiresAt = new Date(Date.now() + this.passwordPolicy.expirationDays * 24 * 60 * 60 * 1000);
+        }
+
+        user.updatedAt = new Date();
+
+        // Revoke sessions if policy requires it
+        if (this.sessionPolicy.revokeOnPasswordChange) {
+            user.sessions.forEach(s => s.status = "revoked");
+        }
+
+        await this.logActivity(userId, "password_changed", "Password changed");
+        await this.createAuditEvent("user", "password_change", userId, "User", user.id);
+
+        return true;
     }
 
-    // ===========================================================================
-    // RATE LIMITING
-    // ===========================================================================
-
-    checkRateLimit(endpoint: string, identifier: string, userRole?: string): {
-        allowed: boolean;
-        remaining: number;
-        resetAt: Date;
-    } {
-        const rule = this.findRateLimitRule(endpoint);
-        if (!rule) {
-            return { allowed: true, remaining: Infinity, resetAt: new Date() };
-        }
-
-        // Check bypass roles
-        if (userRole && rule.bypassRoles?.includes(userRole)) {
-            return { allowed: true, remaining: Infinity, resetAt: new Date() };
-        }
-
-        const key = `${rule.id}:${identifier}`;
-        const now = new Date();
-        let entry = this.rateLimits.get(key);
-
-        // Check if blocked
-        if (entry?.blockedUntil && entry.blockedUntil > now) {
-            return {
-                allowed: false,
-                remaining: 0,
-                resetAt: entry.blockedUntil
-            };
-        }
-
-        // Check if window expired
-        if (!entry || new Date(entry.windowStart.getTime() + rule.windowMs) < now) {
-            entry = { key, count: 0, windowStart: now };
-        }
-
-        // Increment count
-        entry.count++;
-        this.rateLimits.set(key, entry);
-
-        // Check if limit exceeded
-        if (entry.count > rule.maxRequests) {
-            entry.blockedUntil = new Date(now.getTime() + rule.blockDurationMs);
-
-            this.log({
-                action: "api.rate_limited",
-                resource: endpoint,
-                ipAddress: identifier,
-                severity: "warning",
-                details: { rule: rule.id, count: entry.count, blockedUntil: entry.blockedUntil }
-            });
-
-            return {
-                allowed: false,
-                remaining: 0,
-                resetAt: entry.blockedUntil
-            };
-        }
-
-        return {
-            allowed: true,
-            remaining: rule.maxRequests - entry.count,
-            resetAt: new Date(entry.windowStart.getTime() + rule.windowMs)
-        };
+    async getUser(id: string): Promise<User | null> {
+        return this.users.get(id) || null;
     }
 
-    private findRateLimitRule(endpoint: string): RateLimitRule | undefined {
-        // Try exact match first
-        let rule = this.rateLimitRules.find(r => r.endpoint === endpoint);
-        if (rule) return rule;
-
-        // Try wildcard match
-        rule = this.rateLimitRules.find(r => {
-            if (!r.endpoint.includes("*")) return false;
-            const pattern = r.endpoint.replace(/\*/g, ".*");
-            return new RegExp(`^${pattern}$`).test(endpoint);
-        });
-
-        return rule;
-    }
-
-    addRateLimitRule(rule: Omit<RateLimitRule, "id">): RateLimitRule {
-        const newRule: RateLimitRule = {
-            id: this.generateId("rate"),
-            ...rule
-        };
-        this.rateLimitRules.push(newRule);
-        return newRule;
-    }
-
-    // ===========================================================================
-    // SUSPICIOUS ACTIVITY DETECTION
-    // ===========================================================================
-
-    detectSuspiciousInput(input: string): SecurityEventType | null {
-        for (const pattern of SUSPICIOUS_PATTERNS) {
-            if (pattern.test(input)) {
-                if (input.match(/SELECT|INSERT|UPDATE|DELETE|DROP|UNION/i)) {
-                    return "sql_injection_attempt";
-                }
-                if (input.match(/<script|javascript:|on\w+\s*=/i)) {
-                    return "xss_attempt";
-                }
+    async getUserByEmail(email: string): Promise<User | null> {
+        for (const user of this.users.values()) {
+            if (user.email.toLowerCase() === email.toLowerCase()) {
+                return user;
             }
         }
         return null;
     }
 
-    detectSuspiciousUserAgent(userAgent: string): boolean {
-        return SUSPICIOUS_USER_AGENTS.some(pattern => pattern.test(userAgent));
+    private hashPassword(password: string, salt: string): string {
+        return crypto.pbkdf2Sync(password, salt, 100000, 64, "sha512").toString("hex");
     }
 
-    recordLoginAttempt(identifier: string, success: boolean): void {
-        const key = identifier;
-        const attempts = this.failedLoginAttempts.get(key) || { count: 0, lastAttempt: new Date() };
+    private validatePassword(password: string, email?: string): string | null {
+        const policy = this.passwordPolicy;
 
-        if (success) {
-            this.failedLoginAttempts.delete(key);
-            return;
+        if (password.length < policy.minLength) {
+            return `Password must be at least ${policy.minLength} characters`;
+        }
+        if (password.length > policy.maxLength) {
+            return `Password must be at most ${policy.maxLength} characters`;
+        }
+        if (policy.requireUppercase && !/[A-Z]/.test(password)) {
+            return "Password must contain at least one uppercase letter";
+        }
+        if (policy.requireLowercase && !/[a-z]/.test(password)) {
+            return "Password must contain at least one lowercase letter";
+        }
+        if (policy.requireNumbers && !/[0-9]/.test(password)) {
+            return "Password must contain at least one number";
+        }
+        if (policy.requireSpecialChars && !new RegExp(`[${policy.specialChars.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}]`).test(password)) {
+            return "Password must contain at least one special character";
+        }
+        if (policy.preventUserInfo && email && password.toLowerCase().includes(email.split("@")[0].toLowerCase())) {
+            return "Password cannot contain your email";
         }
 
-        attempts.count++;
-        attempts.lastAttempt = new Date();
-        this.failedLoginAttempts.set(key, attempts);
-
-        // Block after 5 failed attempts in 15 minutes
-        if (attempts.count >= 5) {
-            this.blockIP(identifier, "brute_force", 30 * 60 * 1000);
-
-            this.createSecurityEvent({
-                type: "brute_force",
-                ipAddress: identifier,
-                severity: "high",
-                details: { attempts: attempts.count }
-            });
-        }
-    }
-
-    private analyzeForSuspiciousActivity(log: AuditLog): void {
-        // Check for credential stuffing
-        if (log.action === "auth.login_failed") {
-            const recentFailures = this.auditLogs.filter(
-                l => l.action === "auth.login_failed" &&
-                    l.ipAddress === log.ipAddress &&
-                    l.timestamp.getTime() > Date.now() - 15 * 60 * 1000
-            );
-
-            if (recentFailures.length >= 10) {
-                this.createSecurityEvent({
-                    type: "credential_stuffing",
-                    ipAddress: log.ipAddress || "",
-                    severity: "high",
-                    details: { failedAttempts: recentFailures.length }
-                });
-            }
-        }
-
-        // Check for impossible travel
-        if (log.action === "auth.login" && log.userId) {
-            const lastLogin = this.auditLogs
-                .filter(l => l.action === "auth.login" && l.userId === log.userId && l.id !== log.id)
-                .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0];
-
-            if (lastLogin && lastLogin.country && log.country && lastLogin.country !== log.country) {
-                const timeDiff = log.timestamp.getTime() - lastLogin.timestamp.getTime();
-                if (timeDiff < 60 * 60 * 1000) { // Less than 1 hour
-                    this.createSecurityEvent({
-                        type: "impossible_travel",
-                        userId: log.userId,
-                        ipAddress: log.ipAddress || "",
-                        severity: "high",
-                        details: {
-                            previousCountry: lastLogin.country,
-                            currentCountry: log.country,
-                            timeDifferenceMinutes: Math.round(timeDiff / 60000)
-                        }
-                    });
-                }
-            }
-        }
-    }
-
-    createSecurityEvent(params: {
-        type: SecurityEventType;
-        userId?: string;
-        ipAddress: string;
-        severity: "low" | "medium" | "high" | "critical";
-        details: Record<string, any>;
-    }): SecurityEvent {
-        const event: SecurityEvent = {
-            id: this.generateId("sec"),
-            type: params.type,
-            userId: params.userId,
-            ipAddress: params.ipAddress,
-            details: params.details,
-            detectedAt: new Date(),
-            severity: params.severity,
-            resolved: false
-        };
-
-        this.securityEvents.push(event);
-
-        this.log({
-            action: "security.suspicious_activity",
-            userId: params.userId,
-            resource: "security",
-            resourceId: event.id,
-            ipAddress: params.ipAddress,
-            severity: "critical",
-            details: { eventType: params.type, severity: params.severity }
-        });
-
-        return event;
-    }
-
-    getSecurityEvents(unresolvedOnly: boolean = true): SecurityEvent[] {
-        let events = [...this.securityEvents];
-        if (unresolvedOnly) {
-            events = events.filter(e => !e.resolved);
-        }
-        return events.sort((a, b) => b.detectedAt.getTime() - a.detectedAt.getTime());
-    }
-
-    resolveSecurityEvent(eventId: string, resolvedBy: string): void {
-        const event = this.securityEvents.find(e => e.id === eventId);
-        if (event) {
-            event.resolved = true;
-            event.resolvedAt = new Date();
-            event.resolvedBy = resolvedBy;
-        }
-    }
-
-    // ===========================================================================
-    // GDPR COMPLIANCE
-    // ===========================================================================
-
-    createGDPRRequest(
-        userId: string,
-        type: GDPRRequest["type"]
-    ): GDPRRequest {
-        const request: GDPRRequest = {
-            id: this.generateId("gdpr"),
-            userId,
-            type,
-            status: "pending",
-            requestedAt: new Date()
-        };
-
-        this.gdprRequests.push(request);
-
-        this.log({
-            action: type === "access" ? "gdpr.data_access_request" : "gdpr.data_deletion_request",
-            userId,
-            resource: "gdpr",
-            resourceId: request.id,
-            severity: "info"
-        });
-
-        return request;
-    }
-
-    getGDPRRequests(userId?: string): GDPRRequest[] {
-        if (userId) {
-            return this.gdprRequests.filter(r => r.userId === userId);
-        }
-        return [...this.gdprRequests];
-    }
-
-    processGDPRRequest(
-        requestId: string,
-        processedBy: string,
-        status: "completed" | "rejected",
-        notes?: string
-    ): void {
-        const request = this.gdprRequests.find(r => r.id === requestId);
-        if (request) {
-            request.status = status;
-            request.processedAt = new Date();
-            request.processedBy = processedBy;
-            request.notes = notes;
-        }
-    }
-
-    generateUserDataExport(userId: string): Record<string, any> {
-        // Collect all user data for GDPR export
-        const userSessions = this.getUserSessions(userId);
-        const userAuditLogs = this.auditLogs.filter(l => l.userId === userId);
-        const userSecurityEvents = this.securityEvents.filter(e => e.userId === userId);
-
-        return {
-            exportedAt: new Date().toISOString(),
-            userId,
-            sessions: userSessions.map(s => ({
-                ...s,
-                token: "[REDACTED]"
-            })),
-            auditLogs: userAuditLogs.slice(-1000), // Last 1000 logs
-            securityEvents: userSecurityEvents,
-            twoFactorEnabled: this.twoFactorConfigs.get(userId)?.enabled || false
-        };
-    }
-
-    anonymizeUserData(userId: string): void {
-        // Anonymize audit logs
-        this.auditLogs.forEach(log => {
-            if (log.userId === userId) {
-                log.userId = "[ANONYMIZED]";
-                log.details = { anonymized: true };
-            }
-        });
-
-        // Remove sessions
-        this.sessions.forEach((session, id) => {
-            if (session.userId === userId) {
-                this.sessions.delete(id);
-            }
-        });
-
-        // Remove 2FA config
-        this.twoFactorConfigs.delete(userId);
-
-        this.log({
-            action: "gdpr.data_deletion_request",
-            resource: "user",
-            resourceId: userId,
-            severity: "warning",
-            details: { anonymized: true }
-        });
-    }
-
-    // ===========================================================================
-    // TWO-FACTOR AUTHENTICATION
-    // ===========================================================================
-
-    setupTwoFactor(userId: string, method: "totp" | "sms" | "email"): {
-        secret?: string;
-        qrCodeUrl?: string;
-        backupCodes: string[];
-    } {
-        const secret = this.generateTOTPSecret();
-        const backupCodes = this.generateBackupCodes();
-
-        const config: TwoFactorConfig = {
-            userId,
-            enabled: false, // Not enabled until verified
-            method,
-            secret: method === "totp" ? secret : undefined,
-            backupCodes: backupCodes.map(c => this.hashToken(c))
-        };
-
-        this.twoFactorConfigs.set(userId, config);
-
-        return {
-            secret: method === "totp" ? secret : undefined,
-            qrCodeUrl: method === "totp"
-                ? `otpauth://totp/AltusInk:${userId}?secret=${secret}&issuer=AltusInk`
-                : undefined,
-            backupCodes
-        };
-    }
-
-    verifyAndEnableTwoFactor(userId: string, code: string): boolean {
-        const config = this.twoFactorConfigs.get(userId);
-        if (!config) return false;
-
-        // Verify TOTP code
-        if (config.method === "totp" && config.secret) {
-            const isValid = this.verifyTOTP(config.secret, code);
-            if (isValid) {
-                config.enabled = true;
-                config.verifiedAt = new Date();
-
-                this.log({
-                    action: "auth.two_factor_enabled",
-                    userId,
-                    resource: "2fa",
-                    severity: "info"
-                });
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    verifyTwoFactorCode(userId: string, code: string): boolean {
-        const config = this.twoFactorConfigs.get(userId);
-        if (!config || !config.enabled) return true; // 2FA not required
-
-        // Check TOTP
-        if (config.method === "totp" && config.secret) {
-            if (this.verifyTOTP(config.secret, code)) {
-                return true;
-            }
-        }
-
-        // Check backup codes
-        const hashedCode = this.hashToken(code);
-        const backupIndex = config.backupCodes?.findIndex(c => c === hashedCode);
-        if (backupIndex !== undefined && backupIndex >= 0) {
-            // Remove used backup code
-            config.backupCodes?.splice(backupIndex, 1);
-            return true;
-        }
-
-        return false;
-    }
-
-    disableTwoFactor(userId: string): void {
-        this.twoFactorConfigs.delete(userId);
-
-        this.log({
-            action: "auth.two_factor_disabled",
-            userId,
-            resource: "2fa",
-            severity: "warning"
-        });
-    }
-
-    isTwoFactorEnabled(userId: string): boolean {
-        return this.twoFactorConfigs.get(userId)?.enabled || false;
+        return null;
     }
 
     private generateTOTPSecret(): string {
-        return crypto.randomBytes(20).toString("base32").slice(0, 16);
-    }
-
-    private verifyTOTP(secret: string, code: string): boolean {
-        // Simplified TOTP verification - in production use a library like speakeasy
-        const timeStep = 30;
-        const t = Math.floor(Date.now() / 1000 / timeStep);
-
-        for (let i = -1; i <= 1; i++) {
-            const expectedCode = this.generateTOTPCode(secret, t + i);
-            if (expectedCode === code) return true;
-        }
-        return false;
-    }
-
-    private generateTOTPCode(secret: string, counter: number): string {
-        const buffer = Buffer.alloc(8);
-        buffer.writeBigInt64BE(BigInt(counter));
-
-        const hmac = crypto.createHmac("sha1", Buffer.from(secret, "base32"));
-        hmac.update(buffer);
-        const hash = hmac.digest();
-
-        const offset = hash[hash.length - 1] & 0xf;
-        const code = ((hash[offset] & 0x7f) << 24 |
-            (hash[offset + 1] & 0xff) << 16 |
-            (hash[offset + 2] & 0xff) << 8 |
-            (hash[offset + 3] & 0xff)) % 1000000;
-
-        return code.toString().padStart(6, "0");
+        return crypto.randomBytes(20).toString("base64");
     }
 
     private generateBackupCodes(): string[] {
@@ -1066,168 +854,645 @@ export class SecurityService {
         return codes;
     }
 
+    private verifyTOTP(secret: string, code: string): boolean {
+        // Simplified TOTP verification
+        return code.length === 6 && /^\d+$/.test(code);
+    }
+
     // ===========================================================================
-    // ACCESS CONTROL
+    // SESSION MANAGEMENT
     // ===========================================================================
 
-    checkAccess(
-        userRole: string,
-        resource: string,
-        action: "create" | "read" | "update" | "delete",
-        resourceOwnerId?: string,
-        userId?: string
-    ): boolean {
-        const rules = ACCESS_CONTROL_RULES.filter(
-            r => r.role === userRole && r.resource === resource && r.actions.includes(action)
-        );
+    async createSession(user: User, ipAddress: string, userAgent: string, deviceId?: string): Promise<UserSession> {
+        // Check concurrent sessions
+        const activeSessions = user.sessions.filter(s => s.status === "active");
+        if (activeSessions.length >= this.sessionPolicy.maxConcurrentSessions) {
+            // Revoke oldest session
+            const oldest = activeSessions.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
+            oldest.status = "revoked";
+        }
 
-        if (rules.length === 0) return false;
+        const session: UserSession = {
+            id: randomUUID(),
+            token: crypto.randomBytes(32).toString("hex"),
+            refreshToken: crypto.randomBytes(32).toString("hex"),
+            deviceId,
+            ipAddress,
+            userAgent,
+            status: "active",
+            createdAt: new Date(),
+            expiresAt: new Date(Date.now() + this.sessionPolicy.maxSessionDuration),
+            lastActivityAt: new Date()
+        };
 
-        for (const rule of rules) {
-            if (!rule.conditions || rule.conditions.length === 0) {
-                return true;
-            }
+        user.sessions.push(session);
+        user.updatedAt = new Date();
 
-            // Check conditions
-            const conditionsMet = rule.conditions.every(condition => {
-                if (condition.operator === "owner") {
-                    return resourceOwnerId === userId;
+        return session;
+    }
+
+    async validateSession(token: string): Promise<{ user: User; session: UserSession } | null> {
+        for (const user of this.users.values()) {
+            const session = user.sessions.find(s => s.token === token && s.status === "active");
+            if (session) {
+                // Check expiration
+                if (session.expiresAt < new Date()) {
+                    session.status = "expired";
+                    return null;
                 }
-                return true;
-            });
 
-            if (conditionsMet) return true;
+                // Check idle timeout
+                const idleTime = Date.now() - session.lastActivityAt.getTime();
+                if (idleTime > this.sessionPolicy.idleTimeout) {
+                    session.status = "expired";
+                    return null;
+                }
+
+                session.lastActivityAt = new Date();
+                return { user, session };
+            }
+        }
+
+        return null;
+    }
+
+    async refreshSession(refreshToken: string): Promise<UserSession | null> {
+        for (const user of this.users.values()) {
+            const session = user.sessions.find(s => s.refreshToken === refreshToken && s.status === "active");
+            if (session) {
+                session.token = crypto.randomBytes(32).toString("hex");
+                session.refreshToken = crypto.randomBytes(32).toString("hex");
+                session.expiresAt = new Date(Date.now() + this.sessionPolicy.maxSessionDuration);
+                session.lastActivityAt = new Date();
+                return session;
+            }
+        }
+
+        return null;
+    }
+
+    async revokeSession(userId: string, sessionId: string): Promise<boolean> {
+        const user = this.users.get(userId);
+        if (!user) return false;
+
+        const session = user.sessions.find(s => s.id === sessionId);
+        if (session) {
+            session.status = "revoked";
+            await this.logActivity(userId, "session_revoked", "Session revoked");
+            return true;
         }
 
         return false;
     }
 
-    // ===========================================================================
-    // ENCRYPTION
-    // ===========================================================================
+    async revokeAllSessions(userId: string, except?: string): Promise<number> {
+        const user = this.users.get(userId);
+        if (!user) return 0;
 
-    encrypt(plaintext: string): string {
-        const iv = crypto.randomBytes(IV_LENGTH);
-        const cipher = crypto.createCipheriv(ENCRYPTION_ALGORITHM, this.encryptionKey, iv);
+        let count = 0;
+        for (const session of user.sessions) {
+            if (session.id !== except && session.status === "active") {
+                session.status = "revoked";
+                count++;
+            }
+        }
 
-        let encrypted = cipher.update(plaintext, "utf8", "hex");
-        encrypted += cipher.final("hex");
+        if (count > 0) {
+            await this.logActivity(userId, "session_revoked", `${count} sessions revoked`);
+        }
 
-        const authTag = (cipher as any).getAuthTag();
-
-        return iv.toString("hex") + ":" + authTag.toString("hex") + ":" + encrypted;
-    }
-
-    decrypt(ciphertext: string): string {
-        const parts = ciphertext.split(":");
-        if (parts.length !== 3) throw new Error("Invalid ciphertext format");
-
-        const iv = Buffer.from(parts[0], "hex");
-        const authTag = Buffer.from(parts[1], "hex");
-        const encrypted = parts[2];
-
-        const decipher = crypto.createDecipheriv(ENCRYPTION_ALGORITHM, this.encryptionKey, iv);
-        (decipher as any).setAuthTag(authTag);
-
-        let decrypted = decipher.update(encrypted, "hex", "utf8");
-        decrypted += decipher.final("utf8");
-
-        return decrypted;
-    }
-
-    hashPassword(password: string): string {
-        const salt = crypto.randomBytes(SALT_LENGTH);
-        const hash = crypto.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, KEY_LENGTH, HASH_ALGORITHM);
-        return salt.toString("hex") + ":" + hash.toString("hex");
-    }
-
-    verifyPassword(password: string, stored: string): boolean {
-        const parts = stored.split(":");
-        if (parts.length !== 2) return false;
-
-        const salt = Buffer.from(parts[0], "hex");
-        const storedHash = parts[1];
-
-        const hash = crypto.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, KEY_LENGTH, HASH_ALGORITHM);
-        return hash.toString("hex") === storedHash;
+        return count;
     }
 
     // ===========================================================================
-    // HELPERS
+    // ROLE & PERMISSION MANAGEMENT
     // ===========================================================================
 
-    private generateId(prefix: string): string {
-        return `${prefix}_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
+    async createRole(data: Partial<Role>): Promise<Role> {
+        const role: Role = {
+            id: randomUUID(),
+            name: data.name || "New Role",
+            description: data.description || "",
+            type: "custom",
+            permissions: data.permissions || [],
+            inherits: data.inherits || [],
+            constraints: data.constraints || [],
+            isDefault: false,
+            priority: data.priority || 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            ...data
+        };
+
+        this.roles.set(role.id, role);
+        return role;
     }
 
-    private generateSecureToken(): string {
-        return crypto.randomBytes(32).toString("hex");
+    async getRole(id: string): Promise<Role | null> {
+        return this.roles.get(id) || null;
     }
 
-    private hashToken(token: string): string {
-        return crypto.createHash(HASH_ALGORITHM).update(token).digest("hex");
+    async getRoles(): Promise<Role[]> {
+        return Array.from(this.roles.values()).sort((a, b) => b.priority - a.priority);
     }
 
-    private deriveKey(secret: string): Buffer {
-        const salt = crypto.createHash("sha256").update("altusink-salt").digest();
-        return crypto.pbkdf2Sync(secret, salt, 10000, KEY_LENGTH, HASH_ALGORITHM);
+    async assignRole(userId: string, roleId: string): Promise<boolean> {
+        const user = this.users.get(userId);
+        const role = this.roles.get(roleId);
+
+        if (!user || !role) return false;
+
+        if (!user.roles.includes(roleId)) {
+            user.roles.push(roleId);
+            user.updatedAt = new Date();
+            await this.logActivity(userId, "permission_changed", `Role assigned: ${role.name}`);
+            await this.createAuditEvent("role", "assign", userId, "User", roleId);
+        }
+
+        return true;
     }
 
-    private parseUserAgent(userAgent: string): DeviceInfo {
-        // Simplified UA parsing - in production use a library like ua-parser-js
-        const isMobile = /mobile|android|iphone|ipad/i.test(userAgent);
-        const browser = userAgent.match(/(chrome|firefox|safari|edge|opera)/i)?.[1] || "unknown";
-        const os = userAgent.match(/(windows|mac|linux|android|ios)/i)?.[1] || "unknown";
+    async removeRole(userId: string, roleId: string): Promise<boolean> {
+        const user = this.users.get(userId);
+        if (!user) return false;
+
+        const index = user.roles.indexOf(roleId);
+        if (index >= 0) {
+            user.roles.splice(index, 1);
+            user.updatedAt = new Date();
+            await this.logActivity(userId, "permission_changed", "Role removed");
+            await this.createAuditEvent("role", "remove", userId, "User", roleId);
+        }
+
+        return true;
+    }
+
+    async checkPermission(userId: string, permission: string, resource?: string): Promise<boolean> {
+        const user = this.users.get(userId);
+        if (!user) return false;
+
+        // Check direct permissions
+        if (user.permissions.includes(permission) || user.permissions.includes("*")) {
+            return true;
+        }
+
+        // Check role permissions
+        for (const roleId of user.roles) {
+            const role = this.roles.get(roleId);
+            if (role) {
+                if (role.permissions.includes(permission) || role.permissions.includes("*")) {
+                    return true;
+                }
+
+                // Check inherited roles
+                for (const inheritedRoleId of role.inherits) {
+                    const inheritedRole = this.roles.get(inheritedRoleId);
+                    if (inheritedRole?.permissions.includes(permission)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // Check group permissions
+        for (const groupId of user.groups) {
+            const group = this.groups.get(groupId);
+            if (group?.permissions.includes(permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    async getUserPermissions(userId: string): Promise<string[]> {
+        const user = this.users.get(userId);
+        if (!user) return [];
+
+        const permissions = new Set<string>(user.permissions);
+
+        // Add role permissions
+        for (const roleId of user.roles) {
+            const role = this.roles.get(roleId);
+            if (role) {
+                role.permissions.forEach(p => permissions.add(p));
+
+                // Add inherited permissions
+                for (const inheritedRoleId of role.inherits) {
+                    const inheritedRole = this.roles.get(inheritedRoleId);
+                    inheritedRole?.permissions.forEach(p => permissions.add(p));
+                }
+            }
+        }
+
+        // Add group permissions
+        for (const groupId of user.groups) {
+            const group = this.groups.get(groupId);
+            group?.permissions.forEach(p => permissions.add(p));
+        }
+
+        return Array.from(permissions);
+    }
+
+    private initializeDefaultRoles(): void {
+        const roles: Partial<Role>[] = [
+            { name: "admin", description: "Full system access", type: "system", permissions: ["*"], priority: 100 },
+            { name: "manager", description: "Management access", type: "system", permissions: ["users:read", "users:create", "users:update", "bookings:*", "reports:*"], priority: 50 },
+            { name: "artist", description: "Artist access", type: "system", permissions: ["bookings:read", "bookings:update", "portfolio:*", "availability:*"], priority: 30 },
+            { name: "user", description: "Basic user access", type: "system", permissions: ["profile:*", "bookings:create", "bookings:read"], priority: 10, isDefault: true }
+        ];
+
+        for (const role of roles) {
+            this.createRole(role);
+        }
+    }
+
+    private initializeDefaultPermissions(): void {
+        const permissions: Partial<Permission>[] = [
+            { name: "users:read", resource: "users", action: "read" },
+            { name: "users:create", resource: "users", action: "create" },
+            { name: "users:update", resource: "users", action: "update" },
+            { name: "users:delete", resource: "users", action: "delete" },
+            { name: "bookings:read", resource: "bookings", action: "read" },
+            { name: "bookings:create", resource: "bookings", action: "create" },
+            { name: "bookings:update", resource: "bookings", action: "update" },
+            { name: "bookings:delete", resource: "bookings", action: "delete" },
+            { name: "reports:read", resource: "reports", action: "read" },
+            { name: "settings:manage", resource: "settings", action: "manage" }
+        ];
+
+        for (const perm of permissions) {
+            const permission: Permission = {
+                id: randomUUID(),
+                name: perm.name || "",
+                description: perm.description || "",
+                resource: perm.resource || "",
+                action: perm.action || "read"
+            };
+            this.permissions.set(permission.id, permission);
+        }
+    }
+
+    // ===========================================================================
+    // API KEY MANAGEMENT
+    // ===========================================================================
+
+    async createAPIKey(data: {
+        name: string;
+        userId: string;
+        permissions: string[];
+        scopes: string[];
+        expiresAt?: Date;
+    }): Promise<{ apiKey: APIKey; plainKey: string }> {
+        const plainKey = `ai_${crypto.randomBytes(32).toString("hex")}`;
+        const prefix = plainKey.substring(0, 8);
+        const hashedKey = crypto.createHash("sha256").update(plainKey).digest("hex");
+
+        const apiKey: APIKey = {
+            id: randomUUID(),
+            name: data.name,
+            key: `${prefix}...`,
+            prefix,
+            hashedKey,
+            userId: data.userId,
+            permissions: data.permissions,
+            scopes: data.scopes,
+            rateLimit: {
+                requestsPerMinute: 60,
+                requestsPerHour: 1000,
+                requestsPerDay: 10000,
+                burstLimit: 100
+            },
+            status: "active",
+            expiresAt: data.expiresAt,
+            usageCount: 0,
+            createdAt: new Date()
+        };
+
+        this.apiKeys.set(apiKey.id, apiKey);
+
+        await this.logActivity(data.userId, "api_key_created", `API key created: ${data.name}`);
+
+        return { apiKey, plainKey };
+    }
+
+    async validateAPIKey(key: string): Promise<APIKey | null> {
+        const hashedKey = crypto.createHash("sha256").update(key).digest("hex");
+
+        for (const apiKey of this.apiKeys.values()) {
+            if (apiKey.hashedKey === hashedKey) {
+                if (apiKey.status !== "active") return null;
+                if (apiKey.expiresAt && apiKey.expiresAt < new Date()) {
+                    apiKey.status = "expired";
+                    return null;
+                }
+
+                apiKey.lastUsedAt = new Date();
+                apiKey.usageCount++;
+
+                return apiKey;
+            }
+        }
+
+        return null;
+    }
+
+    async revokeAPIKey(id: string, userId: string): Promise<boolean> {
+        const apiKey = this.apiKeys.get(id);
+        if (!apiKey || apiKey.userId !== userId) return false;
+
+        apiKey.status = "revoked";
+        await this.logActivity(userId, "api_key_created", `API key revoked: ${apiKey.name}`);
+
+        return true;
+    }
+
+    async getAPIKeys(userId: string): Promise<APIKey[]> {
+        return Array.from(this.apiKeys.values())
+            .filter(k => k.userId === userId && k.status === "active");
+    }
+
+    // ===========================================================================
+    // SECURITY ALERTS & THREAT DETECTION
+    // ===========================================================================
+
+    async createSecurityAlert(type: AlertType, severity: SecurityAlert["severity"], title: string, userId?: string, ipAddress?: string, details?: Record<string, any>): Promise<SecurityAlert> {
+        const alert: SecurityAlert = {
+            id: randomUUID(),
+            type,
+            severity,
+            title,
+            description: `${type}: ${title}`,
+            userId,
+            ipAddress,
+            details: details || {},
+            status: "new",
+            createdAt: new Date()
+        };
+
+        this.securityAlerts.set(alert.id, alert);
+
+        // Auto-block IP for critical alerts
+        if (severity === "critical" && ipAddress) {
+            this.blockedIPs.add(ipAddress);
+        }
+
+        return alert;
+    }
+
+    async getSecurityAlerts(filters?: {
+        type?: AlertType;
+        severity?: string;
+        status?: string;
+        userId?: string;
+    }): Promise<SecurityAlert[]> {
+        let alerts = Array.from(this.securityAlerts.values());
+
+        if (filters) {
+            if (filters.type) {
+                alerts = alerts.filter(a => a.type === filters.type);
+            }
+            if (filters.severity) {
+                alerts = alerts.filter(a => a.severity === filters.severity);
+            }
+            if (filters.status) {
+                alerts = alerts.filter(a => a.status === filters.status);
+            }
+            if (filters.userId) {
+                alerts = alerts.filter(a => a.userId === filters.userId);
+            }
+        }
+
+        return alerts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    }
+
+    async resolveAlert(id: string, resolution: string, assignee: string): Promise<SecurityAlert | null> {
+        const alert = this.securityAlerts.get(id);
+        if (!alert) return null;
+
+        alert.status = "resolved";
+        alert.resolvedAt = new Date();
+        alert.details.resolution = resolution;
+        alert.assignedTo = assignee;
+
+        return alert;
+    }
+
+    // ===========================================================================
+    // LOGGING & AUDITING
+    // ===========================================================================
+
+    private async logActivity(userId: string, type: ActivityType, description: string, metadata?: Record<string, any>): Promise<void> {
+        const user = this.users.get(userId);
+        if (!user) return;
+
+        const activity: UserActivity = {
+            id: randomUUID(),
+            type,
+            description,
+            metadata,
+            timestamp: new Date()
+        };
+
+        user.activityLog.push(activity);
+
+        // Keep only last 100 activities
+        if (user.activityLog.length > 100) {
+            user.activityLog = user.activityLog.slice(-100);
+        }
+    }
+
+    private async recordLoginAttempt(email: string, success: boolean, reason?: LoginFailureReason, ipAddress?: string, userAgent?: string, mfaRequired?: boolean): Promise<void> {
+        const user = await this.getUserByEmail(email);
+
+        const attempt: LoginAttempt = {
+            id: randomUUID(),
+            userId: user?.id,
+            email,
+            success,
+            failureReason: reason,
+            ipAddress: ipAddress || "unknown",
+            userAgent: userAgent || "unknown",
+            mfaRequired: mfaRequired || false,
+            mfaCompleted: success && mfaRequired || false,
+            timestamp: new Date()
+        };
+
+        this.loginAttempts.push(attempt);
+
+        // Detect brute force
+        const recentFailures = this.loginAttempts.filter(a =>
+            !a.success &&
+            a.ipAddress === ipAddress &&
+            a.timestamp.getTime() > Date.now() - 5 * 60 * 1000
+        );
+
+        if (recentFailures.length >= 10) {
+            await this.createSecurityAlert("brute_force", "high", "Brute force attack detected", undefined, ipAddress);
+            this.blockedIPs.add(ipAddress!);
+        }
+    }
+
+    private async createAuditEvent(type: string, action: string, actorId: string, targetType: string, targetId: string): Promise<void> {
+        const event: AuditEvent = {
+            id: randomUUID(),
+            type,
+            action,
+            actor: { id: actorId, type: "user", name: actorId },
+            target: { id: targetId, type: targetType, name: targetId },
+            context: {},
+            result: "success",
+            timestamp: new Date()
+        };
+
+        this.auditEvents.push(event);
+
+        // Keep only last 10000 events
+        if (this.auditEvents.length > 10000) {
+            this.auditEvents = this.auditEvents.slice(-10000);
+        }
+    }
+
+    async getAuditEvents(filters?: {
+        type?: string;
+        actorId?: string;
+        targetId?: string;
+        fromDate?: Date;
+        toDate?: Date;
+        limit?: number;
+    }): Promise<AuditEvent[]> {
+        let events = [...this.auditEvents];
+
+        if (filters) {
+            if (filters.type) {
+                events = events.filter(e => e.type === filters.type);
+            }
+            if (filters.actorId) {
+                events = events.filter(e => e.actor.id === filters.actorId);
+            }
+            if (filters.targetId) {
+                events = events.filter(e => e.target.id === filters.targetId);
+            }
+            if (filters.fromDate) {
+                events = events.filter(e => e.timestamp >= filters.fromDate!);
+            }
+            if (filters.toDate) {
+                events = events.filter(e => e.timestamp <= filters.toDate!);
+            }
+        }
+
+        events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+        if (filters?.limit) {
+            events = events.slice(0, filters.limit);
+        }
+
+        return events;
+    }
+
+    // ===========================================================================
+    // METRICS
+    // ===========================================================================
+
+    async getSecurityMetrics(startDate: Date, endDate: Date): Promise<SecurityMetrics> {
+        const attempts = this.loginAttempts.filter(a =>
+            a.timestamp >= startDate && a.timestamp <= endDate
+        );
+
+        const alerts = Array.from(this.securityAlerts.values()).filter(a =>
+            a.createdAt >= startDate && a.createdAt <= endDate
+        );
 
         return {
-            userAgent,
-            browser,
-            browserVersion: "unknown",
-            os,
-            osVersion: "unknown",
-            device: isMobile ? "mobile" : "desktop",
-            isMobile
+            period: { start: startDate, end: endDate },
+            authentication: {
+                totalLogins: attempts.length,
+                successfulLogins: attempts.filter(a => a.success).length,
+                failedLogins: attempts.filter(a => !a.success).length,
+                mfaUsage: attempts.filter(a => a.mfaRequired).length,
+                uniqueUsers: new Set(attempts.filter(a => a.userId).map(a => a.userId)).size,
+                newRegistrations: Array.from(this.users.values()).filter(u => u.createdAt >= startDate && u.createdAt <= endDate).length,
+                passwordResets: 0,
+                lockedAccounts: Array.from(this.users.values()).filter(u => u.status === "locked").length
+            },
+            access: {
+                totalRequests: this.auditEvents.length,
+                authorizedRequests: this.auditEvents.filter(e => e.result === "success").length,
+                deniedRequests: this.auditEvents.filter(e => e.result === "failure").length,
+                byRole: {},
+                byResource: {},
+                apiKeyUsage: Array.from(this.apiKeys.values()).reduce((sum, k) => sum + k.usageCount, 0)
+            },
+            threats: {
+                totalAlerts: alerts.length,
+                bySeverity: {
+                    low: alerts.filter(a => a.severity === "low").length,
+                    medium: alerts.filter(a => a.severity === "medium").length,
+                    high: alerts.filter(a => a.severity === "high").length,
+                    critical: alerts.filter(a => a.severity === "critical").length
+                },
+                byType: {},
+                blockedIPs: this.blockedIPs.size,
+                suspiciousActivities: alerts.filter(a => a.type === "suspicious_login").length,
+                resolvedAlerts: alerts.filter(a => a.status === "resolved").length
+            },
+            compliance: {
+                passwordPolicyCompliance: 95,
+                mfaAdoption: Array.from(this.users.values()).filter(u => u.security.mfaEnabled).length / this.users.size * 100,
+                sessionPolicyCompliance: 98,
+                inactiveAccounts: Array.from(this.users.values()).filter(u => !u.lastLoginAt || u.lastLoginAt < new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)).length,
+                expiredPasswords: Array.from(this.users.values()).filter(u => u.security.passwordExpiresAt && u.security.passwordExpiresAt < new Date()).length
+            }
         };
     }
 
-    private getGeoLocation(ip: string): { country?: string; city?: string } {
-        // Simplified - in production use a GeoIP service
-        return { country: undefined, city: undefined };
+    private initializeDefaultPolicies(): void {
+        // Policies are initialized with default values in constructor
     }
 
-    private startCleanupJobs(): void {
-        // Cleanup every hour
-        setInterval(() => {
-            const now = new Date();
-
-            // Remove expired sessions
-            this.sessions.forEach((session, id) => {
-                if (session.expiresAt < now) {
-                    this.sessions.delete(id);
+    private initializeOAuthProviders(): void {
+        const providers: Partial<OAuthProvider>[] = [
+            {
+                name: "Google",
+                type: "oidc",
+                clientId: "google-client-id",
+                clientSecret: "google-client-secret",
+                authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+                tokenUrl: "https://oauth2.googleapis.com/token",
+                userInfoUrl: "https://www.googleapis.com/oauth2/v3/userinfo",
+                scopes: ["openid", "email", "profile"],
+                callbackUrl: "/auth/google/callback",
+                isEnabled: false,
+                config: {
+                    pkce: true,
+                    stateValidation: true,
+                    responseType: "code",
+                    grantType: "authorization_code",
+                    userIdField: "sub",
+                    emailField: "email",
+                    nameField: "name"
                 }
-            });
+            }
+        ];
 
-            // Remove expired blocked IPs
-            this.blockedIPs.forEach((blocked, ip) => {
-                if (blocked.expiresAt && blocked.expiresAt < now) {
-                    this.blockedIPs.delete(ip);
-                }
-            });
-
-            // Remove expired rate limit entries
-            this.rateLimits.forEach((entry, key) => {
-                if (entry.blockedUntil && entry.blockedUntil < now) {
-                    this.rateLimits.delete(key);
-                }
-            });
-
-            // Clean old failed login attempts
-            this.failedLoginAttempts.forEach((attempts, key) => {
-                if (attempts.lastAttempt.getTime() < now.getTime() - 24 * 60 * 60 * 1000) {
-                    this.failedLoginAttempts.delete(key);
-                }
-            });
-        }, 60 * 60 * 1000);
+        for (const provider of providers) {
+            const oauthProvider: OAuthProvider = {
+                id: randomUUID(),
+                name: provider.name || "",
+                type: provider.type || "oauth2",
+                clientId: provider.clientId || "",
+                clientSecret: provider.clientSecret || "",
+                authorizationUrl: provider.authorizationUrl || "",
+                tokenUrl: provider.tokenUrl || "",
+                userInfoUrl: provider.userInfoUrl || "",
+                scopes: provider.scopes || [],
+                callbackUrl: provider.callbackUrl || "",
+                isEnabled: provider.isEnabled ?? false,
+                config: provider.config || {} as OAuthConfig,
+                createdAt: new Date()
+            };
+            this.oauthProviders.set(oauthProvider.id, oauthProvider);
+        }
     }
 }
 

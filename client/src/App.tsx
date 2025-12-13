@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LocaleProvider } from "@/lib/i18n/locale-context";
+import { EnterpriseProvider } from "@/components/enterprise-provider";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
@@ -171,18 +172,20 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <LocaleProvider>
-        <TooltipProvider>
-          <LanguageSelector />
-          <Navigation />
-          <main className="pt-20 pb-20 md:pb-0">
-            <Router />
-          </main>
-          <MobileNav />
-          <WhatsAppFloat />
-          <Toaster />
-        </TooltipProvider>
-      </LocaleProvider>
+      <EnterpriseProvider>
+        <LocaleProvider>
+          <TooltipProvider>
+            <LanguageSelector />
+            <Navigation />
+            <main className="pt-20 pb-20 md:pb-0">
+              <Router />
+            </main>
+            <MobileNav />
+            <WhatsAppFloat />
+            <Toaster />
+          </TooltipProvider>
+        </LocaleProvider>
+      </EnterpriseProvider>
     </QueryClientProvider>
   );
 }
