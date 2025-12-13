@@ -57,23 +57,23 @@ export default function ArtistsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-[var(--bg-app)]">
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+            <header className="sticky top-0 z-50 glass-dark border-b border-[var(--border-dark)]">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                     <Link href="/">
-                        <Button variant="ghost" size="sm" className="gap-2">
+                        <Button variant="ghost" size="sm" className="gap-2 text-[var(--text-on-dark-muted)] hover:text-[var(--text-on-dark)]">
                             <ArrowLeft className="w-4 h-4" />
                             Back
                         </Button>
                     </Link>
 
                     <Link href="/">
-                        <img src="/logo-altus.png" alt="ALTUS INK" className="h-8 w-auto" />
+                        <img src="/logo-altus-white.png" alt="ALTUS INK" className="h-8 w-auto" />
                     </Link>
 
                     <Link href="/login">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="btn-outline-light">
                             Sign In
                         </Button>
                     </Link>
@@ -81,17 +81,17 @@ export default function ArtistsPage() {
             </header>
 
             {/* Page Header */}
-            <section className="py-16 px-6">
+            <section className="py-16 px-6 gradient-hero">
                 <div className="max-w-7xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="max-w-2xl"
                     >
-                        <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+                        <h1 className="heading-1 text-[var(--text-on-dark)] mb-4">
                             Our Artists
                         </h1>
-                        <p className="text-xl text-muted-foreground">
+                        <p className="body-large text-[var(--text-on-dark-muted)]">
                             World-class tattoo artists available for bookings. Browse portfolios and find your perfect match.
                         </p>
                     </motion.div>
@@ -103,12 +103,13 @@ export default function ArtistsPage() {
                         transition={{ delay: 0.1 }}
                         className="mt-8 flex items-center gap-3"
                     >
-                        <Filter className="w-4 h-4 text-muted-foreground" />
+                        <Filter className="w-4 h-4 text-[var(--text-on-dark-muted)]" />
                         <div className="flex gap-2">
                             <Button
                                 variant={filter === "all" ? "default" : "outline"}
                                 size="sm"
                                 onClick={() => setFilter("all")}
+                                className={filter === "all" ? "btn-primary" : "btn-outline-light"}
                             >
                                 All Artists
                             </Button>
@@ -116,6 +117,7 @@ export default function ArtistsPage() {
                                 variant={filter === "tour" ? "default" : "outline"}
                                 size="sm"
                                 onClick={() => setFilter("tour")}
+                                className={filter === "tour" ? "btn-success" : "btn-outline-light"}
                             >
                                 <Globe className="w-4 h-4 mr-2" />
                                 On Tour
@@ -126,12 +128,12 @@ export default function ArtistsPage() {
             </section>
 
             {/* Artists Grid */}
-            <section className="px-6 pb-24">
-                <div className="max-w-7xl mx-auto">
+            <section className="px-6 pb-24 bg-[var(--bg-surface)]">
+                <div className="max-w-7xl mx-auto -mt-8">
                     {isLoading ? (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
                             {[1, 2, 3, 4, 5, 6].map(i => (
-                                <Card key={i} className="overflow-hidden">
+                                <Card key={i} className="card-white overflow-hidden">
                                     <CardContent className="p-0">
                                         <Skeleton className="w-full h-48" />
                                         <div className="p-6 space-y-3">
@@ -149,17 +151,17 @@ export default function ArtistsPage() {
                             animate={{ opacity: 1 }}
                             className="text-center py-24"
                         >
-                            <Globe className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                            <h3 className="text-xl font-semibold text-foreground mb-2">
+                            <Globe className="w-16 h-16 mx-auto mb-4 text-[var(--text-muted)]" />
+                            <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
                                 No artists found
                             </h3>
-                            <p className="text-muted-foreground">
+                            <p className="text-[var(--text-secondary)]">
                                 {filter === "tour" ? "No artists currently on tour." : "Artists will be available soon."}
                             </p>
                         </motion.div>
                     ) : (
                         <motion.div
-                            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+                            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8"
                             variants={staggerContainer}
                             initial="initial"
                             animate="animate"
@@ -171,9 +173,9 @@ export default function ArtistsPage() {
                                     transition={{ delay: index * 0.08 }}
                                 >
                                     <Link href={`/artist/${artist.subdomain}`}>
-                                        <Card className="overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group border border-border hover:border-primary/30">
+                                        <Card className="card-interactive overflow-hidden group">
                                             {/* Cover */}
-                                            <div className="relative h-48 bg-gradient-to-br from-primary/10 to-secondary/10 overflow-hidden">
+                                            <div className="relative h-48 bg-gradient-to-br from-[var(--brand-primary)]/10 to-[var(--signal-success)]/10 overflow-hidden">
                                                 {artist.coverImageUrl ? (
                                                     <img
                                                         src={artist.coverImageUrl}
@@ -181,10 +183,10 @@ export default function ArtistsPage() {
                                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center">
-                                                        <Avatar className="w-20 h-20 border-4 border-background shadow-xl">
+                                                    <div className="w-full h-full flex items-center justify-center gradient-purple">
+                                                        <Avatar className="w-20 h-20 border-4 border-white/20">
                                                             <AvatarImage src={undefined} />
-                                                            <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
+                                                            <AvatarFallback className="text-2xl font-bold bg-[var(--brand-primary)] text-white">
                                                                 {getInitials(artist.displayName)}
                                                             </AvatarFallback>
                                                         </Avatar>
@@ -193,7 +195,7 @@ export default function ArtistsPage() {
 
                                                 {artist.tourModeEnabled && (
                                                     <div className="absolute top-4 right-4">
-                                                        <Badge className="bg-primary text-primary-foreground">
+                                                        <Badge className="badge-success">
                                                             <Globe className="w-3 h-3 mr-1" />
                                                             On Tour
                                                         </Badge>
@@ -204,31 +206,28 @@ export default function ArtistsPage() {
                                             <CardContent className="p-6">
                                                 <div className="flex items-start justify-between mb-3">
                                                     <div>
-                                                        <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                                                        <h3 className="text-lg font-semibold text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] transition-colors">
                                                             {artist.displayName}
                                                         </h3>
                                                         {(artist.city || artist.country) && (
-                                                            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                                                            <p className="text-sm text-[var(--text-secondary)] flex items-center gap-1 mt-1">
                                                                 <MapPin className="w-3 h-3" />
                                                                 {artist.city}{artist.country && `, ${artist.country}`}
                                                             </p>
                                                         )}
                                                     </div>
                                                     {artist.specialty && (
-                                                        <Badge variant="secondary" className="text-xs">
+                                                        <Badge className="badge-primary text-xs">
                                                             {artist.specialty}
                                                         </Badge>
                                                     )}
                                                 </div>
 
-                                                <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                                                <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-4">
                                                     {artist.bio || "International tattoo artist available for bookings."}
                                                 </p>
 
-                                                <Button
-                                                    className="w-full"
-                                                    variant="outline"
-                                                >
+                                                <Button className="w-full btn-outline-dark">
                                                     View Portfolio
                                                     <ChevronRight className="w-4 h-4 ml-1" />
                                                 </Button>

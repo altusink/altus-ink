@@ -17,15 +17,15 @@ import { SiInstagram } from "react-icons/si";
 
 // Available countries for tour
 const TOUR_COUNTRIES = [
-    { code: "NL", name: "Netherlands", flag: "NL" },
-    { code: "FR", name: "France", flag: "FR" },
-    { code: "LU", name: "Luxembourg", flag: "LU" },
-    { code: "IT", name: "Italy", flag: "IT" },
-    { code: "GB", name: "London", flag: "GB" },
-    { code: "DE", name: "Germany", flag: "DE" },
+    { code: "NL", name: "Netherlands" },
+    { code: "FR", name: "France" },
+    { code: "LU", name: "Luxembourg" },
+    { code: "IT", name: "Italy" },
+    { code: "GB", name: "London" },
+    { code: "DE", name: "Germany" },
 ];
 
-// Portfolio categories (without "All")
+// Portfolio categories
 const PORTFOLIO_CATEGORIES = [
     { id: "fineline", label: "Fineline" },
     { id: "blackwork", label: "Blackwork" },
@@ -91,23 +91,23 @@ export default function ArtistFeedPage() {
     const portfolioImages = activeCategory ? (SAMPLE_PORTFOLIO[activeCategory] || []) : [];
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-[var(--bg-app)]">
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-lg border-b border-border">
+            <header className="sticky top-0 z-50 glass-dark border-b border-[var(--border-dark)]">
                 <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
                     <Link href="/artists">
-                        <Button variant="ghost" size="sm" className="gap-2">
+                        <Button variant="ghost" size="sm" className="gap-2 text-[var(--text-on-dark-muted)] hover:text-[var(--text-on-dark)]">
                             <ArrowLeft className="w-4 h-4" />
                             Back
                         </Button>
                     </Link>
 
-                    <h1 className="font-semibold text-lg truncate max-w-[40%]">
+                    <h1 className="font-semibold text-lg text-[var(--text-on-dark)] truncate max-w-[40%]">
                         {displayArtist.displayName}
                     </h1>
 
                     <Link href={`/book/${subdomain}`}>
-                        <Button size="sm" className="gap-2">
+                        <Button size="sm" className="btn-primary gap-2">
                             <Calendar className="w-4 h-4" />
                             Book Session
                         </Button>
@@ -116,21 +116,21 @@ export default function ArtistFeedPage() {
             </header>
 
             {/* Profile Header */}
-            <section className="px-4 py-8 border-b border-border">
+            <section className="px-4 py-8 border-b border-[var(--border-dark)] gradient-hero">
                 <div className="max-w-5xl mx-auto">
                     <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                        <Avatar className="w-24 h-24 border-4 border-primary/20">
+                        <Avatar className="w-24 h-24 border-4 border-[var(--brand-primary)]/30">
                             <AvatarImage src={undefined} />
-                            <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
+                            <AvatarFallback className="text-2xl font-bold bg-[var(--brand-primary)] text-white">
                                 {getInitials(displayArtist.displayName)}
                             </AvatarFallback>
                         </Avatar>
 
                         <div className="flex-1 text-center md:text-left">
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
-                                <h2 className="text-2xl font-bold">{displayArtist.displayName}</h2>
+                                <h2 className="text-2xl font-bold text-[var(--text-on-dark)]">{displayArtist.displayName}</h2>
                                 {displayArtist.tourModeEnabled && (
-                                    <Badge variant="secondary">
+                                    <Badge className="badge-success">
                                         <Globe className="w-3 h-3 mr-1" />
                                         On Tour
                                     </Badge>
@@ -138,17 +138,17 @@ export default function ArtistFeedPage() {
                             </div>
 
                             {(displayArtist.city || displayArtist.country) && (
-                                <p className="text-muted-foreground flex items-center justify-center md:justify-start gap-1 mb-3">
+                                <p className="text-[var(--text-on-dark-muted)] flex items-center justify-center md:justify-start gap-1 mb-3">
                                     <MapPin className="w-4 h-4" />
                                     {displayArtist.city}{displayArtist.country && `, ${displayArtist.country}`}
                                 </p>
                             )}
 
-                            <p className="text-foreground max-w-md mb-4">{displayArtist.bio}</p>
+                            <p className="text-[var(--text-on-dark)] max-w-md mb-4">{displayArtist.bio}</p>
 
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                                 <Link href={`/book/${subdomain}`}>
-                                    <Button className="gap-2">
+                                    <Button className="btn-primary gap-2">
                                         <Calendar className="w-4 h-4" />
                                         Book Session
                                     </Button>
@@ -160,7 +160,7 @@ export default function ArtistFeedPage() {
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >
-                                        <Button variant="outline" className="gap-2">
+                                        <Button className="btn-outline-light gap-2">
                                             <SiInstagram className="w-4 h-4" />
                                             @{displayArtist.instagram}
                                         </Button>
@@ -174,9 +174,9 @@ export default function ArtistFeedPage() {
 
             {/* Country Selector (if on tour) */}
             {displayArtist.tourModeEnabled && (
-                <section className="px-4 py-6 border-b border-border">
+                <section className="px-4 py-6 border-b border-[var(--border-dark)] bg-[var(--bg-dark)]">
                     <div className="max-w-5xl mx-auto">
-                        <p className="text-sm text-muted-foreground mb-3">Select tour location</p>
+                        <p className="text-sm text-[var(--text-on-dark-muted)] mb-3">Select tour location</p>
                         <div className="flex flex-wrap gap-2">
                             {TOUR_COUNTRIES.map((country) => (
                                 <Button
@@ -184,7 +184,7 @@ export default function ArtistFeedPage() {
                                     variant={selectedCountry === country.code ? "default" : "outline"}
                                     size="sm"
                                     onClick={() => setSelectedCountry(country.code)}
-                                    className="rounded-full"
+                                    className={selectedCountry === country.code ? "btn-primary" : "btn-outline-light"}
                                 >
                                     {country.name}
                                 </Button>
@@ -195,7 +195,7 @@ export default function ArtistFeedPage() {
             )}
 
             {/* Category Filter */}
-            <section className="sticky top-[57px] z-40 bg-background border-b border-border">
+            <section className="sticky top-[57px] z-40 bg-[var(--bg-app)] border-b border-[var(--border-dark)]">
                 <div className="max-w-5xl mx-auto px-4">
                     <div className="flex overflow-x-auto py-4 gap-2 scrollbar-hide">
                         {PORTFOLIO_CATEGORIES.map((category) => (
@@ -203,7 +203,7 @@ export default function ArtistFeedPage() {
                                 key={category.id}
                                 variant={activeCategory === category.id ? "default" : "outline"}
                                 size="sm"
-                                className="flex-shrink-0 rounded-full"
+                                className={`flex-shrink-0 rounded-full ${activeCategory === category.id ? "btn-primary" : "btn-outline-light"}`}
                                 onClick={() => setActiveCategory(
                                     activeCategory === category.id ? null : category.id
                                 )}
@@ -215,22 +215,22 @@ export default function ArtistFeedPage() {
                 </div>
             </section>
 
-            {/* Portfolio Grid - Only shows after category selection */}
-            <section className="px-4 py-8">
+            {/* Portfolio Grid */}
+            <section className="px-4 py-8 bg-[var(--bg-surface)]">
                 <div className="max-w-5xl mx-auto">
                     {!activeCategory ? (
                         <div className="text-center py-20">
-                            <Grid3X3 className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                            <h3 className="text-lg font-medium text-foreground mb-2">
+                            <Grid3X3 className="w-12 h-12 mx-auto mb-4 text-[var(--text-muted)]" />
+                            <h3 className="text-lg font-medium text-[var(--text-primary)] mb-2">
                                 Select a category
                             </h3>
-                            <p className="text-muted-foreground">
+                            <p className="text-[var(--text-secondary)]">
                                 Choose a style category above to view the portfolio
                             </p>
                         </div>
                     ) : portfolioImages.length === 0 ? (
                         <div className="text-center py-20">
-                            <p className="text-muted-foreground">
+                            <p className="text-[var(--text-secondary)]">
                                 No images in this category yet
                             </p>
                         </div>
@@ -268,14 +268,14 @@ export default function ArtistFeedPage() {
 
             {/* Instagram Link */}
             {displayArtist.instagram && (
-                <section className="px-4 pb-24 pt-8">
+                <section className="px-4 pb-24 pt-8 bg-[var(--bg-surface)]">
                     <div className="max-w-5xl mx-auto text-center">
                         <a
                             href={`https://instagram.com/${displayArtist.instagram}`}
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                            <Button variant="outline" size="lg" className="rounded-full gap-2">
+                            <Button className="btn-outline-dark rounded-full gap-2">
                                 <SiInstagram className="w-5 h-5" />
                                 See more on Instagram
                                 <ExternalLink className="w-4 h-4" />
@@ -288,7 +288,7 @@ export default function ArtistFeedPage() {
             {/* Floating CTA (Mobile) */}
             <div className="fixed bottom-6 left-4 right-4 md:hidden z-50">
                 <Link href={`/book/${subdomain}`}>
-                    <Button size="lg" className="w-full h-14 text-lg font-semibold rounded-2xl shadow-lg">
+                    <Button className="w-full h-14 text-lg font-semibold rounded-2xl btn-primary shadow-lg glow-purple">
                         <Calendar className="w-5 h-5 mr-2" />
                         Book Now
                     </Button>

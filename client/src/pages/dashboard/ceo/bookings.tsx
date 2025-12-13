@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -23,11 +22,9 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  User,
   Mail,
   Phone,
-  DollarSign,
-  Eye,
+  MoreHorizontal
 } from "lucide-react";
 import {
   Dialog,
@@ -60,12 +57,12 @@ export default function CEOBookings() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Status updated", description: "Booking status has been updated." });
+      toast({ title: "Status Updated", description: "Booking status has been successfully modified." });
       queryClient.invalidateQueries({ queryKey: ["/api/ceo/bookings"] });
       setSelectedBooking(null);
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to update booking status.", variant: "destructive" });
+      toast({ title: "Operation Failed", description: "Could not update booking status.", variant: "destructive" });
     },
   });
 
@@ -77,97 +74,101 @@ export default function CEOBookings() {
     return matchesSearch && matchesStatus;
   });
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null) => {
     switch (status) {
       case "confirmed":
-        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Confirmed</Badge>;
+        return <Badge className="badge-success">Confirmed</Badge>;
       case "pending":
-        return <Badge variant="secondary">Pending</Badge>;
+        return <Badge className="badge-warning">Pending Review</Badge>;
       case "completed":
-        return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">Completed</Badge>;
+        return <Badge className="badge-primary">Completed</Badge>;
       case "cancelled":
-        return <Badge variant="destructive">Cancelled</Badge>;
+        return <Badge className="badge-error">Cancelled</Badge>;
       case "no_show":
-        return <Badge variant="outline" className="text-muted-foreground">No Show</Badge>;
+        return <Badge variant="outline" className="text-[var(--text-muted)]">No Show</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline">{status || "Unknown"}</Badge>;
     }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("de-DE", {
+      style: "currency",
+      currency: "EUR",
+    }).format(amount);
   };
 
   const stats = {
     total: bookings?.length || 0,
     confirmed: bookings?.filter((b) => b.status === "confirmed").length || 0,
     pending: bookings?.filter((b) => b.status === "pending").length || 0,
-    completed: bookings?.filter((b) => b.status === "completed").length || 0,
-    cancelled: bookings?.filter((b) => b.status === "cancelled").length || 0,
+    volume: bookings?.reduce((acc, curr) => acc + Number(curr.depositAmount), 0) || 0,
   };
 
   if (isLoading) {
     return (
-      <DashboardLayout title="All Bookings">
-        <div className="space-y-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-20 w-full" />
-          ))}
+      <DashboardLayout title="Booking Management">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-24 w-full rounded-xl" />
+            ))}
+          </div>
+          <Skeleton className="h-96 w-full rounded-xl" />
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout title="All Bookings" subtitle="Platform-wide booking management">
+    <DashboardLayout title="Booking Management" subtitle="Platform-wide reservation ledger">
+
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold" data-testid="text-total-bookings">{stats.total}</p>
-            <p className="text-xs text-muted-foreground">Total</p>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <Card className="stat-card">
+          <CardContent className="p-6">
+            <p className="stat-label">Total Bookings</p>
+            <p className="stat-value">{stats.total}</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-green-500">{stats.confirmed}</p>
-            <p className="text-xs text-muted-foreground">Confirmed</p>
+        <Card className="stat-card">
+          <CardContent className="p-6">
+            <p className="stat-label">Confirmed</p>
+            <p className="stat-value stat-value-success">{stats.confirmed}</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-amber-500">{stats.pending}</p>
-            <p className="text-xs text-muted-foreground">Pending</p>
+        <Card className="stat-card">
+          <CardContent className="p-6">
+            <p className="stat-label">Pending Review</p>
+            <p className="stat-value" style={{ color: 'var(--signal-warning)' }}>{stats.pending}</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-blue-500">{stats.completed}</p>
-            <p className="text-xs text-muted-foreground">Completed</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-destructive">{stats.cancelled}</p>
-            <p className="text-xs text-muted-foreground">Cancelled</p>
+        <Card className="stat-card">
+          <CardContent className="p-6">
+            <p className="stat-label">Total Volume</p>
+            <p className="stat-value stat-value-gold">{formatCurrency(stats.volume)}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-                data-testid="input-search-bookings"
-              />
-            </div>
+      <div className="space-y-4">
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full sm:w-[320px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+            <Input
+              placeholder="Search bookings..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 input-light"
+              data-testid="input-search-bookings"
+            />
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40" data-testid="select-status-filter">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Status" />
+              <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-status-filter">
+                <Filter className="w-4 h-4 mr-2 text-[var(--text-muted)]" />
+                <SelectValue placeholder="Filter Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
@@ -175,180 +176,184 @@ export default function CEOBookings() {
                 <SelectItem value="confirmed">Confirmed</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
-                <SelectItem value="no_show">No Show</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Bookings List */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Bookings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {filteredBookings && filteredBookings.length > 0 ? (
-            <div className="space-y-3">
-              {filteredBookings.map((booking) => (
-                <div
-                  key={booking.id}
-                  className="p-4 rounded-lg border hover-elevate cursor-pointer"
-                  onClick={() => setSelectedBooking(booking)}
-                  data-testid={`booking-row-${booking.id}`}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <div className="p-2 rounded-lg bg-muted">
-                        <Calendar className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
+        {/* Bookings Table */}
+        <Card className="card-white overflow-hidden">
+          <div className="min-w-full overflow-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="table-header">
+                <tr>
+                  <th className="px-6 py-4 font-medium">Customer / ID</th>
+                  <th className="px-6 py-4 font-medium">Artist</th>
+                  <th className="px-6 py-4 font-medium">Date & Time</th>
+                  <th className="px-6 py-4 font-medium">Deposit</th>
+                  <th className="px-6 py-4 font-medium">Status</th>
+                  <th className="px-6 py-4 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border-subtle)]">
+                {filteredBookings && filteredBookings.length > 0 ? (
+                  filteredBookings.map((booking) => (
+                    <tr
+                      key={booking.id}
+                      className="table-row cursor-pointer"
+                      onClick={() => setSelectedBooking(booking)}
+                    >
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-[var(--text-primary)]">{booking.customerName}</div>
+                        <div className="text-xs text-[var(--text-muted)] font-mono mt-0.5">#{(booking.id ?? "N/A").slice(0, 8)}</div>
+                      </td>
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium truncate">{booking.customerName}</p>
-                          {getStatusBadge(booking.status || "pending")}
+                          <div className="w-6 h-6 rounded-full bg-[var(--brand-primary)]/10 flex items-center justify-center text-xs font-bold text-[var(--brand-primary)]">
+                            {(booking.artist?.displayName ?? "U").slice(0, 1)}
+                          </div>
+                          <span className="text-[var(--text-secondary)]">{booking.artist?.displayName ?? "Unknown"}</span>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {new Date(booking.slotDatetime).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            {booking.artist?.displayName || "Unknown Artist"}
-                          </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-[var(--text-primary)]">
+                          {new Date(booking.slotDatetime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         </div>
+                        <div className="text-xs text-[var(--text-muted)]">
+                          {new Date(booking.slotDatetime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 font-mono text-[var(--text-primary)]">
+                        {formatCurrency(Number(booking.depositAmount))}
+                      </td>
+                      <td className="px-6 py-4">
+                        {getStatusBadge(booking.status)}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Button variant="ghost" size="icon" className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-[var(--text-muted)]">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="p-3 rounded-full bg-[var(--bg-surface)]">
+                          <Search className="w-6 h-6" />
+                        </div>
+                        <p>No bookings matching your criteria found</p>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">€{booking.depositAmount}</p>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No bookings found</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
 
       {/* Booking Detail Dialog */}
       <Dialog open={!!selectedBooking} onOpenChange={() => setSelectedBooking(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Booking Details</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Booking Details</DialogTitle>
           </DialogHeader>
           {selectedBooking && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
+            <div className="space-y-6 pt-4">
+              <div className="flex items-start justify-between">
                 <div>
-                  <p className="font-semibold text-lg">{selectedBooking.customerName}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedBooking.artist?.displayName || "Unknown Artist"}
-                  </p>
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">{selectedBooking.customerName}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Mail className="w-3 h-3 text-[var(--text-muted)]" />
+                    <a href={`mailto:${selectedBooking.customerEmail}`} className="text-sm text-[var(--text-secondary)] hover:text-[var(--brand-primary)]">
+                      {selectedBooking.customerEmail}
+                    </a>
+                  </div>
+                  {selectedBooking.customerPhone && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Phone className="w-3 h-3 text-[var(--text-muted)]" />
+                      <a href={`tel:${selectedBooking.customerPhone}`} className="text-sm text-[var(--text-secondary)] hover:text-[var(--brand-primary)]">
+                        {selectedBooking.customerPhone}
+                      </a>
+                    </div>
+                  )}
                 </div>
                 {getStatusBadge(selectedBooking.status)}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-muted/50">
-                <div>
-                  <p className="text-xs text-muted-foreground">Date & Time</p>
-                  <p className="font-medium">
-                    {new Date(selectedBooking.slotDatetime).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Deposit</p>
-                  <p className="font-medium">€{selectedBooking.depositAmount}</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
-                  <a href={`mailto:${selectedBooking.customerEmail}`} className="hover:underline">
-                    {selectedBooking.customerEmail}
-                  </a>
-                </div>
-                {selectedBooking.customerPhone && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="w-4 h-4 text-muted-foreground" />
-                    <a href={`tel:${selectedBooking.customerPhone}`} className="hover:underline">
-                      {selectedBooking.customerPhone}
-                    </a>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                  <p className="text-xs text-[var(--text-muted)] mb-1">Schedule</p>
+                  <div className="flex items-center gap-2 font-medium text-[var(--text-primary)]">
+                    <Calendar className="w-4 h-4 text-[var(--brand-primary)]" />
+                    {new Date(selectedBooking.slotDatetime).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                   </div>
-                )}
+                  <div className="flex items-center gap-2 mt-1 text-sm text-[var(--text-secondary)]">
+                    <Clock className="w-3 h-3" />
+                    {new Date(selectedBooking.slotDatetime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                  <p className="text-xs text-[var(--text-muted)] mb-1">Financials</p>
+                  <p className="font-mono text-lg font-medium text-[var(--text-primary)]">{formatCurrency(Number(selectedBooking.depositAmount))}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">Deposit Paid</p>
+                </div>
               </div>
 
               {selectedBooking.notes && (
-                <div className="p-3 rounded-lg bg-muted/50">
-                  <p className="text-xs text-muted-foreground mb-1">Notes</p>
-                  <p className="text-sm">{selectedBooking.notes}</p>
+                <div className="p-4 rounded-lg bg-[var(--bg-surface)]/50 border border-[var(--border-subtle)]">
+                  <p className="text-xs text-[var(--text-muted)] mb-2 uppercase tracking-wide font-semibold">Customer Notes</p>
+                  <p className="text-sm text-[var(--text-secondary)] italic leading-relaxed">"{selectedBooking.notes}"</p>
                 </div>
               )}
 
-              <div className="flex gap-2 pt-4 border-t">
-                {selectedBooking.status === "pending" && (
-                  <>
+              <div className="flex flex-col gap-3 pt-4 border-t border-[var(--border-subtle)]">
+                {selectedBooking.status === "pending" && selectedBooking.id && (
+                  <div className="grid grid-cols-2 gap-3">
                     <Button
                       onClick={() =>
                         updateStatusMutation.mutate({
-                          bookingId: selectedBooking.id,
+                          bookingId: selectedBooking.id as string,
                           status: "confirmed",
                         })
                       }
                       disabled={updateStatusMutation.isPending}
-                      className="flex-1"
+                      className="btn-success"
                     >
                       <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Confirm
+                      Approve Booking
                     </Button>
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       onClick={() =>
                         updateStatusMutation.mutate({
-                          bookingId: selectedBooking.id,
+                          bookingId: selectedBooking.id as string,
                           status: "cancelled",
                         })
                       }
                       disabled={updateStatusMutation.isPending}
-                      className="flex-1"
+                      className="border-[var(--signal-error)]/30 text-[var(--signal-error)] hover:bg-[var(--signal-error)]/10"
                     >
                       <XCircle className="w-4 h-4 mr-2" />
-                      Cancel
+                      Decline
                     </Button>
-                  </>
+                  </div>
                 )}
-                {selectedBooking.status === "confirmed" && (
+                {selectedBooking.status === "confirmed" && selectedBooking.id && (
                   <Button
                     onClick={() =>
                       updateStatusMutation.mutate({
-                        bookingId: selectedBooking.id,
+                        bookingId: selectedBooking.id as string,
                         status: "completed",
                       })
                     }
                     disabled={updateStatusMutation.isPending}
-                    className="flex-1"
+                    className="w-full btn-primary"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Mark Completed
+                    Mark Session Complete
                   </Button>
                 )}
               </div>

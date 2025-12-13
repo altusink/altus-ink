@@ -1,35 +1,35 @@
+import { ReactNode, useState } from "react";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Logo } from "@/components/logo";
+import { Badge } from "@/components/ui/badge";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarHeader,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
+  LayoutDashboard,
   Calendar,
-  Home,
-  Image,
-  LogOut,
-  MapPin,
+  Wallet,
+  Globe,
   Palette,
   Settings,
-  TrendingUp,
   Users,
   BarChart3,
+  CreditCard,
+  LogOut,
+  ChevronDown,
+  Bell,
+  Menu,
+  X,
+  Home
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -38,127 +38,223 @@ interface DashboardLayoutProps {
 }
 
 const artistMenuItems = [
-  { title: "Dashboard", url: "/dashboard/artist", icon: Home },
-  { title: "Calendar", url: "/dashboard/artist/calendar", icon: Calendar },
-  { title: "Portfolio", url: "/dashboard/artist/portfolio", icon: Image },
-  { title: "Tour Mode", url: "/dashboard/artist/tour", icon: MapPin },
-  { title: "Earnings", url: "/dashboard/artist/earnings", icon: TrendingUp },
-  { title: "Personalize", url: "/dashboard/artist/personalize", icon: Palette },
-  { title: "Settings", url: "/dashboard/artist/settings", icon: Settings },
+  { href: "/dashboard/artist", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/artist/calendar", label: "Calendar", icon: Calendar },
+  { href: "/dashboard/artist/earnings", label: "Earnings", icon: Wallet },
+  { href: "/dashboard/artist/tour", label: "Tour Mode", icon: Globe },
+  { href: "/dashboard/artist/portfolio", label: "Portfolio", icon: Palette },
+  { href: "/dashboard/artist/settings", label: "Settings", icon: Settings },
 ];
 
 const ceoMenuItems = [
-  { title: "Dashboard", url: "/dashboard/ceo", icon: Home },
-  { title: "Artists", url: "/dashboard/ceo/artists", icon: Users },
-  { title: "Bookings", url: "/dashboard/ceo/bookings", icon: Calendar },
-  { title: "Financial", url: "/dashboard/ceo/financial", icon: TrendingUp },
-  { title: "Reports", url: "/dashboard/ceo/reports", icon: BarChart3 },
-  { title: "Settings", url: "/dashboard/ceo/settings", icon: Settings },
+  { href: "/dashboard/ceo", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/ceo/artists", label: "Artists", icon: Users },
+  { href: "/dashboard/ceo/bookings", label: "Bookings", icon: Calendar },
+  { href: "/dashboard/ceo/financial", label: "Financial", icon: CreditCard },
+  { href: "/dashboard/ceo/reports", label: "Reports", icon: BarChart3 },
+  { href: "/dashboard/ceo/settings", label: "Settings", icon: Settings },
 ];
 
 export default function DashboardLayout({ children, title, subtitle }: DashboardLayoutProps) {
   const { user } = useAuth();
   const [location] = useLocation();
-  
-  const isCeo = user?.role === "ceo";
-  const menuItems = isCeo ? ceoMenuItems : artistMenuItems;
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const getInitials = (name?: string | null) => {
-    if (!name) return "U";
+  const userRole = (user as any)?.role || "artist";
+  const menuItems = userRole === "ceo" ? ceoMenuItems : artistMenuItems;
+  const displayName = (user as any)?.displayName || (user as any)?.username || "User";
+
+  const getInitials = (name: string) => {
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
-  const style = {
-    "--sidebar-width": "16rem",
-    "--sidebar-width-icon": "3.5rem",
+  const handleLogout = () => {
+    window.location.href = "/api/logout";
   };
 
   return (
-    <SidebarProvider style={style as React.CSSProperties}>
-      <div className="flex h-screen w-full">
-        <Sidebar>
-          <SidebarHeader className="p-4">
-            <Link href="/">
-              <div className="flex items-center hover-elevate rounded-lg p-2 -m-2 cursor-pointer">
-                <Logo size="md" />
-              </div>
-            </Link>
-          </SidebarHeader>
+    <div className="min-h-screen bg-[var(--bg-app)] flex">
 
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>
-                {isCeo ? "Agency" : "Artist"}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {menuItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        asChild
-                        isActive={location === item.url}
-                      >
-                        <Link href={item.url}>
-                          <item.icon className="w-4 h-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
+      {/* Sidebar - Desktop */}
+      <aside className="hidden lg:flex flex-col w-64 sidebar-dark fixed inset-y-0 left-0 z-50">
+        {/* Logo */}
+        <div className="h-16 flex items-center px-6 border-b border-[var(--border-dark)]">
+          <Link href="/">
+            <img src="/logo-altus-white.png" alt="Altus Ink" className="h-7" />
+          </Link>
+        </div>
 
-          <SidebarFooter className="p-4">
-            <div className="flex items-center gap-3 mb-4">
-              <Avatar className="w-9 h-9">
-                <AvatarImage src={user?.profileImageUrl || undefined} />
-                <AvatarFallback className="text-xs">
-                  {getInitials(user?.firstName || user?.email)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {user?.firstName || user?.email?.split("@")[0]}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {isCeo ? "CEO" : "Artist"}
-                </p>
-              </div>
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+          {menuItems.map((item) => {
+            const isActive = location === item.href;
+            return (
+              <Link key={item.href} href={item.href}>
+                <a
+                  className={cn(
+                    "nav-item",
+                    isActive && "nav-item-active"
+                  )}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </a>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User Section */}
+        <div className="p-4 border-t border-[var(--border-dark)]">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
+            <Avatar className="w-10 h-10 border-2 border-white/20">
+              <AvatarImage src={undefined} />
+              <AvatarFallback className="bg-[var(--brand-primary)] text-white text-sm font-semibold">
+                {getInitials(displayName)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-[var(--text-on-dark)] truncate">{displayName}</p>
+              <p className="text-xs text-[var(--text-on-dark-muted)] capitalize">{userRole}</p>
             </div>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start"
-              data-testid="button-sidebar-logout"
-              onClick={() => window.location.href = "/api/logout"}
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </SidebarFooter>
-        </Sidebar>
+          </div>
+        </div>
+      </aside>
 
-        <div className="flex flex-col flex-1 overflow-hidden">
-          {/* Header */}
-          <header className="flex items-center gap-4 h-16 px-4 md:px-6 border-b border-border/50 bg-background/80 glass sticky top-0 z-40">
-            <SidebarTrigger data-testid="button-sidebar-toggle" />
-            <div className="flex-1">
-              <h1 className="font-semibold text-lg">{title}</h1>
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Mobile */}
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 w-64 sidebar-dark transform transition-transform duration-300 lg:hidden",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="h-16 flex items-center justify-between px-6 border-b border-[var(--border-dark)]">
+          <Link href="/">
+            <img src="/logo-altus-white.png" alt="Altus Ink" className="h-7" />
+          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(false)}
+            className="text-white hover:bg-white/10"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+          {menuItems.map((item) => {
+            const isActive = location === item.href;
+            return (
+              <Link key={item.href} href={item.href}>
+                <a
+                  className={cn(
+                    "nav-item",
+                    isActive && "nav-item-active"
+                  )}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </a>
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 lg:ml-64">
+
+        {/* Top Header - Light */}
+        <header className="sticky top-0 z-30 h-16 header-light flex items-center justify-between px-6">
+          {/* Left: Mobile Menu + Title */}
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="w-5 h-5 text-[var(--text-secondary)]" />
+            </Button>
+
+            <div>
+              <h1 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h1>
               {subtitle && (
-                <p className="text-sm text-muted-foreground">{subtitle}</p>
+                <p className="text-sm text-[var(--text-secondary)]">{subtitle}</p>
               )}
             </div>
-          </header>
+          </div>
 
-          {/* Main Content */}
-          <main className="flex-1 overflow-auto">
-            <div className="p-4 md:p-6 lg:p-8 page-transition">
-              {children}
-            </div>
-          </main>
-        </div>
+          {/* Right: Actions */}
+          <div className="flex items-center gap-3">
+            {/* Notifications */}
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className="w-5 h-5 text-[var(--text-secondary)]" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--signal-error)] rounded-full" />
+            </Button>
+
+            {/* Home Link */}
+            <Link href="/">
+              <Button variant="ghost" size="icon">
+                <Home className="w-5 h-5 text-[var(--text-secondary)]" />
+              </Button>
+            </Link>
+
+            {/* User Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-2 px-2">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={undefined} />
+                    <AvatarFallback className="bg-[var(--brand-primary)] text-white text-xs font-semibold">
+                      {getInitials(displayName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:inline text-sm font-medium text-[var(--text-primary)]">
+                    {displayName}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div>
+                    <p className="font-medium">{displayName}</p>
+                    <p className="text-xs text-[var(--text-secondary)] capitalize">{userRole}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href={userRole === "ceo" ? "/dashboard/ceo/settings" : "/dashboard/artist/settings"}>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-[var(--signal-error)]">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+
+        {/* Page Content - Light Background */}
+        <main className="p-6 bg-[var(--bg-surface)] min-h-[calc(100vh-4rem)]">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
+        </main>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
