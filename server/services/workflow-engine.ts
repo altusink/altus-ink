@@ -1397,7 +1397,7 @@ export class WorkflowEngine extends EventEmitter {
                     }
                 }
             }
-        });
+        }, { name: "WorkflowSubprocessHandler", retryPolicy: { maxAttempts: 3, backoff: "fixed", initialDelayMs: 1000, maxDelayMs: 5000 } });
     }
 
     private seedDefinitions(): void {
