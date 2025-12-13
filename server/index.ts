@@ -179,7 +179,7 @@ app.use((req, res, next) => {
   // Apply subdomain middleware for artist booking pages
   app.use(subdomainMiddleware);
 
-  await registerRoutes(httpServer, app);
+  registerRoutes(app);
 
   // Seed will run AFTER server starts (non-blocking)
 
