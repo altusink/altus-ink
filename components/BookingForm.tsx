@@ -72,7 +72,7 @@ const bookingSchema = z.object({
     ageAccepted: z.boolean().refine(val => val === true, {
         message: "You must be 18+"
     }),
-    }),
+
 
     // Payment
     paymentMethod: z.enum(['stripe', 'pix']).default('stripe'),
