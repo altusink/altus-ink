@@ -315,7 +315,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                             <input
                                 {...register('bodyLocation')}
                                 placeholder="ex. Forearm, Back"
-                                className={`w-full bg-bg-card border rounded-xl p-3 text-white outline-none focus:border-neon-cyan ${errors.bodyLocation ? 'border-red-500' : 'border-white/10'}`}
+                                className={`w-full bg-white/5 border rounded-xl p-4 text-white placeholder-white/30 outline-none focus:border-neon-cyan focus:bg-white/10 transition-all font-medium ${errors.bodyLocation ? 'border-red-500' : 'border-white/10'}`}
                             />
                             {errors.bodyLocation && <span className="text-red-500 text-xs mt-1">{t('form.required_field') || 'Este campo é obrigatório'}</span>}
                         </div>
@@ -324,7 +324,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                             <textarea
                                 {...register('tattooDescription')}
                                 placeholder="Describe your idea..."
-                                className="w-full bg-bg-card border border-white/10 rounded-xl p-3 text-white focus:border-neon-cyan outline-none h-24"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-white/30 outline-none focus:border-neon-cyan focus:bg-white/10 transition-all font-medium h-32 resize-none"
                             />
                         </div>
                     </div>
@@ -465,13 +465,13 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                     <div className="space-y-5">
                         <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-3">{t('steps.personal_info')}</h3>
                         <div className="space-y-4">
-                            <input {...register('clientName')} placeholder={t('form.full_name')} className="w-full bg-bg-card border border-white/10 rounded-lg p-3 text-white focus:border-neon-cyan outline-none" />
-                            <input {...register('clientEmail')} type="email" placeholder={t('form.email')} className="w-full bg-bg-card border border-white/10 rounded-lg p-3 text-white focus:border-neon-cyan outline-none" />
-                            <input {...register('clientPhone')} placeholder={t('form.phone')} className="w-full bg-bg-card border border-white/10 rounded-lg p-3 text-white focus:border-neon-cyan outline-none" />
+                            <input {...register('clientName')} placeholder={t('form.full_name')} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-white/30 outline-none focus:border-neon-cyan focus:bg-white/10 transition-all font-medium" />
+                            <input {...register('clientEmail')} type="email" placeholder={t('form.email')} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-white/30 outline-none focus:border-neon-cyan focus:bg-white/10 transition-all font-medium" />
+                            <input {...register('clientPhone')} placeholder={t('form.phone')} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-white/30 outline-none focus:border-neon-cyan focus:bg-white/10 transition-all font-medium" />
 
                             <div className="pt-4">
                                 <h4 className="text-sm font-semibold text-white mb-2">{t('form.health_form')}</h4>
-                                <input {...register('healthForm.allergies')} placeholder={t('form.allergies')} className="w-full bg-bg-card border border-white/10 rounded-lg p-3 text-white focus:border-neon-cyan outline-none" />
+                                <input {...register('healthForm.allergies')} placeholder={t('form.allergies')} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-white/30 outline-none focus:border-neon-cyan focus:bg-white/10 transition-all font-medium" />
                             </div>
                         </div>
                     </div>

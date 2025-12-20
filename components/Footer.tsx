@@ -22,7 +22,7 @@ export default function Footer() {
     }, [])
 
     return (
-        <footer className="bg-bg-card/50 backdrop-blur-md border-t border-white/5 relative z-10">
+        <footer className="bg-bg-card/50 backdrop-blur-md relative z-10 pt-10">
             <div className="container mx-auto px-4 py-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-6">
                     {/* Logo & Brand */}

@@ -29,18 +29,18 @@ export default function SelectableCard({
             <motion.button
                 type="button"
                 onClick={onClick}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 className={`
-                    flex flex-col items-center justify-center p-3 rounded-lg border transition-all duration-200 w-full relative overflow-hidden group
+                    flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-300 w-full relative overflow-hidden group
                     ${isSelected 
-                        ? 'bg-white text-bg-dark border-white shadow-lg' 
-                        : 'bg-transparent border-white/20 text-white hover:border-white/40'
+                        ? 'bg-neon-cyan text-bg-dark border-neon-cyan shadow-[0_0_15px_rgba(0,240,255,0.5)]' 
+                        : 'bg-white/5 border-white/10 text-text-muted hover:border-neon-cyan/50 hover:bg-white/10'
                     }
                     ${className}
                 `}
             >
-                <div className="relative z-10 flex flex-col items-center">
+                <div className="relative z-10 flex flex-col items-center gap-1 font-bold">
                     {children}
                 </div>
             </motion.button>
@@ -53,22 +53,22 @@ export default function SelectableCard({
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             className={`
-                relative p-4 rounded-lg border cursor-pointer transition-all duration-200 flex flex-col items-center justify-between gap-3 group
+                relative p-5 rounded-2xl border cursor-pointer transition-all duration-300 flex flex-col items-center justify-between gap-4 group overflow-hidden
                 ${isSelected 
-                    ? 'bg-white text-bg-dark border-white shadow-xl' 
-                    : 'bg-transparent border-white/20 hover:border-white/40'
+                    ? 'bg-neon-cyan/10 border-neon-cyan shadow-[0_0_20px_rgba(0,240,255,0.2)]' 
+                    : 'bg-white/5 border-white/10 hover:border-neon-cyan/50 hover:bg-white/10'
                 }
                 ${className}
             `}
         >
             
-            {/* Icon */}
+            {/* Icon - Glow Effect */}
             {icon && (
                 <div className={`
-                    p-2 rounded-full transition-all duration-200
+                    p-3 rounded-xl transition-all duration-300
                     ${isSelected 
-                        ? 'bg-bg-dark text-white' 
-                        : 'bg-white/10 text-white/70 group-hover:bg-white/20 group-hover:text-white'
+                        ? 'bg-neon-cyan text-bg-dark shadow-[0_0_15px_rgba(0,240,255,0.6)]' 
+                        : 'bg-white/10 text-white/50 group-hover:text-neon-cyan group-hover:bg-neon-cyan/10'
                     }
                 `}>
                     {icon}
@@ -77,21 +77,21 @@ export default function SelectableCard({
 
             <div className="text-center z-10 space-y-1">
                 {title && (
-                    <div className={`font-semibold text-sm leading-tight transition-colors ${isSelected ? 'text-bg-dark' : 'text-white/90'}`}>
+                    <div className={`font-heading font-bold text-sm leading-tight transition-colors ${isSelected ? 'text-white' : 'text-text-secondary group-hover:text-white'}`}>
                         {title}
                     </div>
                 )}
                 {subtitle && (
-                    <div className={`text-[10px] uppercase tracking-wider font-mono transition-opacity ${isSelected ? 'text-bg-dark/70' : 'text-white/50'}`}>
+                    <div className={`text-[10px] uppercase tracking-wider font-mono transition-opacity ${isSelected ? 'text-neon-cyan' : 'text-white/30'}`}>
                         {subtitle}
                     </div>
                 )}
                 {children}
             </div>
             
-            {/* Active Indicator (Clean Dot) */}
+            {/* Active Indicator (Neon Line) */}
             {isSelected && (
-                <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-bg-dark" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-neon-cyan via-white to-neon-cyan shadow-[0_2px_10px_rgba(0,240,255,0.8)]" />
             )}
         </motion.div>
     )

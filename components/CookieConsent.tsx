@@ -34,12 +34,12 @@ export default function CookieConsent() {
                 >
                     <div className="bg-bg-dark/95 border border-white/10 backdrop-blur-xl p-5 rounded-2xl shadow-2xl relative overflow-hidden">
                         {/* Neon Glow */}
-                        <div className="absolute -left-10 -top-10 w-20 h-20 bg-neon-green/20 blur-3xl rounded-full" />
+                        <div className="absolute -left-10 -top-10 w-20 h-20 bg-neon-cyan/20 blur-3xl rounded-full" />
 
                         <div className="relative z-10">
                             <div className="flex items-start gap-3 mb-3">
                                 <div className="p-2 rounded-full bg-white/5 border border-white/10">
-                                    <Cookie className="w-5 h-5 text-neon-green" />
+                                    <Cookie className="w-5 h-5 text-neon-cyan" />
                                 </div>
                                 <div className="flex-1">
                                     <h3 className="text-base font-bold text-white mb-1">Cookies 🍪</h3>
@@ -60,7 +60,7 @@ export default function CookieConsent() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={handleAccept}
-                                    className="flex-1 py-2.5 bg-neon-green text-bg-dark font-bold rounded-xl hover:shadow-neon-green transition-all hover:scale-[1.02]"
+                                    className="flex-1 py-2.5 bg-neon-green text-bg-dark font-bold rounded-xl hover:shadow-neon-cyan transition-all hover:scale-[1.02]"
                                 >
                                     Aceitar Tudo
                                 </button>
