@@ -49,22 +49,70 @@ export default function ArtistPortal() {
 
 // Extracted Dashboard Logic
 function DashboardView() {
-    const [user, setUser] = useState<{ name: string } | null>(null)
+    const [user, setUser] = useState<{ name: string; email?: string } | null>(null)
+    const [stats, setStats] = useState({
+        earnings: 0,
+        sessions: 0,
+        nextLocation: 'Lisboa',
+        hours: 0
+    })
+    const [nextBooking, setNextBooking] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
     const supabase = createClient()
 
     useEffect(() => {
-        async function getUser() {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-                const { data } = await supabase.from('users').select('name').eq('id', user.id).single()
-                setUser(data || { name: user.email?.split('@')[0] || 'Artista' })
+        async function loadDashboardData() {
+            try {
+                // 1. Get Auth User
+                const { data: { user: authUser } } = await supabase.auth.getUser()
+                if (!authUser) return
+
+                // 2. Get User Profile
+                const { data: userProfile } = await supabase.from('users').select('name').eq('id', authUser.id).single()
+                setUser({ name: userProfile?.name || authUser.email?.split('@')[0] || 'Artista', email: authUser.email })
+
+                // 3. Get Artist ID
+                const { data: artist } = await supabase.from('artists').select('id, city').eq('email', authUser.email).single()
+                
+                if (artist) {
+                    // 4. Get Bookings
+                    const today = new Date().toISOString().split('T')[0]
+                    const { data: bookings } = await supabase
+                        .from('bookings')
+                        .select('*')
+                        .eq('artist_id', artist.id)
+                        .gte('booking_date', today)
+                        .order('booking_date', { ascending: true })
+                        .order('booking_time', { ascending: true })
+
+                    if (bookings && bookings.length > 0) {
+                        setNextBooking(bookings[0])
+                        
+                        // Calculate Stats
+                        const totalEarnings = bookings.reduce((acc, curr) => acc + (curr.estimated_price || 0), 0)
+                        const totalHours = bookings.reduce((acc, curr) => acc + (curr.duration_hours || 0), 0)
+                        
+                        setStats({
+                            earnings: totalEarnings,
+                            sessions: bookings.length,
+                            nextLocation: artist.city || 'Lisboa',
+                            hours: totalHours
+                        })
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error)
+            } finally {
+                setLoading(false)
             }
         }
-        getUser()
+        loadDashboardData()
     }, [])
 
+    if (loading) return <div className="p-8 text-center animate-pulse text-text-muted">Carregando painel...</div>
+
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in">
             {/* Hero Section */}
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-neon-purple/20 to-neon-blue/20 border border-white/10 p-8">
                 <div className="relative z-10">
@@ -77,7 +125,11 @@ function DashboardView() {
                             <h1 className="text-3xl md:text-4xl font-bold font-heading mb-2">
                                 Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan to-neon-purple">{user?.name || '...'}</span>
                             </h1>
-                            <p className="text-text-muted max-w-md">Pronto para criar arte hoje? Você tem 3 sessões confirmadas esta semana.</p>
+                            <p className="text-text-muted max-w-md">
+                                {stats.sessions > 0 
+                                    ? `Você tem ${stats.sessions} sessões confirmadas nas próximas semanas.` 
+                                    : 'Nenhum agendamento próximo encontrado.'}
+                            </p>
                         </div>
                         <div className="hidden md:block">
                             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-neon-cyan to-neon-purple p-[2px]">
@@ -96,52 +148,73 @@ function DashboardView() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard label="Ganhos (Mês)" value="€4.2k" icon={<DollarSign size={18} />} trend="+12%" />
-                <StatCard label="Sessões" value="18" icon={<Calendar size={18} />} />
-                <StatCard label="Próx. Tour" value="Lisboa" icon={<MapPin size={18} />} highlight />
-                <StatCard label="Hours" value="42h" icon={<Clock size={18} />} />
+                <StatCard label="Projeção (Total)" value={`€${stats.earnings/1000}k`} icon={<DollarSign size={18} />} trend="+100%" />
+                <StatCard label="Sessões" value={stats.sessions.toString()} icon={<Calendar size={18} />} />
+                <StatCard label="Base" value={stats.nextLocation} icon={<MapPin size={18} />} highlight />
+                <StatCard label="Horas Estúdio" value={`${stats.hours}h`} icon={<Clock size={18} />} />
             </div>
 
             {/* Next Appointment (Big Card) */}
-            <div className="bg-bg-card/50 backdrop-blur-sm border border-white/5 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold">Próxima Sessão</h2>
-                    <Link href="/admin/bookings" className="text-neon-cyan text-sm hover:underline">Ver Agenda</Link>
-                </div>
-
-                <div className="flex flex-col md:flex-row gap-6 items-center">
-                    <div className="w-full md:w-auto flex flex-col items-center bg-black/20 rounded-xl p-4 min-w-[120px]">
-                        <span className="text-3xl font-bold text-white">12</span>
-                        <span className="text-sm text-text-muted uppercase">Dez</span>
-                        <div className="w-full h-px bg-white/10 my-2" />
-                        <span className="text-neon-green font-mono text-sm">14:00</span>
+            {nextBooking ? (
+                <div className="bg-bg-card/50 backdrop-blur-sm border border-white/5 rounded-2xl p-6 hover:border-neon-cyan/30 transition-colors cursor-pointer group">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-neon-green animate-pulse" />
+                            Próxima Sessão
+                        </h2>
+                        <Link href="/admin/bookings" className="text-neon-cyan text-sm hover:underline">Ver Agenda</Link>
                     </div>
 
-                    <div className="flex-1 space-y-4 w-full">
-                        <div>
-                            <h3 className="text-2xl font-bold text-white">Sarah Connor</h3>
-                            <p className="text-text-muted">Projeto: Realismo (Braço Fechado) • Sessão 2/3</p>
+                    <div className="flex flex-col md:flex-row gap-6 items-center">
+                        <div className="w-full md:w-auto flex flex-col items-center bg-black/40 rounded-xl p-4 min-w-[120px] border border-white/5 group-hover:border-neon-cyan/50 transition-colors">
+                            <span className="text-3xl font-bold text-white">{new Date(nextBooking.booking_date).getDate()}</span>
+                            <span className="text-sm text-text-muted uppercase">{new Date(nextBooking.booking_date).toLocaleString('pt-BR', { month: 'short' }).replace('.', '')}</span>
+                            <div className="w-full h-px bg-white/10 my-2" />
+                            <span className="text-neon-green font-mono text-sm">{nextBooking.booking_time?.slice(0, 5)}</span>
                         </div>
 
-                        <div className="flex gap-4">
-                            <div className="flex items-center gap-2 text-sm text-text-secondary">
-                                <Clock size={16} />
-                                <span>Dur. Estimada: 4h</span>
+                        <div className="flex-1 space-y-4 w-full">
+                            <div>
+                                <h3 className="text-2xl font-bold text-white">{nextBooking.client_name}</h3>
+                                <p className="text-text-muted capitalize">
+                                    {nextBooking.tattoo_type?.replace('-', ' ') || 'Tatuagem'} • {nextBooking.body_location || 'Local não esp.'}
+                                </p>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-text-secondary">
-                                <DollarSign size={16} />
-                                <span className="text-neon-green font-bold">€850</span>
+
+                            <div className="flex gap-4">
+                                <div className="flex items-center gap-2 text-sm text-text-secondary">
+                                    <Clock size={16} />
+                                    <span>{nextBooking.duration_hours}h estimadas</span>
+                                </div>
+                                {nextBooking.estimated_price > 0 && (
+                                    <div className="flex items-center gap-2 text-sm text-text-secondary">
+                                        <DollarSign size={16} />
+                                        <span className="text-neon-green font-bold">€{nextBooking.estimated_price}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    </div>
 
-                    <div className="flex flex-col gap-2 w-full md:w-auto">
-                        <Link href="/admin/bookings/123-mock-id" className="px-6 py-3 bg-neon-cyan/10 hover:bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
-                            Ver Ficha <ChevronRight size={18} />
-                        </Link>
+                        <div className="flex flex-col gap-2 w-full md:w-auto">
+                            <Link 
+                                href={`/admin/bookings/${nextBooking.id}`} 
+                                className="px-6 py-3 bg-neon-cyan/10 hover:bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                            >
+                                Ver Ficha <ChevronRight size={18} />
+                            </Link>
+                        </div>
                     </div>
                 </div>
-            </div>
+            ) : (
+                <div className="bg-bg-card/50 backdrop-blur-sm border border-white/5 rounded-2xl p-12 text-center">
+                    <Calendar className="w-12 h-12 text-text-muted mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-white mb-2">Agenda Livre</h3>
+                    <p className="text-text-muted mb-6">Você não tem sessões agendadas para os próximos dias.</p>
+                    <Link href="/admin/bookings" className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
+                        Ver Calendário Completo
+                    </Link>
+                </div>
+            )}
         </div>
     )
 }
