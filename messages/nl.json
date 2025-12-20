@@ -1,0 +1,167 @@
+{
+  "Navbar": {
+    "home": "Home",
+    "artists": "Artiesten",
+    "about": "Over ons",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "book": "Boek Nu",
+    "login": "Inloggen"
+  },
+  "Hero": {
+    "badge": "Premium Tattoo Ervaring",
+    "title_start": "Transformeer je huid in een",
+    "title_highlight": "kunstwerk",
+    "subtitle": "Boek bij wereldklasse artiesten. Slim systeem, veilige betaling.",
+    "cta_book": "Boek Nu",
+    "cta_artists": "Bekijk Artiesten",
+    "stats": {
+      "tattoos": "Tatoeages",
+      "rating": "Beoordeling",
+      "years": "Jaren",
+      "artists": "Artiesten"
+    }
+  },
+  "ArtistsSection": {
+    "badge": "Hoofdartiest",
+    "title_start": "Ontmoet de",
+    "title_highlight": "Artiesten",
+    "subtitle": "Internationale ervaring in artistieke excellentie",
+    "card": {
+      "specialty": "Ultrarealisme - Fineline - Coverup - Old School - Kleur",
+      "description": "Voormalig politieagent uit de kleinste stad van Brazilië, Danilo Santos verliet het korps om zijn droom als artiest te volgen. Met meer dan 7 jaar ervaring en 15.000+ tatoeages, is hij nu een internationale referentie in artistieke excellentie.",
+      "view_portfolio": "Bekijk Portfolio"
+    }
+  },
+  "Features": {
+    "title_start": "Waarom kiezen voor",
+    "title_highlight": "Altus Ink?",
+    "items": {
+      "smart_booking": {
+        "title": "Slim Boeken",
+        "description": "Geautomatiseerd systeem met real-time kalender en directe bevestiging."
+      },
+      "secure_payment": {
+        "title": "Veilig Betalen",
+        "description": "Geïntegreerde Stripe met ondersteuning voor meerdere valuta's en Europese methoden."
+      },
+      "full_support": {
+        "title": "Volledige Ondersteuning",
+        "description": "Gepersonaliseerde nazorggids en ondersteuning tijdens het hele genezingsproces."
+      }
+    }
+  },
+  "CTA": {
+    "title_start": "Klaar om te",
+    "title_highlight": "beginnen?",
+    "subtitle": "Boek nu je sessie en transformeer je visie naar realiteit",
+    "button": "Boek Nu"
+  },
+  "Footer": {
+    "rights": "Alle rechten voorbehouden.",
+    "privacy": "Privacybeleid",
+    "terms": "Gebruiksvoorwaarden",
+    "quick_links": "Snelle Links",
+    "contact": "Contact",
+    "follow_us": "Volg ons",
+    "made_with": "Gemaakt met",
+    "description": "Huid transformeren in kunst sinds 2017. Premium tattoo ervaring met de hoogste kwaliteits- en veiligheidsnormen."
+  },
+  "About": {
+    "title_start": "About",
+    "title_highlight": "Altus Ink",
+    "history_title": "Our History",
+    "history_text": "Altus Ink was born from a passion for tattoo art and a commitment to excellence. Founded by Danilo Santos, a former police officer who left his career to follow his dream, we are now an international reference in quality and professionalism.",
+    "mission_title": "Our Mission",
+    "mission_text": "To transform skin into art, ensuring a premium experience from start to finish. Every tattoo is unique, every client is special."
+  },
+  "Contact": {
+    "title": "Contact",
+    "phone": "Phone",
+    "email": "Email",
+    "location": "Location",
+    "instagram": "Instagram",
+    "location_value": "São Paulo, Brazil"
+  },
+  "FAQ": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Get all your questions answered about our services",
+    "still_have_questions": "Still have questions?",
+    "contact_text": "Contact us via WhatsApp, email or phone",
+    "contact_button": "Contact Us",
+    "items": [
+      {
+        "question": "How does booking work?",
+        "answer": "You choose the artist, style, date, and available time through our online system. After paying the 30% deposit via credit card or PIX, your booking is automatically confirmed and you receive a confirmation email."
+      },
+      {
+        "question": "What is the deposit value?",
+        "answer": "The deposit is 30% of the estimated total tattoo value. This amount is deducted from the final payment. The deposit guarantees your spot and covers preparation costs and materials."
+      },
+      {
+        "question": "Can I reschedule my session?",
+        "answer": "Yes, up to 48h in advance without additional costs. Contact us via WhatsApp, email, or phone to reschedule. Rescheduling with less than 48h may incur a 50% deposit fee."
+      },
+      {
+        "question": "What is the refund policy?",
+        "answer": "The deposit is 100% refundable if cancellation is made more than 7 days in advance. Between 7 and 3 days: 50% refund. Less than 3 days: no refund. In case of cancellation by the studio, immediate full refund."
+      },
+      {
+        "question": "How long does a session take?",
+        "answer": "It depends on size and complexity: Small tattoos (up to 10cm) take 1-2h. Medium (10-20cm) take 3-4h. Large (20cm+) may need multiple sessions of 4-6h each."
+      },
+      {
+        "question": "Do you accept minors?",
+        "answer": "No. Only adults over 18 with valid ID (RG, CNH, or Passport). We make no exceptions, even with parental authorization."
+      },
+      {
+        "question": "What payment methods do you accept?",
+        "answer": "We accept: Credit card (up to 12x), Debit card, PIX, Bank transfer, Cash. For international payments: Stripe, PayPal, Wise."
+      },
+      {
+        "question": "Do I need to bring anything on the day?",
+        "answer": "Yes: Photo ID, Deposit payment proof, Reference images (if any), Comfortable clothing allowing access to tattoo area. We recommend eating well before the session."
+      },
+      {
+        "question": "How is the healing process?",
+        "answer": "Healing takes 2-4 weeks. We provide a complete aftercare guide, specific ointment, and follow-up via WhatsApp. You will receive automatic reminders about necessary care at each stage."
+      },
+      {
+        "question": "Do you do cover-ups?",
+        "answer": "Yes! Danilo is a cover-up specialist. Send photos of the current tattoo for evaluation. Some tattoos may need laser sessions before cover-up for best results."
+      },
+      {
+        "question": "Can I bring a companion?",
+        "answer": "Yes, you can bring 1 companion. For long sessions (over 4h), we recommend having someone to support you. Children are not allowed in the studio for safety reasons."
+      },
+      {
+        "question": "Is the studio sanitized?",
+        "answer": "Absolutely. We follow all biosafety protocols: Single-use disposable materials, Autoclave sterilization, New gloves and needles for every client, Deep cleaning between every session. We have sanitary surveillance certification."
+      },
+      {
+        "question": "Can I get a tattoo if I have allergies?",
+        "answer": "Depends on the allergy type. We inform all allergies in the health form. We use vegan and hypoallergenic inks. For severe allergies, we recommend a patch test 48h prior."
+      },
+      {
+        "question": "How much does a tattoo cost?",
+        "answer": "Price varies by size, complexity, colors, and location. Small tattoos: R$ 300-800. Medium: R$ 800-2000. Large: R$ 2000+. Request a personalized quote by sending your idea and references."
+      },
+      {
+        "question": "Do you give online quotes?",
+        "answer": "Yes! Send reference photos, detailed description, approximate size, and body location. We respond within 24h with an estimated quote. For more precise quotes, schedule a free in-person consultation."
+      }
+    ]
+  },
+  "Booking": {
+    "badge": "Booking System",
+    "title": "Book your Session",
+    "subtitle": "Real-time booking system will be implemented in Phase 3",
+    "dev_note": "🚧 In development - Phase 3"
+  },
+  "Login": {
+    "badge": "Restricted Area",
+    "title": "Login",
+    "subtitle": "Access for CEO, Artists, Sales, and Managers",
+    "dev_note": "🚧 Authentication system will be implemented in Phase 3"
+  }
+}
