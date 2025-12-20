@@ -60,7 +60,7 @@ export default function CookieConsent() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={handleAccept}
-                                    className="flex-1 py-2.5 bg-neon-green text-bg-dark font-bold rounded-xl hover:shadow-neon-cyan transition-all hover:scale-[1.02]"
+                                    className="flex-1 py-2.5 bg-neon-cyan text-bg-dark font-bold rounded-xl hover:shadow-neon-cyan transition-all hover:scale-[1.02]"
                                 >
                                     Aceitar Tudo
                                 </button>
