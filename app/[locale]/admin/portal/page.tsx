@@ -64,17 +64,28 @@ function DashboardView() {
         async function loadDashboardData() {
             try {
                 // 1. Get Auth User
-                const { data: { user: authUser } } = await supabase.auth.getUser()
-                if (!authUser) return
+                const { data: authData, error: authError } = await supabase.auth.getUser()
+                if (authError || !authData?.user) {
+                    console.error('Auth Error:', authError)
+                    setLoading(false)
+                    return
+                }
 
-                // 2. Get User Profile
-                const { data: userProfile } = await supabase.from('users').select('name').eq('id', authUser.id).single()
-                setUser({ name: userProfile?.name || authUser.email?.split('@')[0] || 'Artista', email: authUser.email })
+                const authUser = authData.user
+                
+                // 2. Get User Profile (Safe Fallback)
+                let userName = 'Artista'
+                try {
+                    const { data: userProfile } = await supabase.from('users').select('name').eq('id', authUser.id).single()
+                    if (userProfile?.name) userName = userProfile.name
+                } catch (e) { console.warn('User profile load fail', e) }
+
+                setUser({ name: userName || authUser.email?.split('@')[0] || 'Artista', email: authUser.email })
 
                 // 3. Get Artist ID
-                const { data: artist } = await supabase.from('artists').select('id, city').eq('email', authUser.email).single()
+                const { data: artist, error: artistError } = await supabase.from('artists').select('id, city').eq('email', authUser.email).single()
                 
-                if (artist) {
+                if (artist && !artistError) {
                     // 4. Get Bookings
                     const today = new Date().toISOString().split('T')[0]
                     const { data: bookings } = await supabase
@@ -89,8 +100,8 @@ function DashboardView() {
                         setNextBooking(bookings[0])
                         
                         // Calculate Stats
-                        const totalEarnings = bookings.reduce((acc, curr) => acc + (curr.estimated_price || 0), 0)
-                        const totalHours = bookings.reduce((acc, curr) => acc + (curr.duration_hours || 0), 0)
+                        const totalEarnings = bookings.reduce((acc, curr) => acc + (Number(curr.estimated_price) || 0), 0)
+                        const totalHours = bookings.reduce((acc, curr) => acc + (Number(curr.duration_hours) || 0), 0)
                         
                         setStats({
                             earnings: totalEarnings,
@@ -101,7 +112,7 @@ function DashboardView() {
                     }
                 }
             } catch (error) {
-                console.error('Error loading dashboard:', error)
+                console.error('Critical Dashboard Error:', error)
             } finally {
                 setLoading(false)
             }
@@ -110,6 +121,25 @@ function DashboardView() {
     }, [])
 
     if (loading) return <div className="p-8 text-center animate-pulse text-text-muted">Carregando painel...</div>
+
+    // Helper for safe dates
+    const formatDate = (dateString: string) => {
+        try {
+            if (!dateString) return 'Data Inválida'
+            const d = new Date(dateString)
+            if (isNaN(d.getTime())) return 'Data Inválida'
+            return d.getDate().toString()
+        } catch { return '??' }
+    }
+
+    const formatMonth = (dateString: string) => {
+        try {
+            if (!dateString) return ''
+            const d = new Date(dateString)
+            if (isNaN(d.getTime())) return ''
+            return d.toLocaleString('pt-BR', { month: 'short' }).replace('.', '')
+        } catch { return '' }
+    }
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -123,7 +153,7 @@ function DashboardView() {
                                 <span>Star Artist</span>
                             </div>
                             <h1 className="text-3xl md:text-4xl font-bold font-heading mb-2">
-                                Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan to-neon-purple">{user?.name || '...'}</span>
+                                Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan to-neon-purple">{user?.name || 'Artista'}</span>
                             </h1>
                             <p className="text-text-muted max-w-md">
                                 {stats.sessions > 0 
@@ -148,7 +178,7 @@ function DashboardView() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard label="Projeção (Total)" value={`€${stats.earnings/1000}k`} icon={<DollarSign size={18} />} trend="+100%" />
+                <StatCard label="Projeção (Total)" value={`€${(stats.earnings/1000).toFixed(1)}k`} icon={<DollarSign size={18} />} trend="+100%" />
                 <StatCard label="Sessões" value={stats.sessions.toString()} icon={<Calendar size={18} />} />
                 <StatCard label="Base" value={stats.nextLocation} icon={<MapPin size={18} />} highlight />
                 <StatCard label="Horas Estúdio" value={`${stats.hours}h`} icon={<Clock size={18} />} />
@@ -167,8 +197,8 @@ function DashboardView() {
 
                     <div className="flex flex-col md:flex-row gap-6 items-center">
                         <div className="w-full md:w-auto flex flex-col items-center bg-black/40 rounded-xl p-4 min-w-[120px] border border-white/5 group-hover:border-neon-cyan/50 transition-colors">
-                            <span className="text-3xl font-bold text-white">{new Date(nextBooking.booking_date).getDate()}</span>
-                            <span className="text-sm text-text-muted uppercase">{new Date(nextBooking.booking_date).toLocaleString('pt-BR', { month: 'short' }).replace('.', '')}</span>
+                            <span className="text-3xl font-bold text-white">{formatDate(nextBooking.booking_date)}</span>
+                            <span className="text-sm text-text-muted uppercase">{formatMonth(nextBooking.booking_date)}</span>
                             <div className="w-full h-px bg-white/10 my-2" />
                             <span className="text-neon-green font-mono text-sm">{nextBooking.booking_time?.slice(0, 5)}</span>
                         </div>
