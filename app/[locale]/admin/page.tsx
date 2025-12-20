@@ -83,8 +83,8 @@ export default async function AdminDashboard() {
             value: confirmedCount?.toString() || '0',
             sub: 'Próximas sessões',
             icon: Calendar,
-            color: 'text-neon-blue',
-            bg: 'bg-neon-blue/10',
+            color: 'text-neon-purple',
+            bg: 'bg-neon-purple/10',
             href: '/admin/bookings?status=CONFIRMED'
         },
         {
@@ -101,8 +101,8 @@ export default async function AdminDashboard() {
             value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(totalRevenue),
             sub: 'Confirmado + Concluído',
             icon: DollarSign,
-            color: 'text-neon-green',
-            bg: 'bg-neon-green/10',
+            color: 'text-neon-cyan',
+            bg: 'bg-neon-cyan/10',
             href: '/admin/sales'
         },
     ]
@@ -161,19 +161,19 @@ export default async function AdminDashboard() {
                 <div className="p-8 bg-white/5 border border-white/10 rounded-3xl">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-bold text-white">Pedidos Recentes</h2>
-                        <Link href="/admin/bookings" className="text-sm text-neon-green hover:underline">Ver Agenda Completa</Link>
+                        <Link href="/admin/bookings" className="text-sm text-neon-cyan hover:underline">Ver Agenda Completa</Link>
                     </div>
 
                     <div className="space-y-4">
                         {recentBookings?.map((booking, i) => (
                             <Link href={`/admin/bookings/${booking.id}`} key={booking.id} className="block group">
                                 <div className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-transparent hover:border-white/10 hover:bg-white/5 transition-all cursor-pointer">
-                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-neon-green/20 to-blue-500/20 flex items-center justify-center text-xs font-bold text-white uppercase group-hover:scale-110 transition-transform">
+                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-neon-cyan/20 to-purple-500/20 flex items-center justify-center text-xs font-bold text-white uppercase group-hover:scale-110 transition-transform">
                                         {booking.client_name.substring(0, 2)}
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex justify-between items-start">
-                                            <h4 className="text-white font-medium group-hover:text-neon-green transition-colors">{booking.client_name}</h4>
+                                            <h4 className="text-white font-medium group-hover:text-neon-cyan transition-colors">{booking.client_name}</h4>
                                             <span className="text-xs text-text-secondary">
                                                 {new Date(booking.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                                             </span>
