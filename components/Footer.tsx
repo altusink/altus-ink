@@ -1,20 +1,25 @@
-'use client'
+import { getSystemSettings } from '@/app/actions/settings'
+import { useState, useEffect } from 'react'
 
-import { Link } from '@/navigation'
-import Image from 'next/image'
-import { Instagram, Facebook, Mail, Phone, MapPin, Shield, Lock, CheckCircle } from 'lucide-react'
-import { useTranslations } from 'next-intl'
-import SecuritySeal from './SecuritySeal'
+// ...
 
 export default function Footer() {
     const currentYear = new Date().getFullYear()
     const t = useTranslations('Footer')
     const tNav = useTranslations('Navbar')
+    const [showSeal, setShowSeal] = useState(true)
+
+    useEffect(() => {
+        getSystemSettings().then(settings => {
+             const setting = settings.find(s => s.key === 'show_security_seal')
+             if (setting && setting.value === 'false') setShowSeal(false)
+        }).catch(() => {}) // Fail silently to default (true)
+    }, [])
 
     return (
         <footer className="bg-bg-card/50 backdrop-blur-md border-t border-white/5 relative z-10">
-            <div className="container mx-auto px-4 py-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div className="container mx-auto px-4 py-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-6">
                     {/* Logo & Brand */}
                 <div className="col-span-1 md:col-span-2 lg:col-span-1 mb-8 lg:mb-0">
                     <Link href="/" className="inline-block mb-4">
@@ -34,7 +39,7 @@ export default function Footer() {
                                 <Lock className="w-3 h-3 text-neon-blue" />
                                 <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">SSL</span>
                             </div>
-                            <SecuritySeal variant="badge" />
+                            {showSeal && <SecuritySeal variant="badge" />}
                         </div>
                     </div>
 

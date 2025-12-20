@@ -4,15 +4,17 @@
 import { Link } from '@/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { Calendar, Award, MapPin, Star } from 'lucide-react'
-import ArtistPortfolio from '@/components/ArtistPortfolio'
+import { TOUR_SCHEDULE } from '@/config/tour-schedule'
 
-// Server Component
-// Force dynamic rendering - REMOVED
-// export const dynamic = 'force-dynamic'
+// ...
 
 export default function DaniloSantosPage() {
-    // implicit locale handling via next-intl
+    // Determine current location
+    const today = new Date().toISOString().split('T')[0]
+    const currentSegment = TOUR_SCHEDULE.find(s => today >= s.start_date && today <= s.end_date)
+    const currentLocation = currentSegment 
+        ? `${currentSegment.city_name}, ${currentSegment.country_code}` 
+        : 'São Paulo, BR'
 
     return (
         <div className="min-h-screen">
@@ -21,11 +23,11 @@ export default function DaniloSantosPage() {
             {/* Hero Section */}
             <section className="pt-32 pb-20 px-4 relative overflow-hidden">
                 {/* Background Effects */}
-                <div className="absolute inset-0 bg-gradient-to-b from-neon-green/5 via-transparent to-neon-blue/5" />
+                <div className="absolute inset-0 bg-gradient-to-b from-neon-green/5 via-transparent to-neon-blue/5 pointer-events-none" />
 
                 <div className="container mx-auto max-w-6xl relative z-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                        {/* Artist Info */}
+                        {/* ... Artist Info (Unchanged lines 29-71) ... */}
                         <div>
                             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-neon-green/20 to-neon-blue/20 border border-neon-green/30 mb-6">
                                 <Award className="w-4 h-4 text-neon-green" />
@@ -83,8 +85,8 @@ export default function DaniloSantosPage() {
                                 <div className="flex items-center gap-3">
                                     <MapPin className="w-6 h-6 text-neon-green" />
                                     <div>
-                                        <div className="text-sm text-text-muted">Localização</div>
-                                        <div className="font-bold text-text-primary">São Paulo, BR</div>
+                                        <div className="text-sm text-text-muted">Localização Atual</div>
+                                        <div className="font-bold text-text-primary">{currentLocation}</div>
                                     </div>
                                 </div>
                             </div>

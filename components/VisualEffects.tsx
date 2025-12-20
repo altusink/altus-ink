@@ -19,22 +19,22 @@ export default function VisualEffects() {
       
       {/* 
         Aurora 2.0 - Liquid Glass Effect 
-        Uses CSS Blurs + Slower Motion for Premium Feel
+        Slower, Fluid, Reduced Motion Compliant
       */}
       
       {/* Orb 1: Neon Green (Left Top) */}
       <div 
-        className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full mix-blend-screen opacity-50 animate-pulse-slow filter blur-[120px] bg-[radial-gradient(circle,rgba(57,255,20,0.6)_0%,rgba(57,255,20,0)_70%)] [animation-duration:15s]"
+        className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full mix-blend-screen opacity-40 animate-pulse-slow filter blur-[100px] bg-[radial-gradient(circle,rgba(57,255,20,0.5)_0%,rgba(57,255,20,0)_70%)] [animation-duration:35s] motion-reduce:animate-none motion-reduce:opacity-20"
       />
 
       {/* Orb 2: Neon Blue (Right Top) */}
       <div 
-        className="absolute top-[-5%] right-[-10%] w-[60vw] h-[60vw] rounded-full mix-blend-screen opacity-50 animate-float filter blur-[140px] bg-[radial-gradient(circle,rgba(0,245,255,0.6)_0%,rgba(0,245,255,0)_70%)] [animation-duration:20s]"
+        className="absolute top-[-5%] right-[-10%] w-[60vw] h-[60vw] rounded-full mix-blend-screen opacity-40 animate-float filter blur-[120px] bg-[radial-gradient(circle,rgba(0,245,255,0.5)_0%,rgba(0,245,255,0)_70%)] [animation-duration:45s] motion-reduce:animate-none motion-reduce:opacity-20"
       />
 
       {/* Orb 3: Neon Purple (Bottom Left) */}
       <div 
-        className="absolute bottom-[-20%] left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen opacity-40 animate-glow filter blur-[160px] bg-[radial-gradient(circle,rgba(139,0,255,0.6)_0%,rgba(139,0,255,0)_70%)] [animation-duration:25s]"
+        className="absolute bottom-[-20%] left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen opacity-30 animate-glow filter blur-[140px] bg-[radial-gradient(circle,rgba(139,0,255,0.5)_0%,rgba(139,0,255,0)_70%)] [animation-duration:55s] motion-reduce:animate-none motion-reduce:opacity-20"
       />
 
       {/* Noise Texture Overlay (Optional for "Film" look) */}

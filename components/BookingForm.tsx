@@ -12,6 +12,8 @@ import { ptBR } from 'date-fns/locale'
 import { TOUR_SCHEDULE, PRICING_RULES, type Country, type City } from '@/config/tour-schedule'
 import FileUpload from './FileUpload'
 import SelectableCard from './ui/SelectableCard'
+import LocationSelector from './booking/LocationSelector'
+import PremiumDatePicker from './booking/PremiumDatePicker'
 import { AlertCircle, Check, ChevronLeft, ChevronRight, Info, Loader2, MapPin, MessageCircle } from 'lucide-react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { loadStripe } from '@stripe/stripe-js'
@@ -65,6 +67,11 @@ const bookingSchema = z.object({
     
     termsAccepted: z.boolean().refine(val => val === true, {
         message: "You must accept the terms"
+    }),
+
+    ageAccepted: z.boolean().refine(val => val === true, {
+        message: "You must be 18+"
+    }),
     }),
 
     // Payment
@@ -261,33 +268,17 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
 
                 <div className="space-y-6">
                     {/* Location */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm text-text-muted mb-2">{t('form.country')}</label>
-                            <select
-                                {...register('countryId')}
-                                className="w-full bg-bg-card border border-white/10 rounded-xl p-3 text-white focus:border-neon-green outline-none"
-                            >
-                                <option value="">Select Country</option>
-                                {countries.map((c: any) => (
-                                    <option key={c.id} value={c.id}>{c.flag} {c.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm text-text-muted mb-2">{t('form.city')}</label>
-                            <select
-                                {...register('cityId')}
-                                disabled={!selectedCountryId}
-                                className="w-full bg-bg-card border border-white/10 rounded-xl p-3 text-white focus:border-neon-green outline-none disabled:opacity-50"
-                            >
-                                <option value="">Select City</option>
-                                {currentCities.map((city: any) => (
-                                    <option key={city.id} value={city.id}>{city.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
+                    {/* Location (Premium Selector) */}
+                    <LocationSelector 
+                        countries={countries}
+                        selectedCountryId={selectedCountryId}
+                        selectedCityId={watch('cityId')}
+                        onSelectCountry={(id) => {
+                            setValue('countryId', id)
+                            setValue('cityId', '') // Reset city
+                        }}
+                        onSelectCity={(id) => setValue('cityId', id)}
+                    />
                     {/* ... Rest of Step 1 ... */}
                     {/* Tattoo Type */}
                     <div>
@@ -395,47 +386,18 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                 </h2>
 
                 <div className="flex flex-col gap-8">
-                    {/* Date Selection - REPLACED CALENDAR WITH BUTTONS */}
+                    {/* Date Selection - PREMIUM DATE PICKER */}
                     <div>
                         <h3 className="text-lg font-semibold text-white mb-4">Escolha uma Data</h3>
-                        {allDates.length === 0 ? (
-                            <div className="p-4 bg-white/5 border border-white/10 rounded-xl text-text-muted italic">
-                                Nenhuma data disponível para esta cidade no momento.
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                                {allDates.map((date) => {
-                                    const dateStr = format(date, 'yyyy-MM-dd')
-                                    const isSelected = watchDate === dateStr
-                                    
-                                    // Formatting: "15 Out"
-                                    const dayAndMonth = format(date, 'dd MMM', { locale: ptBR })
-                                    // Formatting: "Sexta"
-                                    const weekDay = format(date, 'EEE', { locale: ptBR })
-                                    // Capitalize first letter
-                                    const weekDayCapitalized = weekDay.charAt(0).toUpperCase() + weekDay.slice(1)
-
-                                    return (
-                                        <SelectableCard
-                                            key={dateStr}
-                                            variant="date"
-                                            isSelected={isSelected}
-                                            onClick={() => {
-                                                setValue('bookingDate', dateStr)
-                                                setValue('bookingTime', '') // Reset time when date changes
-                                            }}
-                                        >
-                                            <span className="text-sm font-bold opacity-80 uppercase tracking-wider text-[0.7rem] mb-1">
-                                                {weekDayCapitalized}
-                                            </span>
-                                            <span className="text-lg font-bold">
-                                                {dayAndMonth}
-                                            </span>
-                                        </SelectableCard>
-                                    )
-                                })}
-                            </div>
-                        )}
+                        <PremiumDatePicker 
+                            dates={allDates}
+                            selectedDateStr={watchDate}
+                            onSelectDate={(dateStr) => {
+                                setValue('bookingDate', dateStr)
+                                setValue('bookingTime', '') // Reset time when date changes
+                            }}
+                            isLoading={false}
+                        />
                     </div>
 
                     {/* Time Slots (Only visible if date selected) */}
@@ -608,7 +570,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                     <input 
                                         type="checkbox"
                                         className="peer sr-only"
-                                        required 
+                                        {...register('ageAccepted')}
                                     />
                                     <div className="w-5 h-5 rounded border border-white/30 peer-checked:bg-orange-500 peer-checked:border-orange-500 transition-colors flex items-center justify-center">
                                         <Check className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" strokeWidth={3} />
