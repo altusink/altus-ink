@@ -1,6 +1,6 @@
 'use client'
 
-import { MapPin, Globe } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 interface LocationSelectorProps {
@@ -53,7 +53,13 @@ export default function LocationSelector({
                                     }
                                 `}
                             >
-                                <Globe className={`w-8 h-8 ${isSelected ? 'text-neon-cyan' : 'text-neon-purple'}`} />
+                                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-md">
+                                    <img 
+                                        src={`https://flagcdn.com/w80/${country.id}.png`} 
+                                        alt={country.name} 
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
                                 <span className="font-semibold text-sm">{country.name}</span>
                                 {isSelected && (
                                     <motion.div 

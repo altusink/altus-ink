@@ -22,6 +22,27 @@ export default function LanguageModal() {
         window.location.reload()
     }
 
+    const getFlagCode = (langCode: string) => {
+        const mapping: Record<string, string> = {
+            'pt-BR': 'br',
+            'pt-PT': 'pt',
+            'en': 'gb',
+            'es': 'es',
+            'fr': 'fr',
+            'de': 'de',
+            'it': 'it',
+            'nl': 'nl',
+            'pl': 'pl',
+            'ro': 'ro',
+            'el': 'gr',
+            'sv': 'se',
+            'da': 'dk',
+            'no': 'no',
+            'fi': 'fi'
+        }
+        return mapping[langCode] || langCode
+    }
+
     if (!mounted || !isOpen) return null
 
     return (
@@ -41,13 +62,19 @@ export default function LanguageModal() {
 
                 {/* Language Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-                    {Object.entries(languages).map(([code, { name, flag }]) => (
+                    {Object.entries(languages).map(([code, { name }]) => (
                         <button
                             key={code}
                             onClick={() => handleSelectLanguage(code as Language)}
                             className="group relative p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-neon-green transition-all duration-300 hover:scale-105"
                         >
-                            <div className="text-5xl mb-3">{flag}</div>
+                            <div className="mb-3 relative w-16 h-12 rounded-lg overflow-hidden shadow-lg group-hover:shadow-neon-green/50 transition-all">
+                                <img 
+                                    src={`https://flagcdn.com/w160/${getFlagCode(code)}.png`} 
+                                    alt={name}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
                             <div className="text-sm font-medium text-text-secondary group-hover:text-neon-green transition-colors">
                                 {name}
                             </div>
