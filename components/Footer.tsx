@@ -4,6 +4,7 @@ import { Link } from '@/navigation'
 import Image from 'next/image'
 import { Instagram, Facebook, Mail, Phone, MapPin, Shield, Lock, CheckCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import SecuritySeal from './SecuritySeal'
 
 export default function Footer() {
     const currentYear = new Date().getFullYear()
@@ -11,39 +12,29 @@ export default function Footer() {
     const tNav = useTranslations('Navbar')
 
     return (
-        <footer className="bg-bg-card border-t border-white/10">
-            <div className="container mx-auto px-4 py-12">
+        <footer className="bg-bg-card/50 backdrop-blur-md border-t border-white/5 relative z-10">
+            <div className="container mx-auto px-4 py-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                     {/* Logo & Brand */}
                 <div className="col-span-1 md:col-span-2 lg:col-span-1 mb-8 lg:mb-0">
-                    <Link href="/" className="inline-block mb-6">
-                        <div className="relative w-64 h-24">
-                            <Image 
-                                src="/images/brand-logo.png" 
-                                alt="Altus Ink International" 
-                                fill
-                                className="object-contain object-left"
-                                quality={100}
-                                priority
-                            />
+                    <Link href="/" className="inline-block mb-4">
+                        <div className="relative w-48 h-16">
+                           <div className="absolute inset-0 bg-gradient-to-r from-neon-green via-neon-blue to-neon-purple mask-brand-logo" />
                         </div>
                     </Link>
-                    <p className="text-text-secondary max-w-sm text-sm leading-relaxed">
+                    <p className="text-text-secondary max-w-sm text-xs leading-relaxed">
                         Elevando a arte da tatuagem a um nível global. Experiências exclusivas com os maiores artistas do mundo.
                     </p>
-                        <div className="flex flex-wrap gap-2 mt-6">
-                            <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                <Shield className="w-4 h-4 text-neon-green" />
-                                <span className="text-xs text-text-muted">Certificado</span>
+                        <div className="flex flex-wrap gap-2 mt-4">
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/5 border border-white/10">
+                                <Shield className="w-3 h-3 text-neon-green" />
+                                <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Certificado</span>
                             </div>
-                            <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                <Lock className="w-4 h-4 text-neon-blue" />
-                                <span className="text-xs text-text-muted">SSL Seguro</span>
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/5 border border-white/10">
+                                <Lock className="w-3 h-3 text-neon-blue" />
+                                <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">SSL</span>
                             </div>
-                            <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                <CheckCircle className="w-4 h-4 text-neon-purple" />
-                                <span className="text-xs text-text-muted">Verificado</span>
-                            </div>
+                            <SecuritySeal variant="badge" />
                         </div>
                     </div>
 

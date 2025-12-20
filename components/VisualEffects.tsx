@@ -13,128 +13,45 @@ export default function VisualEffects() {
   if (!isMounted) return null
 
   return (
-    // Changed BG to Deep Dark Blue (Slate 950 variant)
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-[#020410]">
-
+    // Fixed Background Layer - Z-Index 0 (Content is Z-10)
+    // Deep Space Blue/Black Base
+    <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden bg-[#020410]" aria-hidden="true">
+      
       {/* 
-        =============================================
-        HIGH SPEED FLUID MOTION (Neon Blue Added)
-        Moves X/Y + Morphs Shapes + 3-5s Loop
-        =============================================
+        Aurora 2.0 - Liquid Glass Effect 
+        Uses CSS Blurs + Slower Motion for Premium Feel
       */}
+      
+      {/* Orb 1: Neon Green (Left Top) */}
+      <div 
+        className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full mix-blend-screen opacity-20 animate-pulse-slow filter blur-[100px]"
+        style={{
+          background: 'radial-gradient(circle, rgba(57, 255, 20, 0.4) 0%, rgba(57, 255, 20, 0) 70%)',
+          animationDuration: '15s'
+        }}
+      />
 
-      <svg className="absolute w-[150%] h-[150%] top-[-25%] left-[-25%]" preserveAspectRatio="none" viewBox="0 0 1440 900">
-        <defs>
-          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(57, 255, 20, 0)" />
-            <stop offset="50%" stopColor="rgba(57, 255, 20, 0.25)" />
-            <stop offset="100%" stopColor="rgba(57, 255, 20, 0)" />
-          </linearGradient>
+      {/* Orb 2: Neon Blue (Right Top) */}
+      <div 
+        className="absolute top-[-5%] right-[-10%] w-[60vw] h-[60vw] rounded-full mix-blend-screen opacity-20 animate-float filter blur-[120px]"
+        style={{
+          background: 'radial-gradient(circle, rgba(0, 245, 255, 0.4) 0%, rgba(0, 245, 255, 0) 70%)',
+          animationDuration: '20s'
+        }}
+      />
 
-          <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="rgba(0, 245, 255, 0)" />
-            <stop offset="50%" stopColor="rgba(0, 245, 255, 0.25)" />
-            <stop offset="100%" stopColor="rgba(0, 245, 255, 0)" />
-          </linearGradient>
+      {/* Orb 3: Neon Purple (Bottom Left) */}
+      <div 
+        className="absolute bottom-[-20%] left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen opacity-15 animate-glow filter blur-[150px]"
+        style={{
+          background: 'radial-gradient(circle, rgba(139, 0, 255, 0.4) 0%, rgba(139, 0, 255, 0) 70%)',
+          animationDuration: '25s'
+        }}
+      />
 
-          <linearGradient id="grad3" x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(139, 0, 255, 0)" />
-            <stop offset="50%" stopColor="rgba(139, 0, 255, 0.25)" />
-            <stop offset="100%" stopColor="rgba(139, 0, 255, 0)" />
-          </linearGradient>
+      {/* Noise Texture Overlay (Optional for "Film" look) */}
+      <div className="absolute inset-0 opacity-[0.03] bg-[url('/noise.png')] pointer-events-none" />
 
-          {/* New Neon Blue Gradient (Replaces Pink) */}
-          <linearGradient id="grad4" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stopColor="rgba(0, 245, 255, 0)" />
-            <stop offset="50%" stopColor="rgba(0, 245, 255, 0.25)" />
-            <stop offset="100%" stopColor="rgba(0, 245, 255, 0)" />
-          </linearGradient>
-        </defs>
-
-        {/* Layer 1: Green - SUPER FAST DRIFT */}
-        <motion.path
-          fill="url(#grad1)"
-          className="mix-blend-screen"
-          animate={{
-            x: ["-10%", "10%", "-10%"],
-            y: ["10%", "-10%", "10%"],
-            d: [
-              "M0,900 C300,600 900,900 1440,600 V900 H0 Z",
-              "M0,900 C600,800 1200,500 1440,800 V900 H0 Z",
-              "M0,900 C300,600 900,900 1440,600 V900 H0 Z"
-            ]
-          }}
-          transition={{
-            duration: 4, // 4s loop
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-
-        {/* Layer 2: Cyan - SUPER FAST FLOW */}
-        <motion.path
-          fill="url(#grad2)"
-          className="mix-blend-screen"
-          animate={{
-            x: ["10%", "-10%", "10%"],
-            y: ["-10%", "10%", "-10%"],
-            d: [
-              "M-200,600 C200,400 1200,800 1640,600 V900 H-200 Z",
-              "M-200,500 C400,300 1000,900 1640,500 V900 H-200 Z",
-              "M-200,600 C200,400 1200,800 1640,600 V900 H-200 Z"
-            ]
-          }}
-          transition={{
-            duration: 5, // 5s loop
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-
-        {/* Layer 3: Purple - SPIN */}
-        <motion.path
-          fill="url(#grad3)"
-          className="mix-blend-screen"
-          animate={{
-            scale: [1, 1.15, 1],
-            rotate: [0, 8, -8, 0],
-            d: [
-              "M0,400 C400,200 1000,600 1440,400 V900 H0 Z",
-              "M0,300 C600,100 800,700 1440,300 V900 H0 Z",
-              "M0,400 C400,200 1000,600 1440,400 V900 H0 Z"
-            ]
-          }}
-          transition={{
-            duration: 6, // 6s loop
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-
-        {/* Layer 4: Neon Blue (Replaces Pink) - EXTRA MOVEMENT */}
-        <motion.path
-          fill="url(#grad4)"
-          className="mix-blend-screen"
-          animate={{
-            x: ["-15%", "5%", "-15%"],
-            y: ["-5%", "15%", "-5%"],
-            d: [
-              "M-200,300 C200,500 800,100 1640,300 V900 H-200 Z",
-              "M-200,400 C300,200 900,500 1640,400 V900 H-200 Z",
-              "M-200,300 C200,500 800,100 1640,300 V900 H-200 Z"
-            ]
-          }}
-          transition={{
-            duration: 3.5, // 3.5s loop (Very Fast)
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-
-      </svg>
-
-      {/* Soft blur overlay */}
-      <div className="absolute inset-0 backdrop-blur-[50px]" />
     </div>
   )
 }

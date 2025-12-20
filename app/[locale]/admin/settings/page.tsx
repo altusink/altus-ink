@@ -40,7 +40,9 @@ export default function SettingsPage() {
         { id: 'email', label: 'E-mail & Notificações' },
         { id: 'ai', label: 'Inteligência Artificial' },
         { id: 'users', label: 'Gerenciar Usuários' },
-        { id: 'cms', label: 'Conteúdo do Site (CMS)' }
+        { id: 'users', label: 'Gerenciar Usuários' },
+        { id: 'cms', label: 'Conteúdo do Site (CMS)' },
+        { id: 'security', label: 'Segurança & Selos' }
     ]
 
     // User Creation State
@@ -154,6 +156,31 @@ export default function SettingsPage() {
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                        )
+                    }
+
+                    if (cat.id === 'security') {
+                        return (
+                             <div key={cat.id} className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                                <h2 className="text-xl font-bold text-white mb-4 border-b border-white/10 pb-2">{cat.label}</h2>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5">
+                                        <div>
+                                            <h3 className="text-white font-bold">Selo Cloudflare</h3>
+                                            <p className="text-xs text-text-muted">Exibir selo de proteção no rodapé</p>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                className="sr-only peer"
+                                                defaultChecked={settings.find(s => s.key === 'show_security_seal')?.value === 'true'}
+                                                onChange={(e) => handleSave('show_security_seal', e.target.checked ? 'true' : 'false')}
+                                            />
+                                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-green"></div>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         )

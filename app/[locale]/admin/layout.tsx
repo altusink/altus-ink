@@ -28,7 +28,9 @@ export default async function AdminLayout({
     }
 
     if (!user) {
-        redirect({ href: '/login', locale })
+        // Redirect to login if no user found
+        // Using simple path allows next-intl to handle locale automatically
+        redirect('/login')
     }
 
     return (

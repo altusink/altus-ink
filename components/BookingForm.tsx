@@ -11,6 +11,7 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { TOUR_SCHEDULE, PRICING_RULES, type Country, type City } from '@/config/tour-schedule'
 import FileUpload from './FileUpload'
+import SelectableCard from './ui/SelectableCard'
 import { AlertCircle, Check, ChevronLeft, ChevronRight, Info, Loader2, MapPin, MessageCircle } from 'lucide-react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { loadStripe } from '@stripe/stripe-js'
@@ -300,37 +301,22 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                             {(Object.entries(PRICING_RULES) as [string, any][]).map(([key, rule]) => {
                                 const isSelected = watch('tattooType') === key
                                 return (
-                                    <div
+                                    <SelectableCard
                                         key={key}
+                                        isSelected={isSelected}
                                         onClick={() => setValue('tattooType', key as any)}
-                                        className={`
-                                            relative p-4 rounded-xl border cursor-pointer transition-all duration-200 flex flex-col items-center justify-between gap-2 group overflow-hidden
-                                            ${isSelected 
-                                                ? 'bg-neon-green/10 border-neon-green shadow-[0_0_20px_rgba(0,255,157,0.2)]' 
-                                                : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/30'
-                                            }
-                                        `}
-                                    >
-                                        {isSelected && <div className="absolute inset-0 bg-gradient-to-b from-neon-green/5 to-transparent pointer-events-none" />}
-                                        
-                                        {/* Icon Placeholder based on size (simplified logic) */}
-                                        <div className={`p-2 rounded-full mb-1 transition-colors ${isSelected ? 'bg-neon-green text-bg-dark' : 'bg-white/10 text-text-muted group-hover:text-white'}`}>
-                                           {key === 'small' && <div className="w-4 h-4 rounded-sm border-2 border-current" />}
-                                           {key === 'medium' && <div className="w-5 h-5 rounded-sm border-2 border-current" />}
-                                           {key === 'large' && <div className="w-6 h-6 rounded-sm border-2 border-current" />}
-                                           {key === 'xl' && <div className="w-7 h-7 rounded-sm border-2 border-current" />}
-                                           {key === 'coverup' && <div className="w-5 h-5 rounded-full border-2 border-dashed border-current" />}
-                                        </div>
-
-                                        <div className="text-center z-10">
-                                            <div className={`font-bold text-sm leading-tight mb-1 ${isSelected ? 'text-white' : 'text-text-secondary group-hover:text-white'}`}>
-                                                {rule.label}
-                                            </div>
-                                            <div className="text-[10px] uppercase tracking-wider font-mono opacity-60">
-                                                {rule.price ? `€${rule.price}+` : 'Sob Consulta'}
-                                            </div>
-                                        </div>
-                                    </div>
+                                        title={rule.label}
+                                        subtitle={rule.price ? `€${rule.price}+` : 'Sob Consulta'}
+                                        icon={
+                                            <>
+                                               {key === 'small' && <div className="w-4 h-4 rounded-sm border-2 border-current" />}
+                                               {key === 'medium' && <div className="w-5 h-5 rounded-sm border-2 border-current" />}
+                                               {key === 'large' && <div className="w-6 h-6 rounded-sm border-2 border-current" />}
+                                               {key === 'xl' && <div className="w-7 h-7 rounded-sm border-2 border-current" />}
+                                               {key === 'coverup' && <div className="w-5 h-5 rounded-full border-2 border-dashed border-current" />}
+                                            </>
+                                        }
+                                    />
                                 )
                             })}
                         </div>
@@ -339,12 +325,13 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                     {/* Placement & Description */}
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm text-text-muted mb-2">{t('form.placement')}</label>
+                            <label className="block text-sm text-text-muted mb-2">{t('form.placement')} <span className="text-neon-pink">*</span></label>
                             <input
                                 {...register('bodyLocation')}
                                 placeholder="ex. Forearm, Back"
-                                className="w-full bg-bg-card border border-white/10 rounded-xl p-3 text-white focus:border-neon-green outline-none"
+                                className={`w-full bg-bg-card border rounded-xl p-3 text-white outline-none focus:border-neon-green ${errors.bodyLocation ? 'border-red-500' : 'border-white/10'}`}
                             />
+                            {errors.bodyLocation && <span className="text-red-500 text-xs mt-1">{t('form.required_field') || 'Este campo é obrigatório'}</span>}
                         </div>
                         <div>
                             <label className="block text-sm text-text-muted mb-2">{t('form.description')}</label>
@@ -434,20 +421,14 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                     const weekDayCapitalized = weekDay.charAt(0).toUpperCase() + weekDay.slice(1)
 
                                     return (
-                                        <button
+                                        <SelectableCard
                                             key={dateStr}
-                                            type="button"
+                                            variant="date"
+                                            isSelected={isSelected}
                                             onClick={() => {
                                                 setValue('bookingDate', dateStr)
                                                 setValue('bookingTime', '') // Reset time when date changes
                                             }}
-                                            className={`
-                                                flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200
-                                                ${isSelected 
-                                                    ? 'bg-neon-green text-bg-dark border-neon-green shadow-[0_0_15px_rgba(0,255,157,0.3)] scale-[1.02]' 
-                                                    : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/30'
-                                                }
-                                            `}
                                         >
                                             <span className="text-sm font-bold opacity-80 uppercase tracking-wider text-[0.7rem] mb-1">
                                                 {weekDayCapitalized}
@@ -455,7 +436,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                             <span className="text-lg font-bold">
                                                 {dayAndMonth}
                                             </span>
-                                        </button>
+                                        </SelectableCard>
                                     )
                                 })}
                             </div>
@@ -473,21 +454,14 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                             ) : (
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                     {availableSlots.map((time) => (
-                                        <button
+                                        <SelectableCard
                                             key={time}
-                                            type="button"
+                                            isSelected={watchTime === time}
                                             onClick={() => setValue('bookingTime', time)}
-                                            className={`
-                                                py-3 px-4 rounded-xl border transition-all font-bold flex items-center justify-center gap-2
-                                                ${watchTime === time
-                                                    ? 'bg-neon-green text-bg-dark border-neon-green'
-                                                    : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
-                                                }
-                                            `}
                                         >
                                             <div className={`w-2 h-2 rounded-full ${watchTime === time ? 'bg-bg-dark' : 'bg-neon-green'}`} />
                                             {time}
-                                        </button>
+                                        </SelectableCard>
                                     ))}
                                 </div>
                             )}
@@ -630,6 +604,29 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                             {errors.termsAccepted && (
                                 <span className="text-red-500 text-xs mt-1 block">Você precisa aceitar os termos para continuar.</span>
                             )}
+                        </div>
+
+                         {/* Age Verification & ID Warning */}
+                        <div className="mb-6 p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+                            <label className="flex items-start gap-3 cursor-pointer group mb-2">
+                                <div className="relative pt-1">
+                                    <input 
+                                        type="checkbox"
+                                        className="peer sr-only"
+                                        required 
+                                    />
+                                    <div className="w-5 h-5 rounded border border-white/30 peer-checked:bg-orange-500 peer-checked:border-orange-500 transition-colors flex items-center justify-center">
+                                        <Check className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" strokeWidth={3} />
+                                    </div>
+                                </div>
+                                <div className="text-sm font-bold text-white group-hover:text-orange-400 transition-colors">
+                                    Declaro que sou maior de 18 anos.
+                                </div>
+                            </label>
+                            <div className="flex items-start gap-2 text-xs text-orange-200 ml-8">
+                                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                <p>É obrigatória a apresentação de documento original com foto no dia da sessão.</p>
+                            </div>
                         </div>
 
                         <button
