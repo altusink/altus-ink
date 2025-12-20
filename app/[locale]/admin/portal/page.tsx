@@ -48,6 +48,7 @@ export default function ArtistPortal() {
 }
 
 // Extracted Dashboard Logic
+function DashboardView() {
     const [user, setUser] = useState<{ name: string } | null>(null)
     const supabase = createClient()
 
