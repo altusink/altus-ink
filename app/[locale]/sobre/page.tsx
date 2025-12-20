@@ -24,18 +24,36 @@ export default async function SobrePage() {
                     </h1>
 
                     <div className="prose prose-invert max-w-none">
-                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl mb-8">
-                            <h2 className="text-2xl font-heading font-bold text-white mb-4">{t('history_title')}</h2>
-                            <p className="text-text-secondary leading-relaxed">
-                                {t('history_text')}
-                            </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                            <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl h-full hover:border-white/20 transition-colors">
+                                <h2 className="text-2xl font-heading font-bold text-white mb-4">{t('history_title')}</h2>
+                                <p className="text-text-secondary leading-relaxed">
+                                    {t('history_text')}
+                                </p>
+                            </div>
+
+                             <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl h-full hover:border-white/20 transition-colors">
+                                <h2 className="text-2xl font-heading font-bold text-white mb-4">{t('mission_title')}</h2>
+                                <p className="text-text-secondary leading-relaxed">
+                                    {t('mission_text')}
+                                </p>
+                            </div>
                         </div>
 
-                        <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
-                            <h2 className="text-2xl font-heading font-bold text-white mb-4">{t('mission_title')}</h2>
-                            <p className="text-text-secondary leading-relaxed">
-                                {t('mission_text')}
-                            </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                             <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl h-full hover:border-white/20 transition-colors">
+                                <h2 className="text-2xl font-heading font-bold text-neon-blue mb-4">{t('security_title')}</h2>
+                                <p className="text-text-secondary leading-relaxed">
+                                    {t('security_text')}
+                                </p>
+                            </div>
+
+                             <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl h-full hover:border-white/20 transition-colors">
+                                <h2 className="text-2xl font-heading font-bold text-neon-green mb-4">{t('process_title')}</h2>
+                                <p className="text-text-secondary leading-relaxed">
+                                    {t('process_text')}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

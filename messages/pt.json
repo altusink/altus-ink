@@ -196,9 +196,17 @@
       "email": "Email",
       "phone": "WhatsApp",
       "health_form": "Ficha de Saúde",
-      "allergies": "Possui Alergias?"
+      "allergies": "Possui Alergias?",
+      "required_field": "Este campo é obrigatório"
     },
     "payment_text": "Para confirmar seu agendamento, é necessário um sinal de <span class=\"text-neon-green font-bold\">€100.00</span>. O restante é pago no estúdio.",
+    "buttons": {
+      "back": "Voltar",
+      "next": "Próximo Passo",
+      "proceed_payment": "Ir para Pagamento",
+      "pay_confirm": "Pagar Sinal e Confirmar"
+    },
+    "non_refundable_msg": "Nota: O sinal de reserva não é reembolsável em caso de cancelamento com menos de 48h.",
     "buttons": {
       "back": "Voltar",
       "next": "Próximo Passo",
@@ -210,5 +218,17 @@
       "text": "Obrigado por agendar com a Altus Ink. Um email de confirmação foi enviado para você.",
       "return_home": "Voltar ao Início"
     }
+  },
+  "About": {
+    "title_start": "Sobre a",
+    "title_highlight": "Altus Ink International",
+    "history_title": "De Minas para o Mundo",
+    "history_text": "Fundada por Danilo Santos, a Altus Ink transcende o conceito tradicional de estúdio. O que começou como um sonho em uma pequena cidade de Minas Gerais, hoje é uma marca global de tatuagem, reconhecida pela excelência técnica e artística na Europa e Brasil.",
+    "mission_title": "Nossa Missão & Valores",
+    "mission_text": "Não fazemos apenas tatuagens; criamos legados na pele. Nossa missão é proporcionar uma experiência de luxo, segurança absoluta e arte de alto nível. Valorizamos a exclusividade, o atendimento humanizado e a biossegurança acima de tudo.",
+    "security_title": "Padrão Internacional de Segurança",
+    "security_text": "Adotamos protocolos hospitalares de esterilização e utilizamos apenas materiais premium certificados pela União Europeia. Sua saúde é inegociável.",
+    "process_title": "O Processo Altus",
+    "process_text": "Do primeiro contato até a cicatrização final, você é acompanhado por uma equipe dedicada. Nossos artistas desenvolvem projetos exclusivos baseados na sua anatomia e referências."
   }
 }
