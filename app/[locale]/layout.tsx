@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Orbitron } from "next/font/google";
 import "../globals.css";
 import LanguageModal from "@/components/LanguageModal";
-import VisualEffects from "@/components/VisualEffects";
+import LiquidBackground from "@/components/LiquidBackground";
 import CookieConsent from "@/components/CookieConsent";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
@@ -50,12 +50,15 @@ export default async function RootLayout({
 
     return (
         <html lang={locale} className="dark">
-            <body className={`${inter.variable} ${orbitron.variable} font-body`}>
+             <body className={`${inter.variable} ${orbitron.variable} font-body bg-bg-dark text-text-primary min-h-screen overflow-x-hidden selection:bg-neon-cyan/30 selection:text-neon-cyan`}>
                 <NextIntlClientProvider messages={messages}>
-                    {/* Visual Effects - Aurora + Orbs */}
-                    <VisualEffects />
+                    {/* Premium Liquid Background (Deep Flow) */}
+                    <LiquidBackground />
 
-                    {/* Content with proper z-index */}
+                    {/* Tech Background - Void + Subtle Grid (Overlay) */}
+                   <div className="fixed inset-0 z-[-1] bg-[linear-gradient(to_right,#1f1f1f_1px,transparent_1px),linear-gradient(to_bottom,#1f1f1f_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none opacity-20" />
+
+                    {/* Content */}
                     <div className="relative z-10">
                         <LanguageModal />
                         <CookieConsent />

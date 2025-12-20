@@ -27,7 +27,7 @@ export default function LocationSelector({
             {/* Country Selection */}
             <div>
                  <label className="block text-sm text-text-muted mb-3 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-neon-green" />
+                    <MapPin className="w-4 h-4 text-neon-cyan" />
                     País / Região da Tour
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -48,7 +48,7 @@ export default function LocationSelector({
                                 className={`
                                     relative p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all
                                     ${isSelected 
-                                        ? 'bg-neon-green/10 border-neon-green text-white shadow-[0_0_15px_rgba(57,255,20,0.3)]' 
+                                        ? 'bg-neon-cyan/10 border-neon-cyan text-white shadow-[0_0_15px_rgba(57,255,20,0.3)]' 
                                         : 'bg-bg-card border-white/10 text-text-muted hover:bg-white/5 hover:border-white/30'
                                     }
                                 `}
@@ -58,7 +58,7 @@ export default function LocationSelector({
                                 {isSelected && (
                                     <motion.div 
                                         layoutId="country-highlight"
-                                        className="absolute inset-0 border-2 border-neon-green rounded-xl"
+                                        className="absolute inset-0 border-2 border-neon-cyan rounded-xl"
                                         initial={false}
                                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                                     />

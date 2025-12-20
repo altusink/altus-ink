@@ -41,7 +41,7 @@ export default function Navbar() {
                     <Link href="/" className="flex items-center space-x-3 group">
                         <div className="relative w-[40px] h-[40px]">
                             <div
-                                className="absolute inset-0 bg-gradient-to-r from-neon-green via-neon-blue to-neon-purple mask-brand-symbol"
+                                className="absolute inset-0 bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink mask-brand-symbol"
                             />
                         </div>
                     </Link>
@@ -52,10 +52,10 @@ export default function Navbar() {
                             <Link
                                 key={link.href}
                                 href={link.href}
-                                className="text-text-secondary hover:text-neon-green transition-colors duration-300 font-medium relative group"
+                                className="text-text-secondary hover:text-neon-cyan transition-colors duration-300 font-medium relative group"
                             >
                                 {link.label}
-                                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-neon-green to-neon-blue group-hover:w-full transition-all duration-300" />
+                                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-neon-cyan to-neon-purple group-hover:w-full transition-all duration-300" />
                             </Link>
                         ))}
 
@@ -63,14 +63,14 @@ export default function Navbar() {
 
                         <Link
                             href="/agendar"
-                            className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-neon-green to-neon-blue text-bg-dark font-semibold hover:shadow-neon-green transition-all duration-300 hover:scale-105"
+                            className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-neon-cyan to-neon-purple text-bg-dark font-semibold hover:shadow-neon-cyan transition-all duration-300 hover:scale-105"
                         >
                             {t('book')}
                         </Link>
 
                         <Link
                             href="/login"
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-neon-blue text-neon-blue font-semibold hover:bg-neon-blue hover:text-bg-dark transition-all duration-300"
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-neon-purple text-neon-purple font-semibold hover:bg-neon-purple hover:text-bg-dark transition-all duration-300"
                         >
                             <LogIn className="w-4 h-4" />
                             {t('login')}
@@ -97,7 +97,7 @@ export default function Navbar() {
                                 <Link
                                     key={link.href}
                                     href={link.href}
-                                    className="text-text-secondary hover:text-neon-green transition-colors duration-300 font-medium py-2"
+                                    className="text-text-secondary hover:text-neon-cyan transition-colors duration-300 font-medium py-2"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     {link.label}
@@ -106,7 +106,7 @@ export default function Navbar() {
 
                             <Link
                                 href="/agendar"
-                                className="px-6 py-3 rounded-lg bg-gradient-to-r from-neon-green to-neon-blue text-bg-dark font-semibold text-center"
+                                className="px-6 py-3 rounded-lg bg-gradient-to-r from-neon-cyan to-neon-purple text-bg-dark font-semibold text-center"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
                                 {t('book')}
@@ -114,7 +114,7 @@ export default function Navbar() {
 
                             <Link
                                 href="/login"
-                                className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg border-2 border-neon-blue text-neon-blue font-semibold"
+                                className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg border-2 border-neon-purple text-neon-purple font-semibold"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
                                 <LogIn className="w-4 h-4" />

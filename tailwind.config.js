@@ -9,25 +9,27 @@ module.exports = {
     theme: {
         extend: {
             colors: {
+                // Nova Paleta Tech Neon (Sem Verde)
                 neon: {
-                    // Cores principais
-                    green: '#39FF14',
-                    blue: '#00F5FF',
-                    // Elementos 3D
-                    pink: '#FF006E',
-                    purple: '#8B00FF',
-                    // Dourado da logo
-                    gold: '#B8860B',
+                    cyan: '#00F0FF',      // O novo "Green" (Ação Principal)
+                    blue: '#0066FF',      // Tech Blue
+                    purple: '#7000FF',    // Deep Violet
+                    pink: '#FF003C',      // Glitch Red/Pink
+                    
+                    // Manter compatibilidade do código antigo mapeando 'green' para 'cyan' temporariamente
+                    // até refatorarmos tudo, ou quebrar de propósito para achar onde trocar.
+                    // Vamos mapear para Cyan para não quebrar build imediato, mas visualmente será azul.
+                    green: '#00F0FF', 
                 },
                 bg: {
-                    dark: '#0A0A0F',
-                    card: '#1A1A2E',
-                    hover: '#252540',
+                    dark: '#050505',      // Void Black
+                    card: '#0A0A12',      // Deep Space
+                    hover: '#141424',
                 },
                 text: {
                     primary: '#FFFFFF',
-                    secondary: '#B8B8D1',
-                    muted: '#6B6B8D',
+                    secondary: '#A0A0C0', // Cool Gray
+                    muted: '#505070',
                 },
             },
             fontFamily: {
@@ -36,9 +38,8 @@ module.exports = {
                 hero: ['var(--font-orbitron)', 'sans-serif'],
             },
             backgroundImage: {
-                'gradient-primary': 'linear-gradient(135deg, #39FF14 0%, #00F5FF 100%)',
-                'gradient-secondary': 'linear-gradient(135deg, #FF006E 0%, #8B00FF 100%)',
-                'gradient-gold': 'linear-gradient(135deg, #B8860B 0%, #FFD700 100%)',
+                'gradient-primary': 'linear-gradient(135deg, #00F0FF 0%, #7000FF 100%)', // Cyan -> Purple
+                'gradient-secondary': 'linear-gradient(135deg, #7000FF 0%, #FF003C 100%)', // Purple -> Red
             },
             animation: {
                 'glow': 'glow 2s ease-in-out infinite alternate',
@@ -50,10 +51,10 @@ module.exports = {
             keyframes: {
                 glow: {
                     'from': {
-                        textShadow: '0 0 10px #fff, 0 0 20px #fff, 0 0 30px #39FF14, 0 0 40px #39FF14',
+                        textShadow: '0 0 10px #fff, 0 0 20px #fff, 0 0 30px #00F0FF, 0 0 40px #00F0FF',
                     },
                     'to': {
-                        textShadow: '0 0 20px #fff, 0 0 30px #00F5FF, 0 0 40px #00F5FF, 0 0 50px #00F5FF',
+                        textShadow: '0 0 20px #fff, 0 0 30px #7000FF, 0 0 40px #7000FF, 0 0 50px #7000FF',
                     },
                 },
                 float: {
@@ -70,11 +71,11 @@ module.exports = {
                 },
             },
             boxShadow: {
-                'neon-green': '0 0 20px rgba(57, 255, 20, 0.5)',
-                'neon-blue': '0 0 20px rgba(0, 245, 255, 0.5)',
-                'neon-pink': '0 0 20px rgba(255, 0, 110, 0.5)',
-                'neon-purple': '0 0 20px rgba(139, 0, 255, 0.5)',
-                'neon-gold': '0 0 20px rgba(184, 134, 11, 0.5)',
+                'neon-cyan': '0 0 20px rgba(0, 240, 255, 0.6)',
+                'neon-purple': '0 0 20px rgba(112, 0, 255, 0.6)',
+                'neon-pink': '0 0 20px rgba(255, 0, 60, 0.6)',
+                // Legacy map
+                'neon-green': '0 0 20px rgba(0, 240, 255, 0.6)',
             },
         },
     },

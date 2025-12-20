@@ -61,13 +61,13 @@ export default function PremiumDatePicker({ dates, selectedDateStr, onSelectDate
                         className={`
                             relative h-24 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all
                             ${isSelected 
-                                ? 'bg-neon-green text-bg-dark border-neon-green shadow-[0_0_20px_rgba(57,255,20,0.4)]' 
+                                ? 'bg-neon-cyan text-bg-dark border-neon-cyan shadow-[0_0_20px_rgba(0,240,255,0.4)]' 
                                 : 'bg-bg-card border-white/10 text-white hover:bg-white/5 hover:border-white/30'
                             }
                         `}
                     >
                         {/* Status Indicator (Available) */}
-                        <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${isSelected ? 'bg-bg-dark' : 'bg-neon-green animate-pulse'}`} />
+                        <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${isSelected ? 'bg-bg-dark' : 'bg-neon-cyan animate-pulse'}`} />
 
                         <span className="text-[0.65rem] font-bold uppercase tracking-widest opacity-80">
                             {weekDayCapitalized}

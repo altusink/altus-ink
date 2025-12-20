@@ -127,7 +127,7 @@ function PaymentForm({ clientSecret, bookingId, onSuccess, buttonLabel }: { clie
             <button
                 type="submit"
                 disabled={!stripe || isLoading}
-                className="w-full py-4 bg-neon-green text-bg-dark font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+                className="w-full py-4 bg-neon-cyan text-bg-dark font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex justify-center items-center gap-2"
             >
                 {isLoading ? <Loader2 className="animate-spin" /> : buttonLabel}
             </button>
@@ -193,7 +193,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
     const renderHeader = () => (
         <div className="text-center mb-10">
             <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
-                <span className="bg-gradient-to-r from-neon-green to-neon-blue bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent">
                     {t('title')}
                 </span>
             </h1>
@@ -262,7 +262,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
         return (
             <div className="space-y-8 animate-fade-in">
                 <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                    <span className="bg-neon-green text-bg-dark rounded-full w-8 h-8 flex items-center justify-center text-sm">1</span>
+                    <span className="bg-neon-cyan text-bg-dark rounded-full w-8 h-8 flex items-center justify-center text-sm">1</span>
                     {t('steps.configuration')}
                 </h2>
 
@@ -315,7 +315,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                             <input
                                 {...register('bodyLocation')}
                                 placeholder="ex. Forearm, Back"
-                                className={`w-full bg-bg-card border rounded-xl p-3 text-white outline-none focus:border-neon-green ${errors.bodyLocation ? 'border-red-500' : 'border-white/10'}`}
+                                className={`w-full bg-bg-card border rounded-xl p-3 text-white outline-none focus:border-neon-cyan ${errors.bodyLocation ? 'border-red-500' : 'border-white/10'}`}
                             />
                             {errors.bodyLocation && <span className="text-red-500 text-xs mt-1">{t('form.required_field') || 'Este campo é obrigatório'}</span>}
                         </div>
@@ -324,7 +324,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                             <textarea
                                 {...register('tattooDescription')}
                                 placeholder="Describe your idea..."
-                                className="w-full bg-bg-card border border-white/10 rounded-xl p-3 text-white focus:border-neon-green outline-none h-24"
+                                className="w-full bg-bg-card border border-white/10 rounded-xl p-3 text-white focus:border-neon-cyan outline-none h-24"
                             />
                         </div>
                     </div>
@@ -381,7 +381,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
         return (
             <div className="space-y-8 animate-fade-in">
                 <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                    <span className="bg-neon-green text-bg-dark rounded-full w-8 h-8 flex items-center justify-center text-sm">2</span>
+                    <span className="bg-neon-cyan text-bg-dark rounded-full w-8 h-8 flex items-center justify-center text-sm">2</span>
                     {t('steps.schedule')}
                 </h2>
 
@@ -416,7 +416,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                             isSelected={watchTime === time}
                                             onClick={() => setValue('bookingTime', time)}
                                         >
-                                            <div className={`w-2 h-2 rounded-full ${watchTime === time ? 'bg-bg-dark' : 'bg-neon-green'}`} />
+                                            <div className={`w-2 h-2 rounded-full ${watchTime === time ? 'bg-bg-dark' : 'bg-neon-cyan'}`} />
                                             {time}
                                         </SelectableCard>
                                     ))}
@@ -456,7 +456,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
         return (
             <div className="space-y-8 animate-fade-in">
                 <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
-                    <span className="bg-neon-green text-bg-dark rounded-full w-8 h-8 flex items-center justify-center text-sm">3</span>
+                    <span className="bg-neon-cyan text-bg-dark rounded-full w-8 h-8 flex items-center justify-center text-sm">3</span>
                     {t('steps.payment')}
                 </h2>
 
@@ -465,13 +465,13 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                     <div className="space-y-5">
                         <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-3">{t('steps.personal_info')}</h3>
                         <div className="space-y-4">
-                            <input {...register('clientName')} placeholder={t('form.full_name')} className="w-full bg-bg-card border border-white/10 rounded-lg p-3 text-white focus:border-neon-green outline-none" />
-                            <input {...register('clientEmail')} type="email" placeholder={t('form.email')} className="w-full bg-bg-card border border-white/10 rounded-lg p-3 text-white focus:border-neon-green outline-none" />
-                            <input {...register('clientPhone')} placeholder={t('form.phone')} className="w-full bg-bg-card border border-white/10 rounded-lg p-3 text-white focus:border-neon-green outline-none" />
+                            <input {...register('clientName')} placeholder={t('form.full_name')} className="w-full bg-bg-card border border-white/10 rounded-lg p-3 text-white focus:border-neon-cyan outline-none" />
+                            <input {...register('clientEmail')} type="email" placeholder={t('form.email')} className="w-full bg-bg-card border border-white/10 rounded-lg p-3 text-white focus:border-neon-cyan outline-none" />
+                            <input {...register('clientPhone')} placeholder={t('form.phone')} className="w-full bg-bg-card border border-white/10 rounded-lg p-3 text-white focus:border-neon-cyan outline-none" />
 
                             <div className="pt-4">
                                 <h4 className="text-sm font-semibold text-white mb-2">{t('form.health_form')}</h4>
-                                <input {...register('healthForm.allergies')} placeholder={t('form.allergies')} className="w-full bg-bg-card border border-white/10 rounded-lg p-3 text-white focus:border-neon-green outline-none" />
+                                <input {...register('healthForm.allergies')} placeholder={t('form.allergies')} className="w-full bg-bg-card border border-white/10 rounded-lg p-3 text-white focus:border-neon-cyan outline-none" />
                             </div>
                         </div>
                     </div>
@@ -484,8 +484,8 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                 <p className="text-xl font-bold text-white">{PRICING_RULES[watch('tattooType') as keyof typeof PRICING_RULES]?.label}</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-sm text-neon-green font-bold">Sinal a Pagar</p>
-                                <p className="text-3xl font-bold text-neon-green">€{watch('depositAmount')}</p>
+                                <p className="text-sm text-neon-cyan font-bold">Sinal a Pagar</p>
+                                <p className="text-3xl font-bold text-neon-cyan">€{watch('depositAmount')}</p>
                             </div>
                         </div>
 
@@ -496,7 +496,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                             <div
                                 onClick={() => setSelectedPaymentMethod('pix')}
                                 className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${selectedPaymentMethod === 'pix'
-                                    ? 'bg-neon-green/10 border-neon-green text-white'
+                                    ? 'bg-neon-cyan/10 border-neon-cyan text-white'
                                     : 'bg-black/20 border-white/10 text-text-muted hover:bg-white/5'
                                     }`}
                             >
@@ -511,14 +511,14 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                         </span>
                                     </div>
                                 </div>
-                                {selectedPaymentMethod === 'pix' && <Check className="w-5 h-5 text-neon-green" />}
+                                {selectedPaymentMethod === 'pix' && <Check className="w-5 h-5 text-neon-cyan" />}
                             </div>
 
                             {/* Option B: Euro (Stripe) */}
                             <div
                                 onClick={() => setSelectedPaymentMethod('stripe')}
                                 className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${selectedPaymentMethod === 'stripe'
-                                    ? 'bg-neon-green/10 border-neon-green text-white'
+                                    ? 'bg-neon-cyan/10 border-neon-cyan text-white'
                                     : 'bg-black/20 border-white/10 text-text-muted hover:bg-white/5'
                                     }`}
                             >
@@ -529,14 +529,14 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                         <span className="text-xs opacity-70">Cobrança em €{depositAmount}</span>
                                     </div>
                                 </div>
-                                {selectedPaymentMethod === 'stripe' && <Check className="w-5 h-5 text-neon-green" />}
+                                {selectedPaymentMethod === 'stripe' && <Check className="w-5 h-5 text-neon-cyan" />}
                             </div>
                         </div>
 
 
                         {/* Info Box based on Selection */}
                         {selectedPaymentMethod === 'pix_manual' && (
-                            <div className="bg-neon-blue/10 border border-neon-blue/30 rounded-lg p-3 text-xs text-neon-blue mb-4">
+                            <div className="bg-neon-purple/10 border border-neon-blue/30 rounded-lg p-3 text-xs text-neon-purple mb-4">
                                 Você receberá a chave PIX no próximo passo ou por e-mail/WhatsApp. O agendamento ficará "Pendente" até a confirmação.
                             </div>
                         )}
@@ -550,12 +550,12 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                         className="peer sr-only"
                                         {...register('termsAccepted', { required: true })}
                                     />
-                                    <div className="w-5 h-5 rounded border border-white/30 peer-checked:bg-neon-green peer-checked:border-neon-green transition-colors flex items-center justify-center">
+                                    <div className="w-5 h-5 rounded border border-white/30 peer-checked:bg-neon-cyan peer-checked:border-neon-cyan transition-colors flex items-center justify-center">
                                         <Check className="w-3 h-3 text-black opacity-0 peer-checked:opacity-100" strokeWidth={3} />
                                     </div>
                                 </div>
                                 <div className="text-sm text-text-muted group-hover:text-white transition-colors">
-                                    Li e concordo com os <a href="/politica-privacidade" target="_blank" className="text-neon-green hover:underline">Termos de Serviço</a>, política de cancelamento e declaro que as informações de saúde são verdadeiras.
+                                    Li e concordo com os <a href="/politica-privacidade" target="_blank" className="text-neon-cyan hover:underline">Termos de Serviço</a>, política de cancelamento e declaro que as informações de saúde são verdadeiras.
                                 </div>
                             </label>
                             {errors.termsAccepted && (
@@ -590,7 +590,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                             type="submit"
                             onClick={() => setValue('paymentMethod', selectedPaymentMethod === 'stripe' ? 'stripe' : 'pix')}
                             disabled={isSubmitting || !watch('termsAccepted')}
-                            className="w-full py-4 bg-bg-card border border-neon-green/50 text-neon-green font-bold rounded-xl hover:bg-neon-green/10 hover:border-neon-green hover:shadow-[0_0_20px_rgba(0,255,157,0.2)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full py-4 bg-bg-card border border-neon-cyan/50 text-neon-cyan font-bold rounded-xl hover:bg-neon-cyan/10 hover:border-neon-cyan hover:shadow-[0_0_20px_rgba(0,255,157,0.2)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isSubmitting ? <Loader2 className="animate-spin" /> :
                                 selectedPaymentMethod === 'stripe' ? 'Ir para Pagamento' : 'Confirmar Agendamento'
@@ -615,19 +615,19 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                 <div className="flex justify-between items-center mb-10 px-4 relative max-w-sm mx-auto">
                     <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-white/10 -z-10" />
                     <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 border-2 ${step >= 1 ? 'bg-neon-green border-neon-green text-bg-dark shadow-[0_0_15px_rgba(0,255,157,0.5)]' : 'bg-bg-dark border-white/20 text-text-muted'
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 border-2 ${step >= 1 ? 'bg-neon-cyan border-neon-cyan text-bg-dark shadow-[0_0_15px_rgba(0,255,157,0.5)]' : 'bg-bg-dark border-white/20 text-text-muted'
                             }`}
                     >
                         1
                     </div>
                     <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 border-2 ${step >= 2 ? 'bg-neon-green border-neon-green text-bg-dark shadow-[0_0_15px_rgba(0,255,157,0.5)]' : 'bg-bg-dark border-white/20 text-text-muted'
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 border-2 ${step >= 2 ? 'bg-neon-cyan border-neon-cyan text-bg-dark shadow-[0_0_15px_rgba(0,255,157,0.5)]' : 'bg-bg-dark border-white/20 text-text-muted'
                             }`}
                     >
                         2
                     </div>
                     <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 border-2 ${step >= 3 ? 'bg-neon-green border-neon-green text-bg-dark shadow-[0_0_15px_rgba(0,255,157,0.5)]' : 'bg-bg-dark border-white/20 text-text-muted'
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 border-2 ${step >= 3 ? 'bg-neon-cyan border-neon-cyan text-bg-dark shadow-[0_0_15px_rgba(0,255,157,0.5)]' : 'bg-bg-dark border-white/20 text-text-muted'
                             }`}
                     >
                         3
@@ -666,7 +666,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                 type="button"
                                 onClick={nextStep}
                                 disabled={!watch('countryId') || !watch('cityId') || !watch('tattooType')}
-                                className="ml-auto px-8 py-3 bg-neon-blue text-bg-dark font-bold rounded-xl hover:bg-neon-blue/80 hover:shadow-[0_0_15px_rgba(0,245,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
+                                className="ml-auto px-8 py-3 bg-neon-purple text-bg-dark font-bold rounded-xl hover:bg-neon-purple/80 hover:shadow-[0_0_15px_rgba(0,245,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
                             >
                                 {t('buttons.next')} <ChevronRight size={16} />
                             </button>
@@ -677,7 +677,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                 type="button"
                                 onClick={nextStep}
                                 disabled={!watchDate || !watchTime}
-                                className="ml-auto px-8 py-3 bg-neon-green text-bg-dark font-bold rounded-xl hover:bg-neon-green/80 hover:shadow-[0_0_15px_rgba(57,255,20,0.4)] disabled:opacity-50 flex items-center gap-2 transition-all"
+                                className="ml-auto px-8 py-3 bg-neon-cyan text-bg-dark font-bold rounded-xl hover:bg-neon-cyan/80 hover:shadow-[0_0_15px_rgba(57,255,20,0.4)] disabled:opacity-50 flex items-center gap-2 transition-all"
                             >
                                 {t('buttons.next')} <ChevronRight size={16} />
                             </button>
