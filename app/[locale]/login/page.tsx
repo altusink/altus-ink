@@ -44,22 +44,26 @@ export default function LoginPage() {
 
             const role = profile?.role?.toUpperCase() || 'USER'
 
-            // Smart Redirect based on Role
+            // 1. Refresh to propagate cookies
+            router.refresh()
+            
+            // 2. Wait a tick to ensure cookies are set (just to be safe)
+            await new Promise(resolve => setTimeout(resolve, 500))
+
+            // 3. Smart Redirect based on Role
             switch (role) {
                 case 'ARTIST':
-                    router.push('/admin/portal') // Direct to Artist Dashboard
+                    router.push('/admin/portal') 
                     break
                 case 'SALES':
-                    router.push('/admin/sales')  // Direct to CRM
+                    router.push('/admin/sales')  
                     break
                 case 'COORDINATOR':
-                    router.push('/admin/bookings') // Direct to Calendar
+                    router.push('/admin/bookings') 
                     break
                 default:
-                    router.push('/admin') // CEO/Admin goes to Main Dashboard
+                    router.push('/admin') 
             }
-
-            router.refresh()
         } catch (err) {
             setError('An unexpected error occurred')
         } finally {
