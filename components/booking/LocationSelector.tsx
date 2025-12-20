@@ -1,6 +1,6 @@
 'use client'
 
-import { MapPin } from 'lucide-react'
+import { MapPin, Globe } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 interface LocationSelectorProps {
@@ -53,7 +53,7 @@ export default function LocationSelector({
                                     }
                                 `}
                             >
-                                <span className="text-2xl">{country.flag}</span>
+                                <Globe className={`w-8 h-8 ${isSelected ? 'text-neon-cyan' : 'text-neon-purple'}`} />
                                 <span className="font-semibold text-sm">{country.name}</span>
                                 {isSelected && (
                                     <motion.div 

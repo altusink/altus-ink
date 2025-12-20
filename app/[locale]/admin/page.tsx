@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { Calendar, Users, DollarSign, Clock, ArrowUpRight } from 'lucide-react'
+import { Calendar, Users, DollarSign, Clock, ArrowUpRight, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
