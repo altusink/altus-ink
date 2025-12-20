@@ -19,7 +19,7 @@ export default function Footer() {
                     <Link href="/" className="inline-block mb-6">
                         <div className="relative w-64 h-24">
                             <Image 
-                                src="/logo-international.png" 
+                                src="/images/brand-logo.png" 
                                 alt="Altus Ink International" 
                                 fill
                                 className="object-contain object-left"
