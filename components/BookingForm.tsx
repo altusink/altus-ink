@@ -61,12 +61,7 @@ const bookingSchema = z.object({
         pregnant: z.boolean().optional(),
     }).optional(),
     
-    healthForm: z.object({
-        allergies: z.string().optional(),
-        medications: z.string().optional(),
-        medicalConditions: z.string().optional(),
-        pregnant: z.boolean().optional(),
-    }).optional(),
+    // Removed duplicate healthForm here
     
     termsAccepted: z.boolean().refine(val => val === true, {
         message: "You must accept the terms"
@@ -633,7 +628,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                             type="submit"
                             onClick={() => setValue('paymentMethod', selectedPaymentMethod === 'stripe' ? 'stripe' : 'pix')}
                             disabled={isSubmitting || !watch('termsAccepted')}
-                            className="w-full py-4 bg-white text-bg-dark font-bold rounded-lg hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            className="w-full py-4 bg-bg-card border border-neon-green/50 text-neon-green font-bold rounded-xl hover:bg-neon-green/10 hover:border-neon-green hover:shadow-[0_0_20px_rgba(0,255,157,0.2)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                         >
                             {isSubmitting ? <Loader2 className="animate-spin" /> :
                                 selectedPaymentMethod === 'stripe' ? 'Ir para Pagamento' : 'Confirmar Agendamento'
@@ -698,7 +693,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                             <button
                                 type="button"
                                 onClick={prevStep}
-                                className="px-6 py-3 rounded-lg border border-white/20 hover:bg-white/5 text-white flex items-center gap-2 transition-colors"
+                                className="px-6 py-3 rounded-xl border border-white/20 hover:bg-white/5 text-white flex items-center gap-2 transition-colors"
                             >
                                 <ChevronLeft size={16} /> {t('buttons.back')}
                             </button>
@@ -709,7 +704,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                 type="button"
                                 onClick={nextStep}
                                 disabled={!watch('countryId') || !watch('cityId') || !watch('tattooType')}
-                                className="ml-auto px-8 py-3 bg-white text-bg-dark font-bold rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
+                                className="ml-auto px-8 py-3 bg-neon-blue text-bg-dark font-bold rounded-xl hover:bg-neon-blue/80 hover:shadow-[0_0_15px_rgba(0,245,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
                             >
                                 {t('buttons.next')} <ChevronRight size={16} />
                             </button>
@@ -720,7 +715,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                 type="button"
                                 onClick={nextStep}
                                 disabled={!watchDate || !watchTime}
-                                className="ml-auto px-8 py-3 bg-white text-bg-dark font-bold rounded-lg hover:bg-gray-100 disabled:opacity-50 flex items-center gap-2 transition-all"
+                                className="ml-auto px-8 py-3 bg-neon-green text-bg-dark font-bold rounded-xl hover:bg-neon-green/80 hover:shadow-[0_0_15px_rgba(57,255,20,0.4)] disabled:opacity-50 flex items-center gap-2 transition-all"
                             >
                                 {t('buttons.next')} <ChevronRight size={16} />
                             </button>

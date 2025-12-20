@@ -24,17 +24,17 @@ export default function VisualEffects() {
       
       {/* Orb 1: Neon Green (Left Top) */}
       <div 
-        className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full mix-blend-screen opacity-20 animate-pulse-slow filter blur-[100px] bg-[radial-gradient(circle,rgba(57,255,20,0.4)_0%,rgba(57,255,20,0)_70%)] [animation-duration:15s]"
+        className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full mix-blend-screen opacity-50 animate-pulse-slow filter blur-[120px] bg-[radial-gradient(circle,rgba(57,255,20,0.6)_0%,rgba(57,255,20,0)_70%)] [animation-duration:15s]"
       />
 
       {/* Orb 2: Neon Blue (Right Top) */}
       <div 
-        className="absolute top-[-5%] right-[-10%] w-[60vw] h-[60vw] rounded-full mix-blend-screen opacity-20 animate-float filter blur-[120px] bg-[radial-gradient(circle,rgba(0,245,255,0.4)_0%,rgba(0,245,255,0)_70%)] [animation-duration:20s]"
+        className="absolute top-[-5%] right-[-10%] w-[60vw] h-[60vw] rounded-full mix-blend-screen opacity-50 animate-float filter blur-[140px] bg-[radial-gradient(circle,rgba(0,245,255,0.6)_0%,rgba(0,245,255,0)_70%)] [animation-duration:20s]"
       />
 
       {/* Orb 3: Neon Purple (Bottom Left) */}
       <div 
-        className="absolute bottom-[-20%] left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen opacity-15 animate-glow filter blur-[150px] bg-[radial-gradient(circle,rgba(139,0,255,0.4)_0%,rgba(139,0,255,0)_70%)] [animation-duration:25s]"
+        className="absolute bottom-[-20%] left-[10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen opacity-40 animate-glow filter blur-[160px] bg-[radial-gradient(circle,rgba(139,0,255,0.6)_0%,rgba(139,0,255,0)_70%)] [animation-duration:25s]"
       />
 
       {/* Noise Texture Overlay (Optional for "Film" look) */}
