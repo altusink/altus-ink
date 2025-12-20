@@ -38,17 +38,7 @@ export default function HomePage() {
                         {/* Logo Image with Gradient Mask */}
                         <div className="relative w-full max-w-[500px] h-[80px] md:h-[140px] mx-auto mb-6">
                             <div
-                                className="absolute inset-0 bg-gradient-to-r from-neon-green via-neon-blue to-neon-green"
-                                style={{
-                                    maskImage: 'url(/images/brand-logo.png)',
-                                    maskSize: 'contain',
-                                    maskRepeat: 'no-repeat',
-                                    maskPosition: 'center',
-                                    WebkitMaskImage: 'url(/images/brand-logo.png)',
-                                    WebkitMaskSize: 'contain',
-                                    WebkitMaskRepeat: 'no-repeat',
-                                    WebkitMaskPosition: 'center',
-                                }}
+                                className="absolute inset-0 bg-gradient-to-r from-neon-green via-neon-blue to-neon-green mask-brand-logo"
                             />
                         </div>
 
