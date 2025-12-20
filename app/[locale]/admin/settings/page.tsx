@@ -174,6 +174,8 @@ export default function SettingsPage() {
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input 
                                                 type="checkbox" 
+                                                id="security-toggle"
+                                                aria-label="Ativar Selo Cloudflare"
                                                 className="sr-only peer"
                                                 defaultChecked={settings.find(s => s.key === 'show_security_seal')?.value === 'true'}
                                                 onChange={(e) => handleSave('show_security_seal', e.target.checked ? 'true' : 'false')}
@@ -204,7 +206,9 @@ export default function SettingsPage() {
                                                 <input
                                                     type={setting.is_secret && !showSecrets[setting.key] ? "password" : "text"}
                                                     defaultValue={setting.value}
-                                                    aria-label={setting.key}
+                                                    aria-label={`Configuração ${setting.key}`}
+                                                    name={setting.key}
+                                                    id={`setting-${setting.key}`}
                                                     className="w-full bg-bg-dark border border-white/10 rounded-lg p-3 text-white focus:border-neon-green outline-none"
                                                     onChange={(e) => {
                                                         // Optional: could save on blur or store in local state to save later
