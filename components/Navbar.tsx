@@ -40,17 +40,9 @@ export default function Navbar() {
                     {/* Logo */}
                     <Link href="/" className="flex items-center space-x-3 group">
                         <div className="relative w-[40px] h-[40px]">
-                            <div
-                                className="absolute inset-0 bg-gradient-to-r from-neon-green via-neon-blue to-neon-green"
+                                className="absolute inset-0 bg-gradient-to-r from-neon-green via-neon-blue to-neon-green mask-brand-symbol"
                                 style={{
-                                    maskImage: 'url(/images/brand-symbol.png)',
-                                    maskSize: 'contain',
-                                    maskRepeat: 'no-repeat',
-                                    maskPosition: 'center',
-                                    WebkitMaskImage: 'url(/images/brand-symbol.png)',
-                                    WebkitMaskSize: 'contain',
-                                    WebkitMaskRepeat: 'no-repeat',
-                                    WebkitMaskPosition: 'center',
+                                    // Fallback for older browsers if needed, but class handles it
                                 }}
                             />
                         </div>

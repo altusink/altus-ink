@@ -18,12 +18,7 @@ export default function Footer() {
                 <div className="col-span-1 md:col-span-2 lg:col-span-1 mb-8 lg:mb-0">
                     <Link href="/" className="inline-block mb-6">
                         <div className="relative w-64 h-24">
-                            <Image 
-                                src="/images/brand-logo.png" 
-                                alt="Altus Ink International" 
-                                fill
-                                className="object-contain object-left"
-                            />
+                            <div className="absolute inset-0 bg-gradient-to-r from-neon-green via-neon-blue to-neon-green mask-brand-logo" />
                         </div>
                     </Link>
                     <p className="text-text-secondary max-w-sm text-sm leading-relaxed">

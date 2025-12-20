@@ -23,7 +23,7 @@ export default function HomePage() {
                 {/* Animated Grid Background */}
                 <div className="absolute inset-0 z-0">
                     <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:4rem_4rem]" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-bg-dark via-transparent to-bg-dark" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg-dark/50 to-bg-dark" />
                 </div>
 
                 {/* Content */}
