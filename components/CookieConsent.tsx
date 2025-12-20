@@ -51,6 +51,7 @@ export default function CookieConsent() {
                                 <button
                                     onClick={handleAccept}
                                     className="p-1 text-text-muted hover:text-white transition-colors"
+                                    aria-label="Fechar aviso de cookies"
                                 >
                                     <X size={20} />
                                 </button>

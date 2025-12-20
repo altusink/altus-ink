@@ -15,7 +15,7 @@ export default function Footer() {
             <div className="container mx-auto px-4 py-12">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                     {/* Logo & Brand */}
-                <div className="col-span-1 md:col-span-2 lg:col-span-4 mb-8 lg:mb-0">
+                <div className="col-span-1 md:col-span-2 lg:col-span-1 mb-8 lg:mb-0">
                     <Link href="/" className="inline-block mb-6">
                         <div className="relative w-64 h-24">
                             <Image 
@@ -29,8 +29,7 @@ export default function Footer() {
                     <p className="text-text-secondary max-w-sm text-sm leading-relaxed">
                         Elevando a arte da tatuagem a um nível global. Experiências exclusivas com os maiores artistas do mundo.
                     </p>
-                </div>          {/* Security Badges */}
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 mt-6">
                             <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
                                 <Shield className="w-4 h-4 text-neon-green" />
                                 <span className="text-xs text-text-muted">Certificado</span>
@@ -44,6 +43,7 @@ export default function Footer() {
                                 <span className="text-xs text-text-muted">Verificado</span>
                             </div>
                         </div>
+                    </div>
 
 
                     {/* Links Rápidos */}

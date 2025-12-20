@@ -118,6 +118,7 @@ export default function GuestGuideAdmin() {
                 
                 {/* Artist Selector */}
                 <select
+                    aria-label="Selecione um Artista"
                     className="bg-black/40 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-neon-green"
                     value={selectedArtist}
                     onChange={e => setSelectedArtist(e.target.value)}
@@ -252,8 +253,12 @@ export default function GuestGuideAdmin() {
                                                 )}
                                             </div>
                                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => handleEdit(item)} className="p-2 bg-white/10 rounded-lg hover:text-neon-blue"><Edit2 size={16} /></button>
-                                                <button onClick={() => handleDelete(item.id)} className="p-2 bg-white/10 rounded-lg hover:text-red-500"><Trash2 size={16} /></button>
+                                                <button onClick={() => handleEdit(item)} className="p-2 bg-white/10 rounded-lg hover:text-neon-blue" aria-label="Editar item">
+                                                    <Edit2 size={16} />
+                                                </button>
+                                                <button onClick={() => handleDelete(item.id)} className="p-2 bg-white/10 rounded-lg hover:text-red-500" aria-label="Excluir item">
+                                                    <Trash2 size={16} />
+                                                </button>
                                             </div>
                                         </div>
                                     ))}

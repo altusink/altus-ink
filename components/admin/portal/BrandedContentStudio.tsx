@@ -164,12 +164,13 @@ export default function BrandedContentStudio() {
                     <div className="space-y-4">
                         {/* Upload */}
                         <div className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-neon-green/50 transition-colors cursor-pointer relative group">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                            />
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    aria-label="Upload de imagem"
+                                />
                             <Upload className="mx-auto text-text-muted mb-2 group-hover:text-neon-green" />
                             <p className="text-sm text-text-muted">Clique para enviar foto (9:16)</p>
                         </div>

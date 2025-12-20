@@ -113,6 +113,7 @@ export default function CommunicationsAdmin() {
                             <div className="space-y-2">
                                 <label className="text-xs text-text-muted uppercase font-bold">Assunto</label>
                                 <input
+                                    aria-label="Assunto do Email"
                                     className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-neon-green"
                                     value={currentTemplate.subject}
                                     onChange={e => {
@@ -128,6 +129,7 @@ export default function CommunicationsAdmin() {
                                     Variáveis disponíveis: <code className="bg-black/40 px-1 rounded">{'{name}'}</code> <code className="bg-black/40 px-1 rounded">{'{artist}'}</code> <code className="bg-black/40 px-1 rounded">{'{date}'}</code>
                                 </div>
                                 <textarea
+                                    aria-label="Corpo do Email"
                                     className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-mono text-sm outline-none focus:border-neon-green h-64"
                                     value={currentTemplate.body}
                                     onChange={e => {

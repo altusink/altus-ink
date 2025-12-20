@@ -190,6 +190,7 @@ export default function LocationsAdmin() {
                                 <button 
                                     onClick={() => handleDelete(loc.id)}
                                     className="p-2 text-text-muted hover:text-red-500 hover:bg-white/5 rounded-lg"
+                                    aria-label="Excluir localização"
                                 >
                                     <Trash2 size={20} />
                                 </button>
