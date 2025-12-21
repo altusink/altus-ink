@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Link, usePathname, useRouter } from '@/navigation'
-import { LayoutDashboard, Calendar, Users, Settings, LogOut, Palette, Menu, X, ShieldCheck, MapPin, Star } from 'lucide-react'
+import { LayoutDashboard, Calendar, Users, Settings, LogOut, Palette, Menu, X, ShieldCheck, MapPin, Star, MessageCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function AdminSidebar() {

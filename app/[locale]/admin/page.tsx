@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 
 
+// Cache Bust: v2.2 Fix
 export const dynamic = 'force-dynamic'
 
 export default async function AdminDashboard() {

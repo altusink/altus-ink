@@ -84,8 +84,8 @@ export default function LanguageModal() {
                 </div>
 
                 {/* Footer */}
-                <p className="text-center text-text-muted text-sm">
-                    You can change the language anytime from the menu
+                <p className="text-center text-text-muted text-sm relative z-10">
+                    You can change the language anytime from the menu <span className="text-[10px] opacity-20">v3.0 (Altus OS Alpha)</span>
                 </p>
             </div>
         </div>

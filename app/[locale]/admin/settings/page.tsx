@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { getSystemSettings, updateSystemSetting } from '@/app/actions/settings'
 import { Toaster, toast } from 'sonner'
 import { Save, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
+import ThemeEditor from '@/components/admin/ThemeEditor'
 
 export default function SettingsPage() {
     const [settings, setSettings] = useState<any[]>([])
@@ -35,11 +36,11 @@ export default function SettingsPage() {
     }
 
     const categories = [
+        { id: 'visual', label: 'Identidade Visual (Theme Engine)' },
         { id: 'sales', label: 'Vendas & Metas' },
         { id: 'payment', label: 'Pagamentos (Stripe/MP)' },
         { id: 'email', label: 'E-mail & Notificações' },
         { id: 'ai', label: 'Inteligência Artificial' },
-        { id: 'users', label: 'Gerenciar Usuários' },
         { id: 'users', label: 'Gerenciar Usuários' },
         { id: 'cms', label: 'Conteúdo do Site (CMS)' },
         { id: 'security', label: 'Segurança & Selos' }
@@ -80,6 +81,14 @@ export default function SettingsPage() {
 
             <div className="space-y-8">
                 {categories.map(cat => {
+                    if (cat.id === 'visual') {
+                         return (
+                            <div key={cat.id} className="animate-fade-in">
+                                <ThemeEditor />
+                            </div>
+                         )
+                    }
+
                     // Special Sections
                     if (cat.id === 'users') {
                         return (

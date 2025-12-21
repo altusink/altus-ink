@@ -10,13 +10,15 @@ export async function getStripe() {
     try {
         const supabase = createAdminClient();
         const { data } = await supabase
-            .from('system_settings')
-            .select('value')
-            .eq('key', 'stripe_secret_key')
+            .from('integrations')
+            .select('config')
+            .eq('service_id', 'stripe')
+            .eq('is_active', true)
             .single();
         
-        if (data?.value) {
-            secretKey = data.value;
+        if (data?.config && typeof data.config === 'object' && 'apiKey' in data.config) {
+            // @ts-ignore
+            secretKey = data.config.apiKey;
         }
     } catch (e) {
         // Fallback to env or fail gracefully

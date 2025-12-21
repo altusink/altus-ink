@@ -66,8 +66,10 @@ export default function PremiumDatePicker({ dates, selectedDateStr, onSelectDate
                             }
                         `}
                     >
-                        {/* Status Indicator (Available) */}
-                        <div className={`absolute top-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-bg-dark' : 'bg-neon-cyan animate-pulse'}`} />
+                        {/* Status Indicator (Available) - Centered */}
+                        <div className="absolute top-2 w-full flex justify-center">
+                             <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-bg-dark' : 'bg-neon-cyan animate-pulse'}`} />
+                        </div>
 
                         <span className="text-[0.65rem] font-bold uppercase tracking-widest opacity-80">
                             {weekDayCapitalized}

@@ -485,7 +485,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                             </div>
                             <div className="text-right">
                                 <p className="text-sm text-neon-cyan font-bold">Sinal a Pagar</p>
-                                <p className="text-3xl font-bold text-neon-cyan">€{watch('depositAmount')}</p>
+                                <p className="text-3xl font-bold text-neon-cyan">€{depositAmount}</p>
                             </div>
                         </div>
 

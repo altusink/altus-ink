@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from '@/navigation'
 import AdminSidebar, { AdminNavLink } from '@/components/AdminSidebar'
+import AIChatButton from '@/components/admin/AIChatButton'
 import { Calendar, Users, Globe, MapPin, BarChart3 } from 'lucide-react'
 
 export default async function AdminLayout({
@@ -69,6 +70,9 @@ export default async function AdminLayout({
                         </footer>
                     </div>
                 </div>
+                
+                {/* AI Assistant FAB */}
+                <AIChatButton />
             </main>
         </div>
     )

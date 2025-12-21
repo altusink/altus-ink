@@ -8,6 +8,8 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { adminOS } from "@/lib/services/admin-os"
+import ThemeRegistry from "@/components/ThemeRegistry"
 
 const inter = Inter({
     subsets: ["latin"],
@@ -47,6 +49,7 @@ export default async function RootLayout({
 }) {
     const messages = await getMessages();
     const { locale } = await params;
+    const theme = await adminOS.getTheme();
 
     return (
         <html lang={locale} className="dark">
@@ -60,6 +63,7 @@ export default async function RootLayout({
 
                     {/* Content */}
                     <div className="relative z-10">
+                        <ThemeRegistry initialTheme={theme} />
                         <LanguageModal />
                         <CookieConsent />
                         {children}

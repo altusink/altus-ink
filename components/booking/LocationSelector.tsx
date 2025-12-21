@@ -53,13 +53,34 @@ export default function LocationSelector({
                                     }
                                 `}
                             >
-                                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-md">
-                                    <img 
-                                        src={`https://flagcdn.com/w80/${country.id}.png`} 
-                                        alt={country.name} 
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
+                                    <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-md relative bg-bg-dark">
+                                        <img 
+                                            src={`https://flagcdn.com/w80/${(() => {
+                                                // Helper to map DB names/IDs to ISO codes
+                                                const map: Record<string, string> = {
+                                                    'brasil': 'br', 'brazil': 'br', 'br': 'br',
+                                                    'holanda': 'nl', 'netherlands': 'nl', 'nl': 'nl',
+                                                    'reino unido': 'gb', 'uk': 'gb', 'united kingdom': 'gb', 'gb': 'gb',
+                                                    'frança': 'fr', 'france': 'fr', 'fr': 'fr',
+                                                    'alemanha': 'de', 'germany': 'de', 'de': 'de',
+                                                    'itália': 'it', 'italy': 'it', 'it': 'it',
+                                                    'espanha': 'es', 'spain': 'es', 'es': 'es',
+                                                    'portugal': 'pt', 'pt': 'pt',
+                                                    'bélgica': 'be', 'belgium': 'be', 'be': 'be',
+                                                    'luxemburgo': 'lu', 'luxembourg': 'lu', 'lu': 'lu',
+                                                    'suíça': 'ch', 'switzerland': 'ch', 'ch': 'ch'
+                                                }
+                                                const key = (country.name || country.id || '').toLowerCase().trim()
+                                                return map[key] || 'un' // 'un' for unknown/globe
+                                            })()}.png`}
+                                            alt={country.name} 
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                // Fallback if image fails
+                                                e.currentTarget.style.display = 'none'
+                                            }}
+                                        />
+                                    </div>
                                 <span className="font-semibold text-sm">{country.name}</span>
                                 {isSelected && (
                                     <motion.div 
