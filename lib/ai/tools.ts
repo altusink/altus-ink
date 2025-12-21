@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import { adminOS } from '@/lib/services/admin-os'
+
 
 // Define the Tool Structure for Gemini
 export const toolsDefinition = [
