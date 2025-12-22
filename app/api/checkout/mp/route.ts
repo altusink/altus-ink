@@ -33,9 +33,9 @@ export async function POST(req: NextRequest) {
                     }
                 ],
                 back_urls: {
-                    success: `${process.env.NEXT_PUBLIC_APP_URL}/bookings/${bookingId}?status=success`,
-                    failure: `${process.env.NEXT_PUBLIC_APP_URL}/bookings/${bookingId}?status=failure`,
-                    pending: `${process.env.NEXT_PUBLIC_APP_URL}/bookings/${bookingId}?status=pending`,
+                    success: `${process.env.NEXT_PUBLIC_APP_URL}/booking-success?bookingId=${bookingId}&status=success`,
+                    failure: `${process.env.NEXT_PUBLIC_APP_URL}/booking-success?bookingId=${bookingId}&status=failure`,
+                    pending: `${process.env.NEXT_PUBLIC_APP_URL}/booking-success?bookingId=${bookingId}&status=pending`,
                 },
                 auto_return: 'approved',
                 external_reference: bookingId, // Crucial for matching webhook
