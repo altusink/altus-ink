@@ -1,5 +1,6 @@
 const ICONS: Record<string, any> = {
     stripe: CreditCard,
+    mercadopago: CreditCard, // Added MP
     resend: Mail,
     gemini: Bot,
     chatwoot: Smartphone,
