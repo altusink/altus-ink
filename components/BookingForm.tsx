@@ -166,7 +166,24 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
     // --- Missing State & Variables Restored ---
     const watchDate = watch('bookingDate')
     const watchTime = watch('bookingTime')
-    const depositAmount = watch('depositAmount') || 50 // Default logic
+    const watchTattooType = watch('tattooType')
+    
+    // Auto-update prices when type changes
+    useEffect(() => {
+        const rule = PRICING_RULES[watchTattooType]
+        if (rule) {
+            setValue('estimatedPrice', rule.price)
+            // Example Logic: Deposit is 30% or Fixed value? 
+            // For now, let's say Deposit is 50% of base price or fixed per type
+            // Let's use the rule.price as the 'Base' and maybe deposit is fixed 50 for small, 100 for large?
+            // Adapting to user complaint: "Selected large (100) but charged 50".
+            // Implementation: Set deposit equal to the price rule (or a map).
+            const calculatedDeposit = rule.price // Full price or deposit? Assuming price from rule is the deposit/base.
+            setValue('depositAmount', calculatedDeposit)
+        }
+    }, [watchTattooType, setValue])
+
+    const depositAmount = watch('depositAmount') || 0
     
     // Navigation State
     const [step, setStep] = useState(1)

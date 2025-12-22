@@ -9,7 +9,7 @@ async function getMercadoPagoClient() {
     try {
         const supabase = createAdminClient();
         const { data } = await supabase
-            .from('system_settings')
+            .from('admin_settings')
             .select('value')
             .eq('key', 'mp_access_token')
             .single();
