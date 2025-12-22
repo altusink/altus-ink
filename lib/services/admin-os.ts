@@ -64,12 +64,22 @@ export class AdminOS {
 
     async updateIntegrationConfig(serviceId: string, config: any) {
         // In a real app, encrypt 'config' here before sending
+        // UPSERT is safer: creates row if missing
         const { error } = await this.supabase
             .from('integrations')
-            .update({ config, status: 'connected', last_sync: new Date().toISOString() })
-            .eq('service_id', serviceId)
+            .upsert({ 
+                service_id: serviceId, 
+                config, 
+                status: 'connected', 
+                last_sync: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'service_id' })
+            .select() // Ensure we get a response
         
-        if (error) throw error
+        if (error) {
+            console.error("AdminOS Config Update Error:", error)
+            throw error
+        }
     }
 
     // --- AI Audit ---

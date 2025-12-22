@@ -1,3 +1,12 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { adminOS } from '@/lib/services/admin-os'
+import { IntegrationService } from '@/lib/types/admin'
+import { Check, X, Loader2, CreditCard, Mail, Bot, Smartphone, Settings, Calendar, QrCode } from 'lucide-react'
+import { toast } from 'sonner'
+import { createClient } from '@/lib/supabase/client'
+
 const ICONS: Record<string, any> = {
     stripe: CreditCard,
     mercadopago: CreditCard, // Added MP
@@ -8,68 +17,18 @@ const ICONS: Record<string, any> = {
     evolution_api: Smartphone // Reusing Smartphone or adding QrCode icon if available
 }
 
-import { Calendar, QrCode } from 'lucide-react'
-
 // ... inside component ...
 
-    async function handleSaveConfig() {
-        if (!selectedService) return
-        setSaving(true)
-        try {
-            let finalConfig = { apiKey }
-            
-            // Special handling for Google (Parse JSON)
-            if (selectedService === 'google_calendar') {
-                try {
-                    const json = JSON.parse(apiKey)
-                    finalConfig = { 
-                        client_email: json.client_email,
-                        private_key: json.private_key,
-                        project_id: json.project_id
-                    }
-                    if (!finalConfig.client_email || !finalConfig.private_key) throw new Error()
-                } catch (e) {
-                    toast.error('JSON inválido. Cole o arquivo inteiro.')
-                    setSaving(false)
-                    return
-                }
-            }
 
-            await adminOS.updateIntegrationConfig(selectedService, finalConfig)
-            toast.success('Configuração salva com sucesso!')
-            setApiKey('')
-            setSelectedService(null)
-            loadIntegrations()
-        } catch (error) {
-            toast.error('Erro ao salvar configuração')
-        } finally {
-            setSaving(false)
-        }
-    }
-    
-// ... inside render ...
-// Update Input placeholder based on service
-    const isGoogle = selectedService === 'google_calendar'
-
-    // ...
-    <textarea // value={apiKey} ...
-        value={apiKey}
-        onChange={(e) => setApiKey(e.target.value)}
-        placeholder={isGoogle ? '{ "type": "service_account", ... }' : 'sk_live_...'}
-        className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono text-sm focus:border-neon-green outline-none h-32"
-    />
-
-// ... inside getDescription ...
-function getDescription(id: string) {
-    switch (id) {
-        case 'stripe': return 'Processamento de pagamentos globais, checkout transparente e gestão de assinaturas.'
-        case 'gemini': return 'O cérebro da IA. Permite que o assistente virtual realize ações complexas no banco de dados.'
-        case 'resend': return 'Infraestrutura de e-mail transacional para confirmações e notificações de alta entregabilidade.'
-        case 'chatwoot': return 'CRM de WhatsApp e Omni-channel para atendimento e suporte ao cliente.'
-        case 'google_calendar': return 'Sincronização automática de agendamentos com sua Agenda Google principal.'
-        default: return 'Integração de serviço externo.'
-    }
-}
+const SUPPORTED_SERVICES = [
+    { id: 'stripe', name: 'Stripe', description: 'Processamento de pagamentos globais.' },
+    { id: 'mercadopago', name: 'Mercado Pago', description: 'Pagamentos via Pix e Cartão no Brasil.' },
+    { id: 'resend', name: 'Resend', description: 'Infraestrutura de e-mail transacional.' },
+    { id: 'evolution_api', name: 'Evolution API', description: 'WhatsApp Automático e QR Code.' },
+    { id: 'google_calendar', name: 'Google Calendar', description: 'Sincronização de agenda.' },
+    { id: 'chatwoot', name: 'Chatwoot', description: 'CRM de Atendimento.' },
+    { id: 'gemini', name: 'Google Gemini', description: 'Inteligência Artificial do Assistente.' }
+]
 
 export default function IntegrationsList() {
     const [services, setServices] = useState<IntegrationService[]>([])
@@ -86,8 +45,22 @@ export default function IntegrationsList() {
 
     async function loadIntegrations() {
         try {
-            const data = await adminOS.getIntegrations()
-            setServices(data)
+            const dbServices = await adminOS.getIntegrations()
+            
+            // Merge DB data with Supported List
+            const merged = SUPPORTED_SERVICES.map(idx => {
+                const found = dbServices.find(s => s.service_id === idx.id)
+                return {
+                    service_id: idx.id,
+                    name: idx.name,
+                    is_active: found ? found.is_active : false,
+                    status: found ? found.status : 'disconnected',
+                    config: found ? found.config : null,
+                    last_sync: found ? found.last_sync : null
+                } as IntegrationService
+            })
+            
+            setServices(merged)
         } catch (error) {
             console.error(error)
             toast.error('Erro ao carregar integrações')
@@ -284,7 +257,6 @@ export default function IntegrationsList() {
                     </div>
                 </div>
             )}
-        </div>
     )
 }
 

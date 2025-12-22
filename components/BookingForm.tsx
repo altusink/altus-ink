@@ -45,7 +45,7 @@ const bookingSchema = z.object({
     bookingTime: z.string().min(1, 'Time required'),
 
     // Tattoo Specs
-    tattooType: z.enum(['small', 'medium', 'large', 'xl', 'coverup']),
+    tattooType: z.enum(['small', 'medium', 'large', 'xl', 'coverup', 'fast_test']),
     tattooDescription: z.string().optional(),
     bodyLocation: z.string().min(1, 'Placement required'),
 
@@ -386,6 +386,7 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                                {key === 'large' && <div className="w-6 h-6 rounded-sm border-2 border-current" />}
                                                {key === 'xl' && <div className="w-7 h-7 rounded-sm border-2 border-current" />}
                                                {key === 'coverup' && <div className="w-5 h-5 rounded-full border-2 border-dashed border-current" />}
+                                               {key === 'fast_test' && <div className="w-6 h-6 flex items-center justify-center font-bold">⚡</div>}
                                             </>
                                         }
                                     />

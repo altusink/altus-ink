@@ -96,5 +96,6 @@ export const PRICING_RULES = {
     medium: { label: 'Média (2h - 3h)', price: 60, currency: 'EUR' },
     large: { label: 'Grande (3h - 5h)', price: 100, currency: 'EUR' },
     xl: { label: 'Extra Grande (> 5h)', price: null, action: 'whatsapp' },
-    coverup: { label: 'Reforma / Cobertura', price: null, action: 'whatsapp' }
+    coverup: { label: 'Reforma / Cobertura', price: null, action: 'whatsapp' },
+    fast_test: { label: 'Teste Rápido (1€)', price: 1, currency: 'EUR' }
 }

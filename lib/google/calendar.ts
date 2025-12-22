@@ -17,14 +17,14 @@ const getAuthClient = async () => {
     // Try DB First
     try {
         const integrations = await adminOS.getIntegrations();
-        const google = integrations.find(i => i.service_id === 'google_calendar' && i.is_active);
+        const googleConfig = integrations.find(i => i.service_id === 'google_calendar' && i.is_active);
         
-        if (google?.config && typeof google.config === 'object') {
+        if (googleConfig?.config && typeof googleConfig.config === 'object') {
              // Expecting config to store the JSON object or fields
              // @ts-ignore
-             if (google.config.client_email) clientEmail = google.config.client_email;
+             if (googleConfig.config.client_email) clientEmail = googleConfig.config.client_email;
              // @ts-ignore
-             if (google.config.private_key) privateKey = google.config.private_key;
+             if (googleConfig.config.private_key) privateKey = googleConfig.config.private_key;
         }
     } catch (e) {
         // Fallback to env
