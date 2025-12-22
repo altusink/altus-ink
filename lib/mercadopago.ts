@@ -5,17 +5,21 @@ import { createAdminClient } from '@/lib/supabase/server';
 async function getMercadoPagoClient() {
     let accessToken = process.env.MP_ACCESS_TOKEN;
 
-    // Try DB
+    // Try DB (Integrations Table)
     try {
         const supabase = createAdminClient();
         const { data } = await supabase
-            .from('admin_settings')
-            .select('value')
-            .eq('key', 'mp_access_token')
+            .from('integrations')
+            .select('config, is_active')
+            .eq('service_id', 'mercadopago')
             .single();
         
-        if (data?.value) {
-            accessToken = data.value;
+        if (data?.is_active && data.config) {
+             // Expecting config to be { apiKey: "..." } or similar
+             // @ts-ignore
+             if (data.config.apiKey) accessToken = data.config.apiKey;
+             // @ts-ignore
+             if (data.config.access_token) accessToken = data.config.access_token;
         }
     } catch (e) {
         // Fallback
