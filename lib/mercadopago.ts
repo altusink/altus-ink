@@ -1,4 +1,4 @@
-import MercadoPagoConfig, { Payment, Preference } from 'mercadopago';
+ import MercadoPagoConfig, { Payment, Preference } from 'mercadopago';
 import { createAdminClient } from '@/lib/supabase/server';
 
 // Initialize Client Dynamically

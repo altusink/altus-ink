@@ -171,15 +171,10 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
     // Auto-update prices when type changes
     useEffect(() => {
         const rule = PRICING_RULES[watchTattooType]
-        if (rule) {
+        if (rule && rule.price) {
+            console.log("Updating Price Rule:", rule) // Debug
             setValue('estimatedPrice', rule.price)
-            // Example Logic: Deposit is 30% or Fixed value? 
-            // For now, let's say Deposit is 50% of base price or fixed per type
-            // Let's use the rule.price as the 'Base' and maybe deposit is fixed 50 for small, 100 for large?
-            // Adapting to user complaint: "Selected large (100) but charged 50".
-            // Implementation: Set deposit equal to the price rule (or a map).
-            const calculatedDeposit = rule.price // Full price or deposit? Assuming price from rule is the deposit/base.
-            setValue('depositAmount', calculatedDeposit)
+            setValue('depositAmount', rule.price) // DIRECTLY SET DEPOSIT TO PRICE
         }
     }, [watchTattooType, setValue])
 
@@ -507,8 +502,8 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
                                             isSelected={watchTime === time}
                                             onClick={() => setValue('bookingTime', time)}
                                         >
-                                            <div className={`w-2 h-2 rounded-full ${watchTime === time ? 'bg-bg-dark' : 'bg-neon-cyan'}`} />
-                                            {time}
+                                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${watchTime === time ? 'bg-bg-dark' : 'bg-neon-cyan'}`} />
+                                            <span>{time}</span>
                                         </SelectableCard>
                                     ))}
                                 </div>

@@ -1,17 +1,72 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import { adminOS } from '@/lib/services/admin-os'
-import { IntegrationService } from '@/lib/types/admin'
-import { Check, X, Loader2, CreditCard, Mail, Bot, Smartphone, Settings } from 'lucide-react'
-import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
-
 const ICONS: Record<string, any> = {
     stripe: CreditCard,
     resend: Mail,
     gemini: Bot,
-    chatwoot: Smartphone
+    chatwoot: Smartphone,
+    google_calendar: Calendar // Added Calendar
+}
+
+import { Calendar } from 'lucide-react' // Ensure import
+
+// ... inside component ...
+
+    async function handleSaveConfig() {
+        if (!selectedService) return
+        setSaving(true)
+        try {
+            let finalConfig = { apiKey }
+            
+            // Special handling for Google (Parse JSON)
+            if (selectedService === 'google_calendar') {
+                try {
+                    const json = JSON.parse(apiKey)
+                    finalConfig = { 
+                        client_email: json.client_email,
+                        private_key: json.private_key,
+                        project_id: json.project_id
+                    }
+                    if (!finalConfig.client_email || !finalConfig.private_key) throw new Error()
+                } catch (e) {
+                    toast.error('JSON inválido. Cole o arquivo inteiro.')
+                    setSaving(false)
+                    return
+                }
+            }
+
+            await adminOS.updateIntegrationConfig(selectedService, finalConfig)
+            toast.success('Configuração salva com sucesso!')
+            setApiKey('')
+            setSelectedService(null)
+            loadIntegrations()
+        } catch (error) {
+            toast.error('Erro ao salvar configuração')
+        } finally {
+            setSaving(false)
+        }
+    }
+    
+// ... inside render ...
+// Update Input placeholder based on service
+    const isGoogle = selectedService === 'google_calendar'
+
+    // ...
+    <textarea // value={apiKey} ...
+        value={apiKey}
+        onChange={(e) => setApiKey(e.target.value)}
+        placeholder={isGoogle ? '{ "type": "service_account", ... }' : 'sk_live_...'}
+        className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono text-sm focus:border-neon-green outline-none h-32"
+    />
+
+// ... inside getDescription ...
+function getDescription(id: string) {
+    switch (id) {
+        case 'stripe': return 'Processamento de pagamentos globais, checkout transparente e gestão de assinaturas.'
+        case 'gemini': return 'O cérebro da IA. Permite que o assistente virtual realize ações complexas no banco de dados.'
+        case 'resend': return 'Infraestrutura de e-mail transacional para confirmações e notificações de alta entregabilidade.'
+        case 'chatwoot': return 'CRM de WhatsApp e Omni-channel para atendimento e suporte ao cliente.'
+        case 'google_calendar': return 'Sincronização automática de agendamentos com sua Agenda Google principal.'
+        default: return 'Integração de serviço externo.'
+    }
 }
 
 export default function IntegrationsList() {
@@ -57,8 +112,27 @@ export default function IntegrationsList() {
         if (!selectedService) return
         setSaving(true)
         try {
-            await adminOS.updateIntegrationConfig(selectedService, { apiKey })
-            toast.success('Chave de API salva com sucesso!')
+            let finalConfig: any = { apiKey }
+            
+            // Special handling for Google (Parse JSON)
+            if (selectedService === 'google_calendar') {
+                try {
+                    const json = JSON.parse(apiKey)
+                    finalConfig = { 
+                        client_email: json.client_email,
+                        private_key: json.private_key,
+                        project_id: json.project_id
+                    }
+                    if (!finalConfig.client_email || !finalConfig.private_key) throw new Error()
+                } catch (e) {
+                    toast.error('JSON inválido. Certifique-se de colar o conteúdo exato do arquivo .json')
+                    setSaving(false)
+                    return
+                }
+            }
+
+            await adminOS.updateIntegrationConfig(selectedService, finalConfig)
+            toast.success('Configuração salva com sucesso!')
             setApiKey('')
             setSelectedService(null)
             loadIntegrations() // Reload to see 'connected' status
@@ -157,13 +231,14 @@ export default function IntegrationsList() {
 
                         <div className="space-y-4">
                             <div>
-                                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block mb-2">API Secret Key</label>
-                                <input 
-                                    type="password" 
+                                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block mb-2">
+                                    {selectedService === 'google_calendar' ? 'Service Account JSON' : 'API Secret Key'}
+                                </label>
+                                <textarea 
                                     value={apiKey}
                                     onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder="sk_live_..."
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono text-sm focus:border-neon-green outline-none"
+                                    placeholder={selectedService === 'google_calendar' ? '{ "type": "service_account", ... }' : 'sk_live_...'}
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono text-sm focus:border-neon-green outline-none h-32 resize-none"
                                 />
                             </div>
 
@@ -189,6 +264,7 @@ function getDescription(id: string) {
         case 'gemini': return 'O cérebro da IA. Permite que o assistente virtual realize ações complexas no banco de dados.'
         case 'resend': return 'Infraestrutura de e-mail transacional para confirmações e notificações de alta entregabilidade.'
         case 'chatwoot': return 'CRM de WhatsApp e Omni-channel para atendimento e suporte ao cliente.'
+        case 'google_calendar': return 'Sincronização automática de agendamentos com sua Agenda Google principal.'
         default: return 'Integração de serviço externo.'
     }
 }

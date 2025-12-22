@@ -6,25 +6,48 @@ const SCOPES = ['https://www.googleapis.com/auth/calendar']
 // Initialize JWT Client
 // We use Environment Variables for security. 
 // The user will need to add these to .env.local and Vercel.
-const getAuthClient = () => {
-    const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n') // Fix newlines for Vercel
+import { adminOS } from '@/lib/services/admin-os'
+
+// ... scopes ...
+
+const getAuthClient = async () => {
+    let clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
+    let privateKey = process.env.GOOGLE_PRIVATE_KEY
+    
+    // Try DB First
+    try {
+        const integrations = await adminOS.getIntegrations();
+        const google = integrations.find(i => i.service_id === 'google_calendar' && i.is_active);
+        
+        if (google?.config && typeof google.config === 'object') {
+             // Expecting config to store the JSON object or fields
+             // @ts-ignore
+             if (google.config.client_email) clientEmail = google.config.client_email;
+             // @ts-ignore
+             if (google.config.private_key) privateKey = google.config.private_key;
+        }
+    } catch (e) {
+        // Fallback to env
+    }
 
     if (!clientEmail || !privateKey) {
         console.warn('⚠️ Google Calendar Params missing. Sync skipped.')
         return null
     }
 
+    // Fix newlines if coming from Env/DB string
+    const formattedKey = privateKey.replace(/\\n/g, '\n')
+
     return new google.auth.JWT(
         clientEmail,
         undefined,
-        privateKey,
+        formattedKey,
         SCOPES
     )
 }
 
 export async function createGoogleCalendarEvent(booking: any) {
-    const auth = getAuthClient()
+    const auth = await getAuthClient()
     if (!auth) return { success: false, error: 'credentials_missing' }
 
     const calendar = google.calendar({ version: 'v3', auth })
