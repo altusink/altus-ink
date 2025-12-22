@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/dist/style.css'
 import { format } from 'date-fns'
@@ -179,15 +180,88 @@ export default function BookingForm({ artists, stripePublicKey }: { artists: any
     const nextStep = () => setStep(prev => prev + 1)
     const prevStep = () => setStep(prev => prev - 1)
     
-    // Fetch BRL Rate (Mock or Logic)
+    // Fetch BRL Rate (Real-time from AwesomeAPI)
     useEffect(() => {
-        // Mock fetch rate
-        setBrlRate(6.5) 
+        const fetchRate = async () => {
+            try {
+                const res = await fetch('https://economia.awesomeapi.com.br/last/EUR-BRL')
+                const data = await res.json()
+                if (data.EURBRL && data.EURBRL.bid) {
+                    setBrlRate(parseFloat(data.EURBRL.bid))
+                }
+            } catch (error) {
+                console.error("Failed to fetch exchange rate", error)
+                // Keep fallback or retry
+            }
+        }
+        fetchRate()
+        // Refresh every 5 minutes
+        const interval = setInterval(fetchRate, 300000)
+        return () => clearInterval(interval)
     }, [])
 
-    const onSubmit = (data: BookingFormData) => {
-        // Placeholder for Submission Logic if not present
-        console.log("Submit:", data)
+    const onSubmit = async (data: BookingFormData) => {
+        try {
+            // 1. Save Booking to Supabase
+            const { data: booking, error: bookingError } = await supabase
+                .from('bookings')
+                .insert({
+                    artist_id: data.artistId || artists[0]?.id, // Fallback if not selected
+                    client_name: data.clientName,
+                    client_email: data.clientEmail,
+                    client_phone: data.clientPhone,
+                    service_type: data.tattooType,
+                    description: data.tattooDescription,
+                    body_location: data.bodyLocation,
+                    estimated_price: PRICING_RULES[data.tattooType]?.price || 0,
+                    deposit_amount: depositAmount,
+                    start_time: `${data.bookingDate}T${data.bookingTime}:00`,
+                    end_time: `${data.bookingDate}T${data.bookingTime}:00`, // Placeholder duration logic
+                    status: 'pending',
+                    payment_method: selectedPaymentMethod === 'pix' ? 'mercadopago_pix' : 'stripe',
+                    payment_status: 'pending',
+                    location_city: data.cityId,
+                    location_country: data.countryId
+                })
+                .select()
+                .single()
+
+            if (bookingError) throw bookingError
+            setBookingId(booking.id)
+
+            // 2. Handle Payment Redirect
+            if (selectedPaymentMethod === 'pix') {
+                // Convert EUR to BRL for Pix Payment
+                const priceInBrl = brlRate ? (depositAmount * brlRate).toFixed(2) : (depositAmount * 6.5).toFixed(2)
+                
+                const response = await fetch('/api/checkout/mp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        bookingId: booking.id,
+                        title: `Sinal: Tatuagem ${booking.service_type} (€${depositAmount})`,
+                        price: Number(priceInBrl), // Sending BRL amount
+                        quantity: 1
+                    })
+                })
+
+                const result = await response.json()
+                if (result.init_point) {
+                    window.location.href = result.init_point
+                } else {
+                    toast.error("Erro ao gerar pagamento Pix")
+                }
+            } else if (selectedPaymentMethod === 'stripe') {
+                // Placeholder for Stripe Intent creation (to be implemented/verified)
+                // For now, assume a similar API exists or we need to add it.
+                // call /api/checkout/stripe -> get clientSecret -> setClientSecret
+                toast.info("Stripe integration coming next step")
+            }
+
+        } catch (error) {
+            console.error(error)
+            toast.error("Erro ao criar agendamento. Tente novamente.")
+        }
     }
 
     const renderHeader = () => (

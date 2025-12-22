@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from '@/navigation'
-import AdminSidebar, { AdminNavLink } from '@/components/AdminSidebar'
+import { redirect } from 'next/navigation'
+import AdminSidebar from '@/components/AdminSidebar'
 import AIChatButton from '@/components/admin/AIChatButton'
+import LiquidBackground from '@/components/LiquidBackground' // NEW
 import { Calendar, Users, Globe, MapPin, BarChart3 } from 'lucide-react'
 
 export default async function AdminLayout({
@@ -35,7 +36,9 @@ export default async function AdminLayout({
     }
 
     return (
-        <div className="min-h-screen bg-bg-dark flex text-white">
+        <div className="min-h-screen bg-bg-dark flex text-white relative isolate">
+            {/* Global Animated Background for Admin */}
+            <LiquidBackground />
             {/* Sidebar (Fixed Left) */}
             <AdminSidebar />
 

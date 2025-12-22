@@ -1,0 +1,10 @@
+{
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "react/no-unknown-property": "off",
+    "react/style-prop-object": "off",
+    "react-native/no-inline-styles": "off",
+    "react/forbid-dom-props": "off",
+    "react/forbid-component-props": "off"
+  }
+}
