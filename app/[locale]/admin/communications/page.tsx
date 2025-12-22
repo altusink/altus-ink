@@ -80,11 +80,11 @@ export default function CommunicationsAdmin() {
                                 <AlertTriangle size={16} /> Configurações
                             </h4>
                             <p className="text-xs text-text-muted mb-2">
-                                Para configurar a chave de API do Resend, configure no arquivo `.env.local`
+                                Para conectar o Resend, vá até a aba <b>Integrações</b>.
                             </p>
-                            <code className="block bg-black/40 p-2 rounded text-xs text-secondary">
-                                RESEND_API_KEY=re_123...
-                            </code>
+                            <a href="/admin/integrations" className="block bg-black/40 p-2 rounded text-xs text-neon-cyan hover:underline hover:text-white transition-colors">
+                                Ir para Hub de Conectividade &rarr;
+                            </a>
                         </div>
                     </div>
                 </div>

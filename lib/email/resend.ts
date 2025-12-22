@@ -1,8 +1,9 @@
-
 import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Removed static initialization
+// const resend = new Resend(process.env.RESEND_API_KEY);
 
 type EmailType = 'welcome' | 'confirmation' | 'reminder';
 
@@ -17,8 +18,36 @@ type EmailData = {
     };
 };
 
+async function getResendClient() {
+    let apiKey = process.env.RESEND_API_KEY;
+
+    try {
+        const supabase = createAdminClient();
+        const { data } = await supabase
+            .from('integrations')
+            .select('config, is_active')
+            .eq('service_id', 'resend')
+            .single();
+
+        if (data?.is_active && data.config) {
+             // @ts-ignore
+             if (data.config.apiKey) apiKey = data.config.apiKey;
+        }
+    } catch (e) {}
+
+    // Fallback or Null
+    if (!apiKey) return null;
+    return new Resend(apiKey);
+}
+
 export async function sendEmail({ to, type, variables }: EmailData) {
     const supabase = await createClient();
+    const resend = await getResendClient();
+
+    if (!resend) {
+        console.warn('⚠️ Resend Key missing. Email skipped.');
+        return { success: false, error: 'Configuration missing' };
+    }
 
     // 1. Fetch Template
     const { data: template } = await supabase
