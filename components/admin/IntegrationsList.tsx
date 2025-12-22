@@ -3,10 +3,11 @@ const ICONS: Record<string, any> = {
     resend: Mail,
     gemini: Bot,
     chatwoot: Smartphone,
-    google_calendar: Calendar // Added Calendar
+    google_calendar: Calendar,
+    evolution_api: Smartphone // Reusing Smartphone or adding QrCode icon if available
 }
 
-import { Calendar } from 'lucide-react' // Ensure import
+import { Calendar, QrCode } from 'lucide-react'
 
 // ... inside component ...
 
@@ -115,17 +116,25 @@ export default function IntegrationsList() {
             let finalConfig: any = { apiKey }
             
             // Special handling for Google (Parse JSON)
-            if (selectedService === 'google_calendar') {
+            if (selectedService === 'google_calendar' || selectedService === 'evolution_api') {
                 try {
                     const json = JSON.parse(apiKey)
-                    finalConfig = { 
-                        client_email: json.client_email,
-                        private_key: json.private_key,
-                        project_id: json.project_id
+                    if (selectedService === 'google_calendar') {
+                        finalConfig = { 
+                            client_email: json.client_email,
+                            private_key: json.private_key,
+                            project_id: json.project_id
+                        }
+                    } else {
+                         // Evolution API
+                         finalConfig = {
+                             baseUrl: json.baseUrl,
+                             token: json.token,
+                             instanceName: json.instanceName
+                         }
                     }
-                    if (!finalConfig.client_email || !finalConfig.private_key) throw new Error()
                 } catch (e) {
-                    toast.error('JSON inválido. Certifique-se de colar o conteúdo exato do arquivo .json')
+                    toast.error('JSON inválido. Cole o objeto de configuração correto.')
                     setSaving(false)
                     return
                 }
@@ -229,18 +238,38 @@ export default function IntegrationsList() {
                             Insira sua chave de API (Secret Key) para conectar este serviço.
                         </p>
 
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block mb-2">
-                                    {selectedService === 'google_calendar' ? 'Service Account JSON' : 'API Secret Key'}
-                                </label>
-                                <textarea 
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder={selectedService === 'google_calendar' ? '{ "type": "service_account", ... }' : 'sk_live_...'}
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono text-sm focus:border-neon-green outline-none h-32 resize-none"
-                                />
-                            </div>
+                                {selectedService === 'evolution_api' ? (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block mb-2">Base URL</label>
+                                            <input 
+                                                value={apiKey} // We might need a separate state or split the string. For simplicity: JSON.
+                                                onChange={(e) => setApiKey(e.target.value)} 
+                                                placeholder='{ "baseUrl": "https://api...", "token": "..." }'
+                                                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono text-sm focus:border-neon-green outline-none hidden"
+                                            />
+                                            <div className="text-sm text-text-muted mb-2">Cole o JSON de configuração da sua Instância:</div>
+                                            <textarea 
+                                                value={apiKey}
+                                                onChange={(e) => setApiKey(e.target.value)}
+                                                placeholder='{ "instanceName": "altus", "token": "xyz", "baseUrl": "https://evolution..." }'
+                                                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono text-sm focus:border-neon-green outline-none h-32 resize-none"
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block mb-2">
+                                            {selectedService === 'google_calendar' ? 'Service Account JSON' : 'API Secret Key'}
+                                        </label>
+                                        <textarea 
+                                            value={apiKey}
+                                            onChange={(e) => setApiKey(e.target.value)}
+                                            placeholder={selectedService === 'google_calendar' ? '{ "type": "service_account", ... }' : 'sk_live_...'}
+                                            className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono text-sm focus:border-neon-green outline-none h-32 resize-none"
+                                        />
+                                    </div>
+                                )}
 
                             <button 
                                 onClick={handleSaveConfig}
