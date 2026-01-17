@@ -1,0 +1,227 @@
+{
+  "Navbar": {
+    "home": "Home",
+    "artists": "Artists",
+    "about": "About",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "book": "Book Now",
+    "login": "Login"
+  },
+  "Hero": {
+    "badge": "Premium Tattoo Experience",
+    "title_start": "Transform your skin into a",
+    "title_highlight": "work of art",
+    "subtitle": "Book with world-class artists. Smart system, secure payment.",
+    "cta_book": "Book Now",
+    "cta_artists": "View Artists",
+    "stats": {
+      "tattoos": "Tattoos",
+      "rating": "Rating",
+      "years": "Years",
+      "artists": "Artists"
+    }
+  },
+  "ArtistsSection": {
+    "badge": "Lead Artist",
+    "title_start": "Meet the",
+    "title_highlight": "Artists",
+    "subtitle": "International experience in artistic excellence",
+    "card": {
+      "specialty": "Ultrarealism - Fineline - Coverup - Old School - Colorful",
+      "description": "Former police officer from Brazil's smallest city, Danilo Santos left the force to follow his dream of being an artist. With over 7 years of experience and 15,000+ tattoos done, he is now an international reference in artistic excellence.",
+      "view_portfolio": "View Portfolio"
+    }
+  },
+  "Features": {
+    "title_start": "Why choose",
+    "title_highlight": "Altus Ink?",
+    "items": {
+      "smart_booking": {
+        "title": "Smart Booking",
+        "description": "Automated system with real-time calendar and instant confirmation."
+      },
+      "secure_payment": {
+        "title": "Secure Payment",
+        "description": "Integrated Stripe with support for multiple currencies and European methods."
+      },
+      "full_support": {
+        "title": "Complete Support",
+        "description": "Personalized aftercare guide and support throughout the healing process."
+      }
+    }
+  },
+  "CTA": {
+    "title_start": "Ready to",
+    "title_highlight": "start?",
+    "subtitle": "Book your session now and transform your vision into reality",
+    "button": "Book Now"
+  },
+  "Footer": {
+    "rights": "All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "quick_links": "Quick Links",
+    "contact": "Contact",
+    "follow_us": "Follow Us",
+    "made_with": "Made with",
+    "description": "Transforming skin into art since 2017. Premium tattoo experience with the highest standards of quality and safety."
+  },
+  "About": {
+    "title_start": "About",
+    "title_highlight": "Altus Ink",
+    "history_title": "Our History",
+    "history_text": "Altus Ink was born from a passion for tattoo art and a commitment to excellence. Founded by Danilo Santos, a former police officer who left his career to follow his dream, we are now an international reference in quality and professionalism.",
+    "mission_title": "Our Mission",
+    "mission_text": "To transform skin into art, ensuring a premium experience from start to finish. Every tattoo is unique, every client is special."
+  },
+  "Contact": {
+    "title": "Contact",
+    "phone": "Phone",
+    "email": "Email",
+    "location": "Location",
+    "instagram": "Instagram",
+    "location_value": "São Paulo, Brazil"
+  },
+  "FAQ": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Get all your questions answered about our services",
+    "still_have_questions": "Still have questions?",
+    "contact_text": "Contact us via WhatsApp, email or phone",
+    "contact_button": "Contact Us",
+    "items": [
+      {
+        "question": "How does booking work?",
+        "answer": "You choose the artist, style, date, and available time through our online system. After paying the 30% deposit via credit card or PIX, your booking is automatically confirmed and you receive a confirmation email."
+      },
+      {
+        "question": "What is the deposit value?",
+        "answer": "The deposit is 30% of the estimated total tattoo value. This amount is deducted from the final payment. The deposit guarantees your spot and covers preparation costs and materials."
+      },
+      {
+        "question": "Can I reschedule my session?",
+        "answer": "Yes, up to 48h in advance without additional costs. Contact us via WhatsApp, email, or phone to reschedule. Rescheduling with less than 48h may incur a 50% deposit fee."
+      },
+      {
+        "question": "What is the refund policy?",
+        "answer": "The deposit is 100% refundable if cancellation is made more than 7 days in advance. Between 7 and 3 days: 50% refund. Less than 3 days: no refund. In case of cancellation by the studio, immediate full refund."
+      },
+      {
+        "question": "How long does a session take?",
+        "answer": "It depends on size and complexity: Small tattoos (up to 10cm) take 1-2h. Medium (10-20cm) take 3-4h. Large (20cm+) may need multiple sessions of 4-6h each."
+      },
+      {
+        "question": "Do you accept minors?",
+        "answer": "No. Only adults over 18 with valid ID (RG, CNH, or Passport). We make no exceptions, even with parental authorization."
+      },
+      {
+        "question": "What payment methods do you accept?",
+        "answer": "We accept: Credit card (up to 12x), Debit card, PIX, Bank transfer, Cash. For international payments: Stripe, PayPal, Wise."
+      },
+      {
+        "question": "Do I need to bring anything on the day?",
+        "answer": "Yes: Photo ID, Deposit payment proof, Reference images (if any), Comfortable clothing allowing access to tattoo area. We recommend eating well before the session."
+      },
+      {
+        "question": "How is the healing process?",
+        "answer": "Healing takes 2-4 weeks. We provide a complete aftercare guide, specific ointment, and follow-up via WhatsApp. You will receive automatic reminders about necessary care at each stage."
+      },
+      {
+        "question": "Do you do cover-ups?",
+        "answer": "Yes! Danilo is a cover-up specialist. Send photos of the current tattoo for evaluation. Some tattoos may need laser sessions before cover-up for best results."
+      },
+      {
+        "question": "Can I bring a companion?",
+        "answer": "Yes, you can bring 1 companion. For long sessions (over 4h), we recommend having someone to support you. Children are not allowed in the studio for safety reasons."
+      },
+      {
+        "question": "Is the studio sanitized?",
+        "answer": "Absolutely. We follow all biosafety protocols: Single-use disposable materials, Autoclave sterilization, New gloves and needles for every client, Deep cleaning between every session. We have sanitary surveillance certification."
+      },
+      {
+        "question": "Can I get a tattoo if I have allergies?",
+        "answer": "Depends on the allergy type. We inform all allergies in the health form. We use vegan and hypoallergenic inks. For severe allergies, we recommend a patch test 48h prior."
+      },
+      {
+        "question": "How much does a tattoo cost?",
+        "answer": "Price varies by size, complexity, colors, and location. Small tattoos: R$ 300-800. Medium: R$ 800-2000. Large: R$ 2000+. Request a personalized quote by sending your idea and references."
+      },
+      {
+        "question": "Do you give online quotes?",
+        "answer": "Yes! Send reference photos, detailed description, approximate size, and body location. We respond within 24h with an estimated quote. For more precise quotes, schedule a free in-person consultation."
+      }
+    ]
+  },
+  "Login": {
+    "title": "Admin Access",
+    "subtitle": "Restricted area for Altus Ink management",
+    "badge": "Staff Only",
+    "dev_note": "Secure access. Monitor your session.",
+    "form": {
+      "email_label": "Email Address",
+      "email_placeholder": "admin@altusink.com",
+      "password_label": "Password",
+      "password_placeholder": "••••••••",
+      "submit": "Sign In",
+      "submitting": "Signing in...",
+      "error": "Authentication failed",
+      "success": "Redirecting..."
+    }
+  },
+  "Booking": {
+    "badge": "Booking System",
+    "title": "Book your Session",
+    "subtitle": "Book your appointment in a few simple steps",
+    "steps": {
+      "artist_selection": "Configuration",
+      "location": "Location",
+      "size_price": "Size & Price",
+      "reference": "Reference & Custom",
+      "tattoo_details": "Tattoo Details",
+      "date_time": "Schedule",
+      "personal_info": "Your Info",
+      "payment": "Checkout"
+    },
+    "tour_notice": "Select destination. Danilo Santos World Tour 2026.",
+    "select_city": "Select City",
+    "whatsapp_redirect_msg": "For extra large tattoos or cover-ups, we need to evaluate personally via WhatsApp.",
+    "contact_whatsapp": "Contact on WhatsApp",
+    "deposit": "Deposit",
+    "upload_title": "Reference & Customization (Max 10)",
+    "customization_question": "Do you want changes to the reference images?",
+    "option_as_is": "As in the photo",
+    "option_changes": "I want changes",
+    "details_label": "Describe the changes",
+    "details_placeholder": "Example: I want to add flowers, remove the background, make it more realistic...",
+    "non_refundable_title": "Non-Refundable Deposit",
+    "non_refundable_msg": "The deposit blocks the artist's agenda exclusively for you. Cancellation is not possible as we cannot fill the spot on short notice.",
+    "summary": {
+      "service": "Selected Service",
+      "deposit_due": "Deposit Due"
+    },
+    "payment_secure_note": "Your payment is processed securely by Stripe. We do not store your card details.",
+    "form": {
+      "tattoo_type": "Tattoo Type",
+      "placement": "Placement (Body Location)",
+      "description": "Description",
+      "select_time": "Select Time",
+      "full_name": "Full Name",
+      "email": "Email",
+      "phone": "Phone (WhatsApp)",
+      "health_form": "Health Form (Optional)",
+      "allergies": "Allergies?"
+    },
+    "payment_text": "To confirm your booking, a deposit of <span class=\"text-neon-green font-bold\">€100.00</span> is required. The rest is paid at the studio.",
+    "buttons": {
+      "back": "Back",
+      "next": "Next Step",
+      "proceed_payment": "Proceed to Payment",
+      "pay_confirm": "Pay Deposit to Confirm"
+    },
+    "success": {
+      "title": "Booking Confirmed!",
+      "text": "Thank you for booking with Altus Ink. A confirmation email has been sent to you.",
+      "return_home": "Return Home"
+    }
+  }
+}

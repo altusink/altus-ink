@@ -1,0 +1,209 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply text-text-primary antialiased;
+        background-color: transparent;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* PREMIUM SCROLLBAR */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        transition: background 0.2s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(57, 255, 20, 0.4); /* Neon Green Hover */
+    }
+}
+
+@layer utilities {
+    .mask-brand-logo {
+        -webkit-mask-image: url('/images/brand-logo.png');
+        -webkit-mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-image: url('/images/brand-logo.png');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+    }
+
+    .mask-brand-symbol {
+        -webkit-mask-image: url('/images/brand-symbol.png');
+        -webkit-mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-image: url('/images/brand-symbol.png');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+    }
+}
+
+/* AURORA BOREAL - VERSÃO SIMPLIFICADA E GARANTIDA */
+@keyframes aurora-wave {
+    0% {
+        transform: translateY(0px) translateX(0px) scale(1);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: translateY(-60px) translateX(30px) scale(1.15);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translateY(0px) translateX(0px) scale(1);
+        opacity: 0.6;
+    }
+}
+
+@keyframes aurora-wave-reverse {
+    0% {
+        transform: translateY(0px) translateX(0px) scale(1);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: translateY(60px) translateX(-30px) scale(1.1);
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: translateY(0px) translateX(0px) scale(1);
+        opacity: 0.5;
+    }
+}
+
+/* FLOATING ORBS - VERSÃO SIMPLIFICADA */
+@keyframes float-orb {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    25% {
+        transform: translate(50px, -50px) scale(1.1);
+    }
+
+    50% {
+        transform: translate(-40px, -80px) scale(0.9);
+    }
+
+    75% {
+        transform: translate(-50px, -40px) scale(1.05);
+    }
+
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+}
+
+/* Classes utilitárias para os efeitos */
+.aurora-layer-1 {
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse 60% 40% at 50% 20%,
+            rgba(57, 255, 20, 0.3) 0%,
+            rgba(57, 255, 20, 0.15) 30%,
+            transparent 60%);
+    pointer-events: none;
+    z-index: 1;
+    animation: aurora-wave 20s ease-in-out infinite;
+}
+
+.aurora-layer-2 {
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse 50% 35% at 50% 80%,
+            rgba(0, 245, 255, 0.3) 0%,
+            rgba(0, 245, 255, 0.15) 30%,
+            transparent 60%);
+    pointer-events: none;
+    z-index: 1;
+    animation: aurora-wave-reverse 25s ease-in-out infinite;
+    animation-delay: 5s;
+}
+
+.floating-orb {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2;
+    filter: blur(80px);
+}
+
+.orb-1 {
+    width: 500px;
+    height: 500px;
+    top: 5%;
+    left: 5%;
+    background: radial-gradient(circle, rgba(255, 0, 110, 0.7) 0%, rgba(255, 0, 110, 0.3) 50%, transparent 100%);
+    animation: float-orb 18s ease-in-out infinite;
+}
+
+.orb-2 {
+    width: 600px;
+    height: 600px;
+    top: 10%;
+    right: 5%;
+    background: radial-gradient(circle, rgba(139, 0, 255, 0.7) 0%, rgba(139, 0, 255, 0.3) 50%, transparent 100%);
+    animation: float-orb 22s ease-in-out infinite;
+    animation-delay: 4s;
+}
+
+.orb-3 {
+    width: 550px;
+    height: 550px;
+    bottom: 10%;
+    left: 10%;
+    background: radial-gradient(circle, rgba(255, 0, 110, 0.6) 0%, rgba(255, 0, 110, 0.2) 50%, transparent 100%);
+    animation: float-orb 20s ease-in-out infinite;
+    animation-delay: 8s;
+}
+
+.orb-4 {
+    width: 450px;
+    height: 450px;
+    top: 50%;
+    right: 15%;
+    background: radial-gradient(circle, rgba(139, 0, 255, 0.6) 0%, rgba(139, 0, 255, 0.2) 50%, transparent 100%);
+    animation: float-orb 16s ease-in-out infinite;
+    animation-delay: 2s;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+
+    .orb-1,
+    .orb-2,
+    .orb-3,
+    .orb-4 {
+        width: 300px;
+        height: 300px;
+    }
+}

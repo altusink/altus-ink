@@ -1,0 +1,221 @@
+{
+  "Navbar": {
+    "home": "Início",
+    "artists": "Artistas",
+    "about": "Sobre",
+    "contact": "Contato",
+    "faq": "FAQ",
+    "book": "Agendar",
+    "login": "Login"
+  },
+  "Hero": {
+    "badge": "Experiência Premium em Tatuagem",
+    "title_start": "Transforme sua pele em",
+    "title_highlight": "obra de arte",
+    "subtitle": "Agende com artistas de classe mundial. Sistema inteligente, pagamento seguro.",
+    "cta_book": "Agendar Agora",
+    "cta_artists": "Ver Artistas",
+    "stats": {
+      "tattoos": "Tatuagens",
+      "rating": "Avaliação",
+      "years": "Anos",
+      "artists": "Artistas"
+    }
+  },
+  "Login": {
+    "title": "Acesso Admin",
+    "subtitle": "Área restrita para gestão Altus Ink",
+    "badge": "Equipe Apenas",
+    "dev_note": "Acesso seguro. Monitore sua sessão.",
+    "form": {
+      "email_label": "Endereço de Email",
+      "email_placeholder": "admin@altusink.com",
+      "password_label": "Senha",
+      "password_placeholder": "••••••••",
+      "submit": "Entrar",
+      "submitting": "Entrando...",
+      "error": "Falha na autenticação",
+      "success": "Redirecionando..."
+    }
+  },
+  "ArtistsSection": {
+    "badge": "Artista Principal",
+    "title_start": "Conheça os",
+    "title_highlight": "Artistas",
+    "subtitle": "Experiência internacional em excelência artística",
+    "card": {
+      "specialty": "Ultrarrealismo - Fineline - Cobertura - Old School - Colorido",
+      "description": "Ex-policial da menor cidade do Brasil, Danilo Santos deixou a farda para seguir seu sonho de ser artista. Com mais de 7 anos de experiência e 15.000+ tatuagens realizadas, hoje é referência internacional em excelência artística.",
+      "view_portfolio": "Ver Portfólio"
+    }
+  },
+  "Features": {
+    "title_start": "Por que escolher a",
+    "title_highlight": "Altus Ink?",
+    "items": {
+      "smart_booking": {
+        "title": "Agendamento Inteligente",
+        "description": "Sistema automatizado com calendário em tempo real e confirmação instantânea."
+      },
+      "secure_payment": {
+        "title": "Pagamento Seguro",
+        "description": "Stripe integrado com suporte a múltiplas moedas e métodos europeus."
+      },
+      "full_support": {
+        "title": "Acompanhamento Completo",
+        "description": "Guia de aftercare personalizado e suporte durante toda a cicatrização."
+      }
+    }
+  },
+  "CTA": {
+    "title_start": "Pronto para",
+    "title_highlight": "começar?",
+    "subtitle": "Agende sua sessão agora e transforme sua visão em realidade",
+    "button": "Agendar Agora"
+  },
+  "Footer": {
+    "rights": "Todos os direitos reservados.",
+    "privacy": "Política de Privacidade",
+    "terms": "Termos de Uso",
+    "quick_links": "Links Rápidos",
+    "contact": "Contato",
+    "follow_us": "Siga-nos",
+    "made_with": "Feito com",
+    "description": "Transformando pele em arte desde 2017. Experiência premium em tatuagem com os mais altos padrões de qualidade e segurança."
+  },
+
+  "Contact": {
+    "title": "Contato",
+    "phone": "Telefone",
+    "email": "Email",
+    "location": "Localização",
+    "instagram": "Instagram",
+    "location_value": "São Paulo, Brasil"
+  },
+  "FAQ": {
+    "title": "Perguntas Frequentes",
+    "subtitle": "Tire todas as suas dúvidas sobre nossos serviços",
+    "still_have_questions": "Ainda tem dúvidas?",
+    "contact_text": "Entre em contato conosco pelo WhatsApp, email ou telefone",
+    "contact_button": "Falar Conosco",
+    "items": [
+      {
+        "question": "Como funciona o agendamento?",
+        "answer": "Você escolhe o artista, estilo, data e horário disponível através do nosso sistema online. Após pagar o sinal de 30% via cartão de crédito ou PIX, seu agendamento é confirmado automaticamente e você recebe um email de confirmação."
+      },
+      {
+        "question": "Qual o valor do sinal?",
+        "answer": "O sinal é de 30% do valor total estimado da tatuagem. Este valor é descontado no pagamento final. O sinal garante sua vaga e cobre custos de preparação e materiais."
+      },
+      {
+        "question": "Posso remarcar minha sessão?",
+        "answer": "Sim, com até 48h de antecedência sem custos adicionais. Entre em contato conosco por WhatsApp, email ou telefone para reagendar. Remarcações com menos de 48h podem ter taxa de 50% do sinal."
+      },
+      {
+        "question": "Qual a política de reembolso?",
+        "answer": "O sinal é reembolsável em 100% se o cancelamento for feito com mais de 7 dias de antecedência. Entre 7 e 3 dias: reembolso de 50%. Menos de 3 dias: sem reembolso. Em caso de cancelamento por parte do estúdio, reembolso integral imediato."
+      },
+      {
+        "question": "Quanto tempo leva uma sessão?",
+        "answer": "Depende do tamanho e complexidade: Tatuagens pequenas (até 10cm) levam 1-2h. Médias (10-20cm) levam 3-4h. Grandes (20cm+) podem precisar de múltiplas sessões de 4-6h cada."
+      },
+      {
+        "question": "Vocês aceitam menores de idade?",
+        "answer": "Não. Apenas maiores de 18 anos com documento de identidade válido (RG, CNH ou Passaporte). Não fazemos exceções, mesmo com autorização dos pais."
+      },
+      {
+        "question": "Quais formas de pagamento vocês aceitam?",
+        "answer": "Aceitamos: Cartão de crédito (até 12x), Cartão de débito, PIX, Transferência bancária, Dinheiro. Para pagamentos internacionais: Stripe, PayPal, Wise."
+      },
+      {
+        "question": "Preciso levar alguma coisa no dia?",
+        "answer": "Sim: Documento de identidade com foto, Comprovante de pagamento do sinal, Imagens de referência (se tiver), Roupa confortável que permita acesso à área da tatuagem. Recomendamos comer bem antes da sessão."
+      },
+      {
+        "question": "Como é o processo de cicatrização?",
+        "answer": "A cicatrização leva 2-4 semanas. Fornecemos um guia completo de aftercare, pomada específica e acompanhamento via WhatsApp. Você receberá lembretes automáticos sobre os cuidados necessários em cada fase."
+      },
+      {
+        "question": "Fazem cobertura de tatuagens antigas?",
+        "answer": "Sim! Danilo é especialista em coberturas. Envie fotos da tatuagem atual para avaliação. Algumas tatuagens podem precisar de sessões de laser antes da cobertura para melhores resultados."
+      },
+      {
+        "question": "Posso levar acompanhante?",
+        "answer": "Sim, você pode levar 1 acompanhante. Para sessões longas (mais de 4h), recomendamos ter alguém para te dar suporte. Crianças não são permitidas no estúdio por questões de segurança."
+      },
+      {
+        "question": "O estúdio é higienizado?",
+        "answer": "Absolutamente. Seguimos todos os protocolos de biossegurança: Materiais descartáveis de uso único, Esterilização em autoclave, Luvas e agulhas novas para cada cliente, Limpeza profunda entre cada sessão. Temos certificado de vigilância sanitária."
+      },
+      {
+        "question": "Posso fazer tatuagem se tiver alergia?",
+        "answer": "Depende do tipo de alergia. Informamos todas as alergias no formulário de saúde. Usamos tintas veganas e hipoalergênicas. Para alergias graves, recomendamos teste de patch 48h antes."
+      },
+      {
+        "question": "Quanto custa uma tatuagem?",
+        "answer": "O preço varia conforme tamanho, complexidade, cores e localização. Tatuagens pequenas: R$ 300-800. Médias: R$ 800-2000. Grandes: R$ 2000+. Solicite um orçamento personalizado enviando sua ideia e referências."
+      },
+      {
+        "question": "Vocês fazem orçamento online?",
+        "answer": "Sim! Envie fotos de referência, descrição detalhada, tamanho aproximado e local do corpo. Respondemos em até 24h com orçamento estimado. Para orçamentos mais precisos, agende uma consulta presencial gratuita."
+      }
+    ]
+  },
+  "Booking": {
+    "badge": "Sistema de Agendamento",
+    "title": "Agende sua Sessão",
+    "subtitle": "Agende seu horário em poucos passos simples",
+    "steps": {
+      "configuration": "Configuração",
+      "artist_selection": "Artista",
+      "location": "Local",
+      "size_price": "Tamanho",
+      "reference": "Referências",
+      "schedule": "Agenda",
+      "tattoo_details": "Detalhes",
+      "date_time": "Data e Hora",
+      "personal_info": "Dados Pessoais",
+      "payment": "Pagamento"
+    },
+    "form": {
+      "country": "País",
+      "city": "Cidade",
+      "tattoo_type": "Estilo / Tamanho",
+      "placement": "Local do Corpo",
+      "description": "Ideia / Descrição",
+      "reference_images": "Imagens de Referência",
+      "select_time": "Horários Disponíveis",
+      "full_name": "Nome Completo",
+      "email": "Email",
+      "phone": "WhatsApp",
+      "health_form": "Ficha de Saúde",
+      "allergies": "Possui Alergias?",
+      "required_field": "Este campo é obrigatório"
+    },
+    "payment_text": "Para confirmar seu agendamento, é necessário um sinal de <span class=\"text-neon-green font-bold\">€100.00</span>. O restante é pago no estúdio.",
+    "non_refundable_msg": "Nota: O sinal de reserva não é reembolsável em caso de cancelamento com menos de 48h.",
+    "buttons": {
+      "back": "Voltar",
+      "next": "Próximo Passo",
+      "proceed_payment": "Ir para Pagamento",
+      "pay_confirm": "Pagar Sinal e Confirmar"
+    },
+    "success": {
+      "title": "Agendamento Confirmado!",
+      "text": "Obrigado por agendar com a Altus Ink. Um email de confirmação foi enviado para você.",
+      "return_home": "Voltar ao Início"
+    }
+  },
+  "About": {
+    "title_start": "Sobre a",
+    "title_highlight": "Altus Ink International",
+    "history_title": "De Minas para o Mundo",
+    "history_text": "Fundada por Danilo Santos, a Altus Ink transcende o conceito tradicional de estúdio. O que começou como um sonho em uma pequena cidade de Minas Gerais, hoje é uma marca global de tatuagem, reconhecida pela excelência técnica e artística na Europa e Brasil.",
+    "mission_title": "Nossa Missão & Valores",
+    "mission_text": "Não fazemos apenas tatuagens; criamos legados na pele. Nossa missão é proporcionar uma experiência de luxo, segurança absoluta e arte de alto nível. Valorizamos a exclusividade, o atendimento humanizado e a biossegurança acima de tudo.",
+    "security_title": "Padrão Internacional de Segurança",
+    "security_text": "Adotamos protocolos hospitalares de esterilização e utilizamos apenas materiais premium certificados pela União Europeia. Sua saúde é inegociável.",
+    "process_title": "O Processo Altus",
+    "process_text": "Do primeiro contato até a cicatrização final, você é acompanhado por uma equipe dedicada. Nossos artistas desenvolvem projetos exclusivos baseados na sua anatomia e referências."
+  }
+}

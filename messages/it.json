@@ -1,0 +1,167 @@
+{
+    "Navbar": {
+        "home": "Home",
+        "artists": "Artisti",
+        "about": "Chi Siamo",
+        "contact": "Contatti",
+        "faq": "FAQ",
+        "book": "Prenota",
+        "login": "Accedi"
+    },
+    "Hero": {
+        "badge": "Esperienza Premium Tattoo",
+        "title_start": "Trasforma la tua pelle in",
+        "title_highlight": "un'opera d'arte",
+        "subtitle": "Prenota con artisti di fama mondiale. Sistema intelligente, pagamento sicuro.",
+        "cta_book": "Prenota Ora",
+        "cta_artists": "Vedi Artisti",
+        "stats": {
+            "tattoos": "Tatuaggi",
+            "rating": "Valutazione",
+            "years": "Anni",
+            "artists": "Artisti"
+        }
+    },
+    "ArtistsSection": {
+        "badge": "Lead Artist",
+        "title_start": "Incontra gli",
+        "title_highlight": "Artisti",
+        "subtitle": "Esperienza internazionale in eccellenza artistica",
+        "card": {
+            "specialty": "Ultrarealismo - Fineline - Coverup - Old School - Colore",
+            "description": "Ex poliziotto della città più piccola del Brasile, Danilo Santos ha lasciato la divisa per seguire il suo sogno di artista. Con oltre 7 anni di esperienza e 15.000+ tatuaggi realizzati, è oggi un riferimento internazionale in eccellenza artistica.",
+            "view_portfolio": "Vedi Portfolio"
+        }
+    },
+    "Features": {
+        "title_start": "Perché scegliere",
+        "title_highlight": "Altus Ink?",
+        "items": {
+            "smart_booking": {
+                "title": "Prenotazione Intelligente",
+                "description": "Sistema automatizzato con calendario in tempo reale e conferma immediata."
+            },
+            "secure_payment": {
+                "title": "Pagamento Sicuro",
+                "description": "Stripe integrato con supporto per valute multiple e metodi europei."
+            },
+            "full_support": {
+                "title": "Supporto Completo",
+                "description": "Guida post-cura personalizzata e supporto durante tutto il processo di guarigione."
+            }
+        }
+    },
+    "CTA": {
+        "title_start": "Pronto a",
+        "title_highlight": "iniziare?",
+        "subtitle": "Prenota la tua sessione ora e trasforma la tua visione in realtà",
+        "button": "Prenota Ora"
+    },
+    "Footer": {
+        "rights": "Tutti i diritti riservati.",
+        "privacy": "Privacy Policy",
+        "terms": "Termini d'Uso",
+        "quick_links": "Link Rapidi",
+        "contact": "Contatti",
+        "follow_us": "Seguici",
+        "made_with": "Fatto con",
+        "description": "Trasformiamo la pelle in arte dal 2017. Esperienza tattoo premium con i più alti standard di qualità e sicurezza."
+    },
+    "About": {
+        "title_start": "About",
+        "title_highlight": "Altus Ink",
+        "history_title": "Our History",
+        "history_text": "Altus Ink was born from a passion for tattoo art and a commitment to excellence. Founded by Danilo Santos, a former police officer who left his career to follow his dream, we are now an international reference in quality and professionalism.",
+        "mission_title": "Our Mission",
+        "mission_text": "To transform skin into art, ensuring a premium experience from start to finish. Every tattoo is unique, every client is special."
+    },
+    "Contact": {
+        "title": "Contact",
+        "phone": "Phone",
+        "email": "Email",
+        "location": "Location",
+        "instagram": "Instagram",
+        "location_value": "São Paulo, Brazil"
+    },
+    "FAQ": {
+        "title": "Frequently Asked Questions",
+        "subtitle": "Get all your questions answered about our services",
+        "still_have_questions": "Still have questions?",
+        "contact_text": "Contact us via WhatsApp, email or phone",
+        "contact_button": "Contact Us",
+        "items": [
+            {
+                "question": "How does booking work?",
+                "answer": "You choose the artist, style, date, and available time through our online system. After paying the 30% deposit via credit card or PIX, your booking is automatically confirmed and you receive a confirmation email."
+            },
+            {
+                "question": "What is the deposit value?",
+                "answer": "The deposit is 30% of the estimated total tattoo value. This amount is deducted from the final payment. The deposit guarantees your spot and covers preparation costs and materials."
+            },
+            {
+                "question": "Can I reschedule my session?",
+                "answer": "Yes, up to 48h in advance without additional costs. Contact us via WhatsApp, email, or phone to reschedule. Rescheduling with less than 48h may incur a 50% deposit fee."
+            },
+            {
+                "question": "What is the refund policy?",
+                "answer": "The deposit is 100% refundable if cancellation is made more than 7 days in advance. Between 7 and 3 days: 50% refund. Less than 3 days: no refund. In case of cancellation by the studio, immediate full refund."
+            },
+            {
+                "question": "How long does a session take?",
+                "answer": "It depends on size and complexity: Small tattoos (up to 10cm) take 1-2h. Medium (10-20cm) take 3-4h. Large (20cm+) may need multiple sessions of 4-6h each."
+            },
+            {
+                "question": "Do you accept minors?",
+                "answer": "No. Only adults over 18 with valid ID (RG, CNH, or Passport). We make no exceptions, even with parental authorization."
+            },
+            {
+                "question": "What payment methods do you accept?",
+                "answer": "We accept: Credit card (up to 12x), Debit card, PIX, Bank transfer, Cash. For international payments: Stripe, PayPal, Wise."
+            },
+            {
+                "question": "Do I need to bring anything on the day?",
+                "answer": "Yes: Photo ID, Deposit payment proof, Reference images (if any), Comfortable clothing allowing access to tattoo area. We recommend eating well before the session."
+            },
+            {
+                "question": "How is the healing process?",
+                "answer": "Healing takes 2-4 weeks. We provide a complete aftercare guide, specific ointment, and follow-up via WhatsApp. You will receive automatic reminders about necessary care at each stage."
+            },
+            {
+                "question": "Do you do cover-ups?",
+                "answer": "Yes! Danilo is a cover-up specialist. Send photos of the current tattoo for evaluation. Some tattoos may need laser sessions before cover-up for best results."
+            },
+            {
+                "question": "Can I bring a companion?",
+                "answer": "Yes, you can bring 1 companion. For long sessions (over 4h), we recommend having someone to support you. Children are not allowed in the studio for safety reasons."
+            },
+            {
+                "question": "Is the studio sanitized?",
+                "answer": "Absolutely. We follow all biosafety protocols: Single-use disposable materials, Autoclave sterilization, New gloves and needles for every client, Deep cleaning between every session. We have sanitary surveillance certification."
+            },
+            {
+                "question": "Can I get a tattoo if I have allergies?",
+                "answer": "Depends on the allergy type. We inform all allergies in the health form. We use vegan and hypoallergenic inks. For severe allergies, we recommend a patch test 48h prior."
+            },
+            {
+                "question": "How much does a tattoo cost?",
+                "answer": "Price varies by size, complexity, colors, and location. Small tattoos: R$ 300-800. Medium: R$ 800-2000. Large: R$ 2000+. Request a personalized quote by sending your idea and references."
+            },
+            {
+                "question": "Do you give online quotes?",
+                "answer": "Yes! Send reference photos, detailed description, approximate size, and body location. We respond within 24h with an estimated quote. For more precise quotes, schedule a free in-person consultation."
+            }
+        ]
+    },
+    "Booking": {
+        "badge": "Booking System",
+        "title": "Book your Session",
+        "subtitle": "Real-time booking system will be implemented in Phase 3",
+        "dev_note": "🚧 In development - Phase 3"
+    },
+    "Login": {
+        "badge": "Restricted Area",
+        "title": "Login",
+        "subtitle": "Access for CEO, Artists, Sales, and Managers",
+        "dev_note": "🚧 Authentication system will be implemented in Phase 3"
+    }
+}
